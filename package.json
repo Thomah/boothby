@@ -1,0 +1,21 @@
+{
+  "name": "pomona",
+  "version": "0.0.0",
+  "description": "A bot to provide tips about how to make our softwares greener",
+  "main": "./node_modules/gupshup-botrunner/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node ./node_modules/gupshup-local-botrunner/index.js",
+    "deploy": "node ./node_modules/gupshup-local-botrunner/deploy.js"
+  },
+  "author": {
+    "name": "Thomah",
+    "email": "thomas.hingant@posteo.net",
+    "url": ""
+  },
+  "license": "ISC",
+  "dependencies": {
+    "bot-script": "^3.6.3",
+    "gupshup-local-botrunner": "^1.2.3"
+  }
+}
