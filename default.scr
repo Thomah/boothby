@@ -1,18 +1,18 @@
 [main]
-    hello:Bonjour {{name}} !:continue
-        Ravie de faire ta connaissance, je m'appelle Pomona !:continue
-            Je suis spécialiste en Green IT, tu connais ? [[ Oui, Non ]]
+    hello_1:Bonjour {{name}} !:continue
+        hello_2:Ravie de faire ta connaissance, je m'appelle Pomona !:continue
+            hello_3:Je suis spécialiste en Green IT, tu connais ? [[ Oui, Non ]]
                 Oui
-                    Je sens qu'on va bien s'entendre toi et moi ! :call default.register
+                    hello_4:Je sens qu'on va bien s'entendre toi et moi ! :call default.register
                 Non
-                    Alors c'est l'occasion pour toi de découvrir !:continue
-                        Le Green IT c'est un ensemble de bonnes pratiques d'écoconception logicielle. Le but est de réduire l'empreinte ressource de l'IT qui représente aujourd'hui 10% de la consommation électrique dans le monde ! Et tiens, un autre chiffre pour toi : un internaute consomme 200kg de GES / an, c'est énorme ! :call default.register
+                    hello_5:Alors c'est l'occasion pour toi de découvrir !:continue
+                        hello_6:Le Green IT c'est un ensemble de bonnes pratiques d'écoconception logicielle. Le but est de réduire l'empreinte ressource de l'IT qui représente aujourd'hui 10% de la consommation électrique dans le monde ! Et tiens, un autre chiffre pour toi : un internaute consomme 200kg de GES / an, c'est énorme ! :call default.register
 
 [register]
-    {"type":"quick_reply","msgid":"askRegister","content":{"text":"Serais-tu intéressé(e) pour recevoir des bonnes pratiques Green IT de temps en temps ? J'essayerai de m'en tenir à une publication par jour au début."},"options":[{"title":"Avec plaisir !"},{"title":"Non, merci"}]}
+    register_ask:{"type":"quick_reply","msgid":"askRegister","content":{"text":"Serais-tu intéressé(e) pour recevoir des bonnes pratiques Green IT de temps en temps ? J'essayerai de m'en tenir à une publication par jour au début."},"options":[{"title":"Avec plaisir !"},{"title":"Non, merci"}]}
         Avec plaisir !
-            {"type":"image","originalUrl":"https://media.giphy.com/media/3oz8xRF0v9WMAUVLNK/giphy.gif","previewUrl":"https://media.giphy.com/media/3oz8xRF0v9WMAUVLNK/giphy.gif"}:continue
-                Super ! Je suis trop contente de pouvoir partager ça avec toi. Tu vas voir, je vais te donner plein de conseils pour être the BEST en Green IT.:continue
-                    D'ici ma première publication, passe une excellente journée !
+            register_yes:{"type":"image","originalUrl":"https://media.giphy.com/media/3oz8xRF0v9WMAUVLNK/giphy.gif","previewUrl":"https://media.giphy.com/media/3oz8xRF0v9WMAUVLNK/giphy.gif"}:continue
+                register_yes_2:Super ! Je suis trop contente de pouvoir partager ça avec toi. Tu vas voir, je vais te donner plein de conseils pour être the BEST en Green IT.:continue
+                    register_yes_3:D'ici ma première publication, passe une excellente journée !
         Non, merci
-            Pas de souci, je ne t'embèterai plus avec ça. Bonne journée !
+            register_no:Pas de souci, je ne t'embèterai plus avec ça. Bonne journée !

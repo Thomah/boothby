@@ -2,11 +2,13 @@ var botScriptExecutor = require('bot-script').executor;
 var scr_config = require('./scr_config.json');
 
 function MessageHandler(context, event) {
-    console.log("CONTEXT " + JSON.stringify(context));
-    console.log("EVENT " + JSON.stringify(event));
     if(event.messageobj.refmsgid == "askRegister") {
         if(event.message == "Avec plaisir !") {
             context.simpledb.roomleveldata.register = true;
+            if(context.simpledb.botleveldata.subscribers == null) {
+                context.simpledb.botleveldata.subscribers = [];
+            }
+            context.simpledb.botleveldata.subscribers[event.contextobj.contextid]= JSON.stringify(event.contextobj);
         }
     }
     ScriptHandler(context, event);
@@ -17,19 +19,29 @@ function EventHandler(context, event) {
     MessageHandler(context, event);
 }
 
+function ScheduledMessageHandler(context, event, section) {
+    var options = Object.assign({}, scr_config);
+    options.current_dir = __dirname;
+    options.start_section = section;
+    options.success = function (opm) {
+        context.sendResponse(JSON.stringify(opm));
+    };
+    options.error = function (err) {
+        console.log(err.stack);
+        context.sendResponse("Sorry Some error occurred.");
+    };
+    botScriptExecutor.execute(options, event, context);
+}
 
 function ScriptHandler(context, event) {
     var options = Object.assign({}, scr_config);
     options.data = {};
     options.current_dir = __dirname;
-    options.default_message = "Sorry I am young and still learning. I am unable to understand your query.";
-    // You can add any start point by just mentioning the <script_file_name>.<section_name>
-    // options.start_section = "default.main";
     options.success = function (opm) {
         context.sendResponse(JSON.stringify(opm));
     };
     options.error = function (err) {
-        context.console.log(err.stack);
+        console.log(err.stack);
         context.sendResponse("Sorry Some error occurred.");
     };
     options.data.name = event.senderobj.firstName;
@@ -50,7 +62,13 @@ function DbPutHandler(context, event) {
 }
 
 function HttpEndpointHandler(context, event) {
-    context.sendResponse('This is response from http \n' + JSON.stringify(event, null, '\t'));
+    if(event.headers.apikey == context.simpledb.botleveldata.config.apikey) {
+        for(let sub of context.simpledb.botleveldata.subscribers) {
+            ScheduledMessageHandler(sub, event, "default.main");
+        }
+    } else {
+        context.sendResponse('The API Key is needed');
+    }
 }
 
 function LocationHandler(context, event) {
