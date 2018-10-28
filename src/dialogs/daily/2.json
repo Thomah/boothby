@@ -1,0 +1,42 @@
+{
+    "main": {
+        "channel": "greenit",
+        "text": "Est-ce que votre site est valide W3C ? Je suis sûr que non.",
+        "next": "2"
+    },
+    "2": {
+        "wait": "2000",
+        "channel": "greenit",
+        "text": "Le W3C ce sont les fondateurs du web. Ouais rien que ça...",
+        "next": "3"
+    },
+    "3": {
+        "wait": "2000",
+        "channel": "greenit",
+        "text": "Et pour vous aider à faire un site web conforme aux règles du web, ils ont mis en place ce validateur : https://validator.w3.org",
+        "next": "4"
+    },
+        "4": {
+        "wait": "4000",
+        "channel": "greenit",
+        "text": "En y soumettant votre code HTML/CSS, cette application va vous dire s'il est conforme aux règles.",
+        "next": "5"
+    },
+    "5": {
+        "wait": "3000",
+        "channel": "greenit",
+        "text" : "Vous allez me demander : pourquoi c'est important de faire ça à l'heure où on a des navigateurs capables d'interprêter le pire des codes et de faire un rendu ?",
+        "next": "6"
+    },
+    "6": {
+        "wait": "5000",
+        "channel": "greenit",
+        "text" : "Facile : ce travail d'interprêtation ne devrait pas exister. Si vous donner aux navigateur un code valide, cette procédure ne se déclenchera pas. Ainsi, vous économiserez du CPU et de la RAM sur les machines de vos utilisateurs.",
+        "next": "7"
+    },
+    "7": {
+        "wait": "7000",
+        "channel": "greenit",
+        "text": "A vous de jouer maintenant !"
+    }
+  }

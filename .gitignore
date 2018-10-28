@@ -1,3 +1,2 @@
-.metadata
 node_modules
-temp_db
+.env
