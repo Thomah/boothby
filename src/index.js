@@ -3,6 +3,7 @@ const { WebClient } = require('@slack/client');
 const Express = require('express');
 const BodyParser = require('body-parser');
 const Schedule = require('node-schedule');
+const Db = require('./db');
 const Speach = require('./speach');
 
 // Load Express Framework
@@ -12,41 +13,39 @@ app.use(BodyParser.urlencoded({ extended: true }));
 
 // Load Slack Web Client
 const HttpsProxyAgent = require("https-proxy-agent");
-const token = process.env.SLACK_TOKEN;
 var webAdditionalParams;
 if (process.env.HTTP_PROXY) {
   webAdditionalParams = { agent: new HttpsProxyAgent(process.env.HTTP_PROXY) };
 } else {
   webAdditionalParams = {};
 }
-const web = new WebClient(token, webAdditionalParams);
+const web = new WebClient(process.env.SLACK_TOKEN, webAdditionalParams);
 
-function init(dialogId) {
+function init(callback) {
   web.api
     .test()
     .then(() => {
       Speach.Speach(web);
-      if (dialogId !== undefined) {
-        Speach.processDialog(dialogId);
-      }
+      callback();
     })
     .catch(console.error);
 }
 
 function resume() {
-  init();
-  Speach.readDb('global', 'state', function(data) {
-    if(data === null) {
-      data = {};
-      data.daily = 1;
-      data.name = 'state';
-      Speach.insertInDb('global', 'state', data);
-    }
-    if(data.daily < 4) {
-      Speach.processDialog('daily/' + data.daily);
-    }
-    data.daily++;
-    Speach.updateInDb('global', 'state', data);
+  init(function() {
+    Db.readDb('global', 'state', function(data) {
+      if(data === null) {
+        data = {};
+        data.daily = 1;
+        data.name = 'state';
+        Db.insertInDb('global', 'state', data);
+      }
+      if(data.daily < 4) {
+        Speach.processDialog('daily', data.daily);
+        data.daily++;
+      }
+      Db.updateInDb('global', 'state', data);
+    });
   });
 }
 
@@ -55,16 +54,21 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'pug');
 
 // Home Route
-app.get("/", function(req, res) {
-  init();
+app.get('/', function(req, res) {
+  init(() => {});
+  res.render('index');
+});
+app.get('/setup', function(req, res) {
+  init(function() {
+    Speach.loadInDb();
+  });
   res.render("index");
 });
-app.get("/intro", function(req, res) {
-  init("intro");
-  res.render("index");
-});
-app.get("/publish/:id", function(req, res) {
-  init("daily/" + req.params.id);
+
+app.get('/publish/:collection/:name', function(req, res) {
+  init(function() {
+    Speach.processDialog(req.params.collection, req.params.name);
+  });
   res.render("index");
 });
 app.post("/callback", function(req, res) {
@@ -77,7 +81,7 @@ app.listen(8080);
  
 // Main Scheduler
 var cronEveryDay = '42 10 * * 1-5'
-var j = Schedule.scheduleJob('* * * * *', function(fireDate){
+var j = Schedule.scheduleJob('42 * * * 1-5', function(fireDate){
   console.log('This job was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
   resume();
 });

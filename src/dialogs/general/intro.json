@@ -1,7 +1,7 @@
 {
   "main": {
     "channel": "général",
-    "text": "Bonjour, je m'appelle Pomona !",
+    "text": "Bonjour, je m'appelle Boothby !",
     "next": "hello_2"
   },
   "hello_2": {
@@ -13,7 +13,7 @@
   "hello_3": {
     "channel": "général",
     "wait": "3000",
-    "text": "Ah oui et je suis un robot (ou une robot, ça existe robot au féminin ?). Bref, mon rôle, c'est de publier des astuces ou des news sur le Green IT dans le canal #greenit. Si ça vous intéresse, n'hésitez pas à le rejoindre. Vous allez voir ça va être marrant.",
+    "text": "Ah oui, petit détail : je suis un robot. Mon rôle, c'est de publier des astuces ou des news sur le Green IT dans le canal #greenit. Si ça vous intéresse, n'hésitez pas à le rejoindre. Vous allez voir ça va être marrant.",
     "next": "hello_4"
   },
   "hello_4": {

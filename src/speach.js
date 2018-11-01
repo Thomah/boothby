@@ -1,14 +1,52 @@
-require("dotenv").config();
-var fs = require("fs");
-var MongoClient = require("mongodb").MongoClient;
+const Path = require('path');
+const Fs = require('fs');
+const Db = require('./db');
 
 (function() {
   var web;
   var conversationId;
   var dialog;
 
+  var Speach = function(webClient) {
+    web = webClient;
+  };
+
+  var loadInDb = function() {
+    var directoryPath = Path.join(__dirname, 'dialogs');
+    Fs.readdir(directoryPath, function (err, files) {
+      if(err) {
+        return console.log(`Unable to scan directory: ${err}`)
+      }
+      files.forEach(function (collection) {
+        directoryPath = Path.join(__dirname, 'dialogs', collection);
+        Fs.readdir(directoryPath, function (err, files) {
+          if(err) {
+            return console.log(`Unable to scan directory: ${err}`)
+          }
+          files.forEach(function (file) {
+            var filename = file.slice(0, -5);
+            Db.readDb(`dialogs/${collection}`, filename, function(data) {
+              if(data === null) {
+                Db.insertInDb(`dialogs/${collection}`, filename, require(`./dialogs/${collection}/${file}`));
+              }
+            });
+          });
+        });
+      });
+    });
+  };
+
   var join = function(channelName) {
     return web.channels.join({ name: channelName });
+  };
+
+  var processDialog = function(collection, name) {
+    Db.readDb(`dialogs/${collection}`, name, function(data) {
+      dialog = data;
+      if(dialog !== null) {
+        speakRecurse('main');
+      }
+    });
   };
 
   var speakRecurse = function(currentId) {
@@ -40,83 +78,14 @@ var MongoClient = require("mongodb").MongoClient;
     });
   };
 
-  var readDb = function(collection, name, callback) {
-    MongoClient.connect(
-      process.env.MONGODB_URI,
-      { useNewUrlParser: true },
-      function(error, database) {
-        if (error) console.log(error);
-        const db = database.db("heroku_5fr6w04p");
-        db.collection(collection).findOne({ name: name }, function(
-          err,
-          result
-        ) {
-          if (error) throw error;
-          database.close();
-          callback(result);
-        });
-      }
-    );
-  };
-
-  var updateInDb = function(collection, name, content) {
-    MongoClient.connect(
-      process.env.MONGODB_URI,
-      { useNewUrlParser: true },
-      function(error, database) {
-        if (error) console.log(error);
-        const db = database.db("heroku_5fr6w04p");
-        db.collection(collection).updateOne(
-          { name: name },
-          {
-            $set: content
-          },
-          function(error, results) {
-            if (error) throw error;
-            database.close();
-          }
-        );
-      }
-    );
-  };
-
-  var insertInDb = function(collection, name, content) {
-    MongoClient.connect(
-      process.env.MONGODB_URI,
-      { useNewUrlParser: true },
-      function(error, database) {
-        if (error) console.log(error);
-        const db = database.db("heroku_5fr6w04p");
-        db.collection(collection).insertOne(content, function(error, results) {
-          if (error) throw error;
-          database.close();
-        });
-      }
-    );
-  };
-
-  module.exports.readDb = readDb;
-  module.exports.updateInDb = updateInDb;
-  module.exports.insertInDb = insertInDb;
-  module.exports.join = join;
-
-  module.exports.Speach = function(webClient) {
-    web = webClient;
-  };
-
-  module.exports.processDialog = function(id) {
-    dialog = require("./dialogs/" + id + ".json");
-    speakRecurse("main");
-  };
-
-  module.exports.survey = function(req) {
+  var survey = function(req) {
     var payload = JSON.parse(req.body.payload);
-    readDb("surveys", payload.actions[0].name, function(data) {
+    Db.readDb("surveys", payload.actions[0].name, function(data) {
       var newMessage = payload.original_message;
       if (data === null) {
         data = {};
         data.name = payload.actions[0].name;
-        insertInDb("surveys", payload.actions[0].name, data);
+        Db.insertInDb("surveys", payload.actions[0].name, data);
       }
       if (data.texts === undefined) {
         data.texts = {};
@@ -151,7 +120,7 @@ var MongoClient = require("mongodb").MongoClient;
         data.values[data.users[payload.user.id]]--;
         data.users[payload.user.id] = undefined;
       }
-      updateInDb("surveys", payload.actions[0].name, data);
+      Db.updateInDb("surveys", payload.actions[0].name, data);
 
       for (var id in data.texts) {
         newMessage.attachments[0].actions[data.actions[id]].text =
@@ -166,4 +135,11 @@ var MongoClient = require("mongodb").MongoClient;
       });
     });
   };
+  
+  module.exports.Speach = Speach;
+  module.exports.loadInDb = loadInDb;
+  module.exports.join = join;
+  module.exports.processDialog = processDialog;
+  module.exports.survey = survey;
+
 })();
