@@ -1,0 +1,11 @@
+[Unit]
+Description=Boothby daemon
+
+[Service]
+Type=forking
+ExecStart=/home/ubuntu/boothby/boothby.sh start
+ExecStop=/home/ubuntu/boothby/boothby.sh stop
+ExecReload=/home/ubuntu/boothby/boothby.sh reload
+
+[Install]
+WantedBy=multi-user.target

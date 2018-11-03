@@ -80,9 +80,9 @@ app.post("/callback", function(req, res) {
 app.listen(8080);
  
 // Main Scheduler
-var cronEveryDay = '42 10 * * 1-5'
-var j = Schedule.scheduleJob('42 * * * 1-5', function(fireDate){
+var cron = '42 10 * * 1-5';
+var j = Schedule.scheduleJob(cron, function(fireDate){
   console.log('This job was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
   resume();
 });
-console.log("cron set");
+console.log(`CRON set : ${cron} on resume()`);
