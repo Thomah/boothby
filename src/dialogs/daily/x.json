@@ -1,0 +1,58 @@
+{
+    "main": {
+      "channel": "greenit",
+      "text": "Aujourd'hui, petite info pour nos amis les fonctionnels ! Attendez les autres ! Ca peut vous intéresser.",
+      "next": "2"
+    },
+    "2": {
+      "wait": "2000",
+      "channel": "greenit",
+      "text": "D'après-vous, pour une application donnée, quel est le pourcentage des fonctionnalités demandées par les utilisateurs qui ne sont pas essentielles ? Réponse dans 5min !",
+      "attachments": [
+        {
+          "text": "Choisissez une valeur",
+          "fallback": "You are unable to choose a game",
+          "callback_id": "survey_necessary_func",
+          "attachment_type": "default",
+          "actions": [
+            {
+              "name": "survey_necessary_func",
+              "text": "30%",
+              "type": "button",
+              "value": "30"
+            },
+            {
+              "name": "survey_necessary_func",
+              "text": "50%",
+              "type": "button",
+              "value": "50"
+            },
+            {
+              "name": "survey_necessary_func",
+              "text": "70%",
+              "type": "button",
+              "value": "70"
+            }
+          ]
+        }
+      ],
+      "next": "3"
+    },
+    "3": {
+      "wait": "300000",
+      "channel": "greenit",
+      "text": "La bonne réponse était 70% ! Vous vous rendez compte le temps et l'énergie qu'on gagnerait à développer uniquement l'essentiel ?",
+      "next": "4"
+    },
+    "4": {
+      "wait": "4000",
+      "channel": "greenit",
+      "text": "D'où l'importance de bien cadrer le besoin d'une application. De façon général, posez-vous juste la question : \"Est-ce vraiment nécessaire ?\"",
+      "next": "5"
+    },
+    "5": {
+      "wait": "5000",
+      "channel": "greenit",
+      "text" : "C'est tout pour aujourd'hui, à demain !"
+    }
+  }

@@ -1,0 +1,37 @@
+{
+    "main": {
+        "channel": "greenit",
+        "text": "Amateur d'écoconception, bonjour !",
+        "next": "2"
+    },
+    "2": {
+        "wait": "2000",
+        "channel": "greenit",
+        "text": "Il est temps de se mettre à dos une population de gens aujourd'hui.",
+        "next": "3"
+    },
+    "3": {
+        "wait": "3000",
+        "channel": "greenit",
+        "text": "Vous êtes-vous déjà retrouvé face à une application qui ramait à cause d'animations trop gourmandes ? Je suis sûr que oui.",
+        "next": "4"
+    },
+        "4": {
+        "wait": "4000",
+        "channel": "greenit",
+        "text": "Alors de façon générale, avez-vous **vraiment** besoins d'animations pour votre programme ?",
+        "next": "5"
+    },
+    "5": {
+        "wait": "3000",
+        "channel": "greenit",
+        "text" : "C'est une question qu'il faut absolument se poser car ces dernières sont souvent très consommatrices de CPU et de RAM.",
+        "next": "6"
+    },
+    "6": {
+        "wait": "4000",
+        "channel": "greenit",
+        "text" : "Si vous souhaitez en savoir plus, rdv ici : http://bit.ly/2D4v0u7.",
+        "next": "7"
+    }
+  }

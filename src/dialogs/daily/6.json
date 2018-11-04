@@ -1,0 +1,31 @@
+{
+    "main": {
+        "channel": "greenit",
+        "text": "Hello :smiley:",
+        "next": "2"
+    },
+    "2": {
+        "wait": "2000",
+        "channel": "greenit",
+        "text": "Aujourd'hui, 50% des sites web sont en PHP.",
+        "next": "3"
+    },
+    "3": {
+        "wait": "3000",
+        "channel": "greenit",
+        "text": "Depuis pas mal d'années, cette technologie souffre pourtant d'une mauvaise presse concernant ces performances, à juste titre d'ailleurs.",
+        "next": "4"
+    },
+    "4": {
+        "wait": "4000",
+        "channel": "greenit",
+        "text": "Néanmoins, il faut savoir que la version 7 de PHP a fait beaucoup d'efforts. Alors plutôt que d'envisager une réécriture de votre projet en Java ou Ruby... faites plutôt une montée de version.",
+        "next": "5"
+    },
+    "5": {
+        "wait": "5000",
+        "channel": "greenit",
+        "text" : "Plus d'info ici : https://www.youtube.com/watch?v=rKXFgWP-2xQ&feature=youtu.be&t=908",
+        "next": "6"
+    }
+}
