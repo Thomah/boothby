@@ -41,7 +41,7 @@ function resume() {
         Db.insertInDb('global', 'state', data);
       }
       if(data.daily < 4) {
-        Speach.processDialog('daily', data.daily);
+        Speach.processDialog('daily', data.daily.toString());
         data.daily++;
       }
       Db.updateInDb('global', 'state', data);
@@ -80,7 +80,7 @@ app.post("/callback", function(req, res) {
 app.listen(8080);
  
 // Main Scheduler
-var cron = '42 10 * * 1-5';
+var cron = '42 9 * * 1-5';
 var j = Schedule.scheduleJob(cron, function(fireDate){
   console.log('This job was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
   resume();
