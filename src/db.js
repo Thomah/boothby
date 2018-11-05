@@ -1,6 +1,6 @@
 require("dotenv").config();
 const MongoClient = require("mongodb").MongoClient;
-const DB_NAME = 'heroku_5fr6w04p';
+const DB_NAME = 'heroku_lqkdtf3k';
 
 (function() {
 

@@ -65,6 +65,11 @@ app.get('/setup', function(req, res) {
   res.render("index");
 });
 
+app.get('/resume', function(req, res) {
+  resume();
+  res.render("index");
+});
+
 app.get('/publish/:collection/:name', function(req, res) {
   init(function() {
     Speach.processDialog(req.params.collection, req.params.name);
