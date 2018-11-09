@@ -40,10 +40,8 @@ function resume() {
         data.name = 'state';
         Db.insertInDb('global', 'state', data);
       }
-      if(data.daily < 4) {
-        Speach.processDialog('daily', data.daily.toString());
-        data.daily++;
-      }
+      Speach.processDialog('daily', data.daily.toString());
+      data.daily++;
       Db.updateInDb('global', 'state', data);
     });
   });
