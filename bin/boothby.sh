@@ -3,8 +3,8 @@
 function d_start ()
 { 
 	echo "Boothby: starting service"
-	BASEDIR=$(dirname "$0")
-	cd "$BASEDIR" && npm start &
+	BASEDIR=$(dirname "$0")/..
+	cd "$BASEDIR" && .bin/ setenv.sh && node src/index.js &
     sleep 5
 }
  

@@ -1,67 +1,64 @@
-require("dotenv").config();
-const MongoClient = require("mongodb").MongoClient;
-const DB_NAME = 'heroku_lqkdtf3k';
+const mongodb = require("mongodb");
+const DB_NAME = "heroku_lqkdtf3k";
+const MONGODB_URI = process.env.MONGODB_URI;
+var dbo;
 
-(function() {
+exports.init = function() {
+  mongodb.MongoClient.connect(
+    MONGODB_URI,
+    { useNewUrlParser: true },
+    function(err, database) {
+      if (err) throw err;
+      dbo = database.db(DB_NAME);
+    }
+  );
+};
 
-  var readDb = function(collection, name, callback) {
-    MongoClient.connect(
-      process.env.MONGODB_URI,
-      { useNewUrlParser: true },
-      function(error, database) {
-        if (error) console.log(error);
-        const db = database.db(DB_NAME);
-        db.collection(collection).findOne({ name: name }, function(
-          err,
-          result
-        ) {
-          if (error) throw error;
-          database.close();
-          callback(result);
-        });
-      }
-    );
-  };
+exports.delete = function(collection, id, callback) {
+  dbo
+    .collection(collection)
+    .deleteOne({ _id: new mongodb.ObjectId(id) }, function(err, result) {
+      if (err) throw err;
+      callback(result);
+    });
+};
 
-  var updateInDb = function(collection, name, content) {
-    MongoClient.connect(
-      process.env.MONGODB_URI,
-      { useNewUrlParser: true },
-      function(error, database) {
-        if (error) console.log(error);
-        const db = database.db(DB_NAME);
-        db.collection(collection).updateOne(
-          { name: name },
-          {
-            $set: content
-          },
-          function(error, results) {
-            if (error) throw error;
-            database.close();
-          }
-        );
-      }
-    );
-  };
+exports.read = function(collection, name, callback) {
+  dbo.collection(collection).findOne({ name: name }, function(err, result) {
+    if (err) throw err;
+    callback(result);
+  });
+};
 
-  var insertInDb = function(collection, name, content) {
-    content.name = name;
-    MongoClient.connect(
-      process.env.MONGODB_URI,
-      { useNewUrlParser: true },
-      function(error, database) {
-        if (error) console.log(error);
-        const db = database.db(DB_NAME);
-        db.collection(collection).insertOne(content, function(error, results) {
-          if (error) throw error;
-          database.close();
-        });
-      }
-    );
-  };
+exports.update = function(collection, name, content) {
+  dbo.collection(collection).updateOne(
+    { name: name },
+    {
+      $set: content
+    },
+    function(error, results) {
+      if (error) throw error;
+    }
+  );
+};
 
-  module.exports.readDb = readDb;
-  module.exports.updateInDb = updateInDb;
-  module.exports.insertInDb = insertInDb;
+exports.insert = function(collection, name, content) {
+  content.name = name;
+  dbo.collection(collection).insertOne(content, function(error, results) {
+    if (error) throw error;
+  });
+};
 
-})();
+exports.list = function(collection, callback) {
+  dbo
+    .collection(collection)
+    .find({})
+    .toArray(function(err, result) {
+      if (err) throw err;
+      callback(result);
+    });
+};
+
+exports.close = function() {
+  dbo.close();
+};
