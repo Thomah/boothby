@@ -1,91 +1,45 @@
-require('dotenv').config();
-const { WebClient } = require('@slack/client');
-const Express = require('express');
-const BodyParser = require('body-parser');
-const Schedule = require('node-schedule');
-const Db = require('./db');
-const Speach = require('./speach');
+const http = require("http");
+const schedule = require("node-schedule");
+const api = require("./api.js");
+const db = require("./db.js");
+const router = require("./router.js");
+const slack = require("./slack.js");
 
-// Load Express Framework
-var app = Express();
-app.use(BodyParser.json());
-app.use(BodyParser.urlencoded({ extended: true }));
+const ROOT_URL = process.env.ROOT_URL;
 
-// Load Slack Web Client
-const HttpsProxyAgent = require("https-proxy-agent");
-var webAdditionalParams;
-if (process.env.HTTP_PROXY) {
-  webAdditionalParams = { agent: new HttpsProxyAgent(process.env.HTTP_PROXY) };
-} else {
-  webAdditionalParams = {};
-}
-const web = new WebClient(process.env.SLACK_TOKEN, webAdditionalParams);
+var server = http.createServer(function(request, response) {
+  router.serve(request, response);
+});
 
-function init(callback) {
-  web.api
-    .test()
-    .then(() => {
-      Speach.Speach(web);
-      callback();
-    })
-    .catch(console.error);
-}
-
-function resume() {
-  init(function() {
-    Db.readDb('global', 'state', function(data) {
-      if(data === null) {
-        data = {};
-        data.daily = 1;
-        data.name = 'state';
-        Db.insertInDb('global', 'state', data);
-      }
-      Speach.processDialog('daily', data.daily.toString());
-      data.daily++;
-      Db.updateInDb('global', 'state', data);
-    });
+var io = require("socket.io").listen(server);
+io.sockets.on("connection", function(socket) {
+  console.log("Socket connected");
+  socket.on("disconnect", function() {
+    console.log("Socket disconnected");
   });
-}
-
-// Load View Engine
-app.set('views', __dirname + '/views');
-app.set('view engine', 'pug');
-
-// Home Route
-app.get('/', function(req, res) {
-  init(() => {});
-  res.render('index');
-});
-app.get('/setup', function(req, res) {
-  init(function() {
-    Speach.loadInDb();
-  });
-  res.render("index");
 });
 
-app.get('/resume', function(req, res) {
-  resume();
-  res.render("index");
+slack.initRtm(io);
+db.init();
+
+server.on("close", function() {
+  console.log(" Stopping ...");
+  db.close();
 });
 
-app.get('/publish/:collection/:name', function(req, res) {
-  init(function() {
-    Speach.processDialog(req.params.collection, req.params.name);
-  });
-  res.render("index");
-});
-app.post("/callback", function(req, res) {
-  res.send("OK");
-  init();
-  Speach.survey(req);
+process.on("SIGINT", function() {
+  server.close();
 });
 
-app.listen(8080);
- 
 // Main Scheduler
-var cron = '42 9 * * 1-5';
-var j = Schedule.scheduleJob(cron, function(fireDate){
-  console.log('This job was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
-  resume();
+var cron = "42 9 * * 1,3,5";
+schedule.scheduleJob(cron, function(fireDate) {
+  console.log(
+    `This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`
+  );
+  api.resumeDialogs();
 });
 console.log(`CRON set : ${cron} on resume()`);
+
+server.listen(8080);
+console.log("Server running at " + ROOT_URL);

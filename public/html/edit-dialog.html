@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Edit Dialog</title>
+    <style>
+      table,
+      th,
+      td {
+        border: 1px solid black;
+      }
+
+      label,
+      #name,
+      #save {
+        margin-right: 0.5em;
+      }
+
+      input {
+        width: 5em;
+      }
+    </style>
+  </head>
+
+  <body onload="refresh()">
+    <h1>Edit Dialog</h1>
+    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a></p>
+    <hr />
+    <label for="name">Name</label
+    ><input id="name" type="text" name="name" /><button id="save">
+      Save this dialog
+    </button>
+    <hr />
+    <table id="edit-dialog">
+      <thead>
+        <tr>
+          <th>Channel</th>
+          <th>Wait</th>
+          <th>Message</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4"><button>+</button></th>
+        </tr>
+      </tfoot>
+    </table>
+    <script src="edit-dialog.js"></script>
+  </body>
+</html>
