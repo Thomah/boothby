@@ -14,6 +14,15 @@ function refresh() {
   xhr.send();
 }
 
+function save() {
+  var newName = document.getElementById("new-name").value;
+  var oldName = document.getElementById("old-name").value;
+  console.log(`New Name : ${newName}`);
+  console.log(`Old Name : ${oldName}`);
+  doc_saveDialog();
+  var xhr = new XMLHttpRequest();
+};
+
 var deleteMessage = function deleteMessage() {
   var xhr = new XMLHttpRequest();
   var textButton = this.firstChild.parentElement;
@@ -72,7 +81,8 @@ function doc_refreshDialog(dialog) {
     .getElementsByTagName("tbody")[0];
 
   // Add Value to name field
-  document.getElementById("name").value = dialog.name;
+  document.getElementById("old-name").value = dialog.name;
+  document.getElementById("new-name").value = dialog.name;
 
   // Hide table when updating it (Green IT Best Practice)
   dialogsTable.style.display = "none";
@@ -88,4 +98,21 @@ function doc_refreshDialog(dialog) {
 
   // Show table when update is finished
   dialogsTable.style.display = "table-row-group";
+}
+
+function doc_saveDialog() {
+
+  var dialog = {};
+
+  var dialogsTable = document
+    .getElementById("edit-dialog")
+    .getElementsByTagName("tbody")[0];
+
+  // Delete previous entries
+  var rowCount = dialogsTable.childNodes.length;
+  for (var x = 0 ; x < rowCount ; x++) {
+    console.log(dialogsTable.childNodes[x]);
+  }
+
+  return dialog;
 }
