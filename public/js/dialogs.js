@@ -1,3 +1,17 @@
+function add() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "/api/dialogs");
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      var json = JSON.parse(this.responseText);
+      doc_refreshDialogs(json);
+    } else {
+      alert("Request failed.  Returned status of " + xhr.status);
+    }
+  };
+  xhr.send();
+}
+
 function refresh() {
   var xhr = new XMLHttpRequest();
   xhr.open("GET", "/api/dialogs");

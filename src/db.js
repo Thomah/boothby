@@ -44,8 +44,16 @@ exports.update = function(collection, name, content) {
 
 exports.insert = function(collection, name, content) {
   content.name = name;
-  dbo.collection(collection).insertOne(content, function(error, results) {
+  dbo.collection(collection).insertOne(content, function(error, result) {
     if (error) throw error;
+  });
+};
+
+exports.insert = function(collection, name, content, callback) {
+  content.name = name;
+  dbo.collection(collection).insertOne(content, function(error, result) {
+    if (error) throw error;
+    callback(result);
   });
 };
 
