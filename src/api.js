@@ -22,6 +22,15 @@ var speakRecurse = function(dialog, currentId) {
   }, dialog[currentId].wait);
 };
 
+exports.createDialog = function(callback) {
+  var dialog = {
+    "main": {
+      "text": "first message"
+    }
+  };
+  db.insert("dialogs-daily", "new-dialog", dialog, callback);
+}
+
 exports.deleteMessage = function(mesageId, callback) {
   db.delete("messages", mesageId, callback);
 };
@@ -89,7 +98,7 @@ exports.interactive = function(rawPayload) {
 };
 
 exports.listDialogs = function(callback) {
-  db.list("dialogs/daily", callback);
+  db.list("dialogs-daily", callback);
 };
 
 exports.listChannels = function(callback) {
@@ -109,7 +118,7 @@ exports.openIm = function(user, callback) {
 };
 
 exports.processDialog = function(collection, name) {
-  db.read(`dialogs/${collection}`, name, function(data) {
+  db.read(`dialogs-${collection}`, name, function(data) {
     if (data !== null) {
       speakRecurse(data, "main");
     }

@@ -56,28 +56,60 @@ var routeStatic = function(request, response) {
 };
 
 var routeApi = function(request, response) {
+
   if (request.url.startsWith("/api/dialogs")) {
     var regex_play = /^\/api\/dialogs\/([^/]+)\/play$/;
     var regex_dialogName = /^\/api\/dialogs\/([^/]+)$/;
+    
+    // api/dialogs
     if (request.url.match(/^\/api\/dialogs\/?$/) !== null) {
-      response.writeHead(200, { "Content-Type": "application/json" });
-      api.listDialogs(function(data) {
-        response.write(JSON.stringify(data));
+
+      // GET : list dialogs
+      if (request.method === "GET") {
+        response.writeHead(200, { "Content-Type": "application/json" });
+        api.listDialogs(function(data) {
+          response.write(JSON.stringify(data));
+          response.end();
+        });
+      } 
+      
+      // POST : create new dialog
+      else if (request.method === "POST") {
+        response.writeHead(200, { "Content-Type": "application/json" });
+        api.createDialog(function(data) {
+          response.write(JSON.stringify(data));
+          response.end();
+        });
+      }
+        
+        // Otherwise 404
+      else {
+        response.writeHead(404, { "Content-Type": "application/octet-stream" });
         response.end();
-      });
-    } else if (request.url.match(regex_play) !== null) {
+      }
+
+    }
+    
+    // api/dialogs/play
+    else if (request.url.match(regex_play) !== null) {
       var dialogName = request.url.match(regex_play)[1];
       api.processDialog("daily", dialogName);
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end();
-    } else if (request.url.match(regex_dialogName) !== null) {
+    } 
+    
+    // api/dialogs/name
+    else if (request.url.match(regex_dialogName) !== null) {
       var dialogName = request.url.match(regex_dialogName)[1];
       response.writeHead(200, { "Content-Type": "application/json" });
-      api.getObjectInDb("dialogs/daily", dialogName, function(data) {
+      api.getObjectInDb("dialogs-daily", dialogName, function(data) {
         response.write(JSON.stringify(data));
         response.end();
       });
-    } else {
+    } 
+    
+    // Otherwise 404
+    else {
       response.writeHead(404, { "Content-Type": "application/octet-stream" });
       response.end();
     }
