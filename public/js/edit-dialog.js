@@ -23,14 +23,17 @@ function save() {
   var xhr = new XMLHttpRequest();
 };
 
-var deleteMessage = function deleteMessage() {
-  var xhr = new XMLHttpRequest();
-  var textButton = this.firstChild.parentElement;
-  alert("todo");
+var addMessage = function addMessage() {
+  doc_addMessage();
 };
 
-function doc_refreshDialogRecurse(table, dialog, currentId) {
-  var message = dialog[currentId];
+var deleteMessage = function deleteMessage() {
+  var row = this.firstChild.parentElement.parentElement.parentElement.parentElement;
+  var table = row.parentElement;
+  table.removeChild(row);
+};
+
+function doc_addRow(table, message) {
   var row = document.createElement("tr");
 
   // Channel
@@ -62,17 +65,42 @@ function doc_refreshDialogRecurse(table, dialog, currentId) {
   cellContent = document.createElement("span");
   var button = document.createElement("button");
   button.appendChild(document.createTextNode("Delete"));
-  button.id = currentId;
+  button.id = message.id;
   button.onclick = deleteMessage;
   cellContent.appendChild(button);
   cell.appendChild(cellContent);
   row.appendChild(cell);
 
   table.appendChild(row);
+}
 
-  if (dialog[currentId].next !== undefined) {
-    doc_refreshDialogRecurse(table, dialog, dialog[currentId].next);
+function doc_refreshDialogRecurse(table, dialog, currentId) {
+  var message = dialog[currentId];
+  message.id = currentId;
+  doc_addRow(table, message);
+
+  if (message.next !== undefined) {
+    doc_refreshDialogRecurse(table, dialog, message.next);
   }
+}
+
+function doc_addMessage() {
+  var dialogsTable = document
+    .getElementById("edit-dialog")
+    .getElementsByTagName("tbody")[0];
+
+  // Hide table when updating it (Green IT Best Practice)
+  dialogsTable.style.display = "none";
+
+  var message = {
+    channel: "",
+    wait: 0,
+    message: ""
+  };
+  doc_addRow(dialogsTable, message);
+  
+  // Show table when update is finished
+  dialogsTable.style.display = "table-row-group";
 }
 
 function doc_refreshDialog(dialog) {
@@ -80,9 +108,10 @@ function doc_refreshDialog(dialog) {
     .getElementById("edit-dialog")
     .getElementsByTagName("tbody")[0];
 
-  // Add Value to name field
+  // Add Value to simple fields
   document.getElementById("old-name").value = dialog.name;
   document.getElementById("new-name").value = dialog.name;
+  document.getElementById("category").value = dialog.category;
 
   // Hide table when updating it (Green IT Best Practice)
   dialogsTable.style.display = "none";

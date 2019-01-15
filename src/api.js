@@ -28,11 +28,12 @@ exports.createDialog = function(callback) {
       "text": "first message"
     }
   };
-  db.insert("dialogs-daily", "new-dialog", dialog, callback);
+  db.insert("dialogs", "new-dialog", dialog, callback);
 }
 
-exports.deleteMessage = function(mesageId, callback) {
-  db.delete("messages", mesageId, callback);
+exports.deleteObjectInDb = function(collection, id, callback) {
+  console.log("delete " + collection + " " + id);
+  db.delete(collection, id, callback);
 };
 
 exports.getObjectInDb = function(collection, name, callback) {
@@ -98,7 +99,7 @@ exports.interactive = function(rawPayload) {
 };
 
 exports.listDialogs = function(callback) {
-  db.list("dialogs-daily", callback);
+  db.list("dialogs", callback);
 };
 
 exports.listChannels = function(callback) {
@@ -118,7 +119,7 @@ exports.openIm = function(user, callback) {
 };
 
 exports.processDialog = function(collection, name) {
-  db.read(`dialogs-${collection}`, name, function(data) {
+  db.read('dialogs', name, function(data) {
     if (data !== null) {
       speakRecurse(data, "main");
     }

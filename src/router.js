@@ -5,6 +5,7 @@ const api = require("./api.js");
 
 const resourceFolder = {
   ".html": "./public/html",
+  ".css": "./public/css",
   ".js": "./public/js",
   ".ico": "./public/img"
 };
@@ -90,22 +91,42 @@ var routeApi = function(request, response) {
 
     }
     
+    // api/dialogs/name
+    else if (request.url.match(regex_dialogName) !== null) {
+      var dialogName = request.url.match(regex_dialogName)[1];
+
+      // GET : get a dialog
+      if (request.method === "GET") {
+        response.writeHead(200, { "Content-Type": "application/json" });
+        api.getObjectInDb("dialogs", dialogName, function(data) {
+          response.write(JSON.stringify(data));
+          response.end();
+        });
+      }
+      
+      // DELETE : delete a dialog
+      else if (request.method === "DELETE") {
+        response.writeHead(200, { "Content-Type": "application/json" });
+        api.deleteObjectInDb("dialogs", dialogName, function(data) {
+          response.write(JSON.stringify(data));
+          response.end();
+        });
+      }
+        
+        // Otherwise 404
+      else {
+        response.writeHead(404, { "Content-Type": "application/octet-stream" });
+        response.end();
+      }
+
+    } 
+
     // api/dialogs/play
     else if (request.url.match(regex_play) !== null) {
       var dialogName = request.url.match(regex_play)[1];
       api.processDialog("daily", dialogName);
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end();
-    } 
-    
-    // api/dialogs/name
-    else if (request.url.match(regex_dialogName) !== null) {
-      var dialogName = request.url.match(regex_dialogName)[1];
-      response.writeHead(200, { "Content-Type": "application/json" });
-      api.getObjectInDb("dialogs-daily", dialogName, function(data) {
-        response.write(JSON.stringify(data));
-        response.end();
-      });
     } 
     
     // Otherwise 404
@@ -156,7 +177,7 @@ var routeApi = function(request, response) {
       var regex_delete = /^\/api\/simple-messages\/([^/]+)\/?$/;
       if (request.url.match(regex_delete) !== null) {
         var messageId = request.url.match(regex_delete)[1];
-        api.deleteMessage(messageId, function(data) {
+        api.deleteObjectInDb("messages", messageId, function(data) {
           response.writeHead(200, { "Content-Type": "application/json" });
           response.end();
         });

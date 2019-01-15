@@ -3,31 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <title>Edit Dialog</title>
-    <style>
-      table,
-      th,
-      td {
-        border: 1px solid black;
-      }
-
-      label,
-      #name,
-      #save {
-        margin-right: 0.5em;
-      }
-
-      input {
-        width: 5em;
-      }
-    </style>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="boothby.css" />
   </head>
 
   <body onload="refresh()">
     <p><a href="index.html">Home</a> <a href="dialogs.html">Dialogs</a></p>
     <hr />
     <input id="old-name" type="hidden" name="old-name" />
-    <label for="new-name">Name</label
-    ><input id="new-name" type="text" name="new-name" /><button id="save" onclick="save()">
+    <label for="category">Category</label><input id="category" type="text" name="category" />
+    <label for="new-name">Name</label><input id="new-name" type="text" name="new-name" />
+    <button id="save" onclick="save()">
       Save this dialog
     </button>
     <hr />
@@ -43,7 +29,7 @@
       <tbody></tbody>
       <tfoot>
         <tr>
-          <th colspan="4"><button>+</button></th>
+          <th colspan="4"><button onclick="addMessage()">+</button></th>
         </tr>
       </tfoot>
     </table>

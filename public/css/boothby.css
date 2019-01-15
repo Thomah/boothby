@@ -1,0 +1,32 @@
+/* GLOBAL */
+table {
+    width: 100%;
+}
+
+table,
+th,
+td {
+  border: 1px solid black;
+}
+
+input {
+  width: 5em;
+}
+
+/* INDEX */
+#channels-and-users ul li {
+    display: inline-block;
+    margin-right: 1em;
+}
+
+/* DIALOGS */
+#dialogs td span a {
+    margin: 0.5em;
+}
+
+/* EDIT DIALOGS */
+label,
+#name,
+#save {
+  margin-right: 0.5em;
+}
