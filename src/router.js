@@ -91,28 +91,52 @@ var routeApi = function(request, response) {
 
     }
     
-    // api/dialogs/name
+    // api/dialogs/<id>/play
+    else if (request.url.match(regex_play) !== null) {
+      var dialogId = request.url.match(regex_play)[1];
+      api.processDialog("dialogs", dialogId);
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end();
+    } 
+    
+    // api/dialogs/<id>
     else if (request.url.match(regex_dialogName) !== null) {
-      var dialogName = request.url.match(regex_dialogName)[1];
+      var dialogId = request.url.match(regex_dialogName)[1];
 
       // GET : get a dialog
       if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        api.getObjectInDb("dialogs", dialogName, function(data) {
+        api.getObjectInDb("dialogs", dialogId, function(data) {
           response.write(JSON.stringify(data));
           response.end();
+        });
+      }
+      
+      // PUT : update a dialog
+      else if (request.method === "PUT") {
+        response.writeHead(200, { "Content-Type": "application/json" });
+        let body = "";
+        request.on("data", chunk => {
+          body += chunk.toString();
+        });
+        request.on("end", () => {
+          var dialog = JSON.parse(body);
+          api.updateObjectInDb("dialogs", dialogId, dialog, function(data) {
+            response.write(JSON.stringify(data));
+            response.end();
+          });
         });
       }
       
       // DELETE : delete a dialog
       else if (request.method === "DELETE") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        api.deleteObjectInDb("dialogs", dialogName, function(data) {
+        api.deleteObjectInDb("dialogs", dialogId, function(data) {
           response.write(JSON.stringify(data));
           response.end();
         });
       }
-        
+      
         // Otherwise 404
       else {
         response.writeHead(404, { "Content-Type": "application/octet-stream" });
@@ -121,14 +145,6 @@ var routeApi = function(request, response) {
 
     } 
 
-    // api/dialogs/play
-    else if (request.url.match(regex_play) !== null) {
-      var dialogName = request.url.match(regex_play)[1];
-      api.processDialog("daily", dialogName);
-      response.writeHead(200, { "Content-Type": "application/json" });
-      response.end();
-    } 
-    
     // Otherwise 404
     else {
       response.writeHead(404, { "Content-Type": "application/octet-stream" });

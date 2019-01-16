@@ -28,7 +28,8 @@ function refresh() {
 var play = function play() {
   var xhr = new XMLHttpRequest();
   var textButton = this.firstChild.parentElement;
-  xhr.open("GET", `/api/dialogs/${textButton.id.replace("play-", "")}/play`);
+  var row = textButton.parentElement.parentElement.parentElement;
+  xhr.open("GET", `/api/dialogs/${row.id}/play`);
   xhr.onload = function() {
     if (xhr.status === 200) {
       textButton.style["backgroundColor"] = "greenyellow";
@@ -42,17 +43,15 @@ var play = function play() {
 
 var edit = function edit() {
   var textButton = this.firstChild.parentElement;
-  window.location.href = `/edit-dialog.html?name=${textButton.id.replace(
-    "edit-",
-    ""
-  )}`;
+  var row = textButton.parentElement.parentElement.parentElement;
+  window.location.href = `/edit-dialog.html?id=${row.id}`;
 };
 
 var remove = function remove() {
   var xhr = new XMLHttpRequest();
   var textButton = this.firstChild.parentElement;
   var row = textButton.parentElement.parentElement.parentElement;
-  xhr.open("DELETE", `/api/dialogs/${row.id.replace("remove-", "")}`);
+  xhr.open("DELETE", `/api/dialogs/${row.id}`);
   xhr.onload = function() {
     if (xhr.status === 200) {
       var table = row.parentElement;
@@ -103,21 +102,18 @@ function doc_refreshDialogs(dialogs) {
     // -- Play Button
     button = document.createElement("button");
     button.appendChild(document.createTextNode("Play"));
-    button.id = `play-${dialog.name}`;
     button.onclick = play;
     cellSpan.appendChild(button);
 
     // -- Edit Button
     button = document.createElement("button");
     button.appendChild(document.createTextNode("Edit"));
-    button.id = `edit-${dialog.name}`;
     button.onclick = edit;
     cellSpan.appendChild(button);
 
     // -- Delete Button
     button = document.createElement("button");
     button.appendChild(document.createTextNode("Delete"));
-    button.id = `remove-${dialog.name}`;
     button.onclick = remove;
     cellSpan.appendChild(button);
 
