@@ -15,22 +15,35 @@ exports.init = function() {
 };
 
 exports.delete = function(collection, id, callback) {
-  dbo
-    .collection(collection)
+  dbo.collection(collection)
     .deleteOne({ _id: new mongodb.ObjectId(id) }, function(err, result) {
       if (err) throw err;
       callback(result);
     });
 };
 
-exports.read = function(collection, name, callback) {
-  dbo.collection(collection).findOne({ name: name }, function(err, result) {
-    if (err) throw err;
-    callback(result);
-  });
+exports.read = function(collection, id, callback) {
+  dbo.collection(collection)
+    .findOne({ _id: new mongodb.ObjectId(id) }, function(err, result) {
+      if (err) throw err;
+      callback(result);
+    }
+  );
 };
 
-exports.update = function(collection, name, content) {
+exports.update = function(collection, id, content, callback) {
+  delete content._id;
+  dbo.collection(collection).updateOne(
+    { _id: new mongodb.ObjectId(id) },
+    { $set: content },
+    function(error, results) {
+      if (error) throw error;
+      callback(results);
+    }
+  );
+};
+
+exports.updateByName = function(collection, name, content) {
   dbo.collection(collection).updateOne(
     { name: name },
     {

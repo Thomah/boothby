@@ -1,8 +1,8 @@
 function refresh() {
   var url = new URL(window.location.href);
-  var name = url.searchParams.get("name");
+  var id = url.searchParams.get("id");
   var xhr = new XMLHttpRequest();
-  xhr.open("GET", `/api/dialogs/${name}`);
+  xhr.open("GET", `/api/dialogs/${id}`);
   xhr.onload = function() {
     if (xhr.status === 200) {
       var json = JSON.parse(this.responseText);
@@ -28,7 +28,7 @@ function save() {
       alert("Request failed.  Returned status of " + xhr.status);
     }
   }
-  xhr.send(dialog);
+  xhr.send(JSON.stringify(dialog));
 };
 
 var addMessage = function addMessage() {
@@ -87,7 +87,6 @@ function doc_refreshDialogRecurse(table, dialog, currentId) {
   var message = dialog[currentId];
   message.id = currentId;
   doc_addRow(table, message);
-
   if (message.next !== undefined) {
     doc_refreshDialogRecurse(table, dialog, message.next);
   }
@@ -145,6 +144,7 @@ function doc_getDialog() {
 
   // Get global data
   dialog.name = document.getElementById("new-name").value;
+  dialog.category = document.getElementById("category").value;
   dialog._id = document.getElementById("id").value;
 
   var dialogsTable = document
@@ -159,9 +159,11 @@ function doc_getDialog() {
     dialog[x] = {
       channel: row.getElementsByClassName("channel")[0].value,
       wait: parseInt(row.getElementsByClassName("wait")[0].value),
-      text: row.getElementsByClassName("text")[0].value
+      text: row.getElementsByClassName("text")[0].value,
+      next: `${x + 1}`
     };
   }
+  delete dialog[x-1].next;
 
   return dialog;
 }

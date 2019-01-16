@@ -2,6 +2,7 @@ const db = require("./db.js");
 const slack = require("./slack.js");
 
 var speakRecurse = function(dialog, currentId) {
+  console.log(dialog[currentId]);
   if (dialog[currentId].wait === undefined) {
     dialog[currentId].wait = 0;
   }
@@ -39,9 +40,13 @@ exports.deleteObjectInDb = function(collection, id, callback) {
   db.delete(collection, id, callback);
 };
 
-exports.getObjectInDb = function(collection, name, callback) {
-  db.read(collection, name, callback);
+exports.getObjectInDb = function(collection, id, callback) {
+  db.read(collection, id, callback);
 };
+
+exports.updateObjectInDb = function(collection, id, object, callback) {
+  db.update(collection, id, object, callback);
+}
 
 exports.interactive = function(rawPayload) {
   var payload = JSON.parse(rawPayload);
@@ -85,7 +90,7 @@ exports.interactive = function(rawPayload) {
       data.values[data.users[payload.user.id]]--;
       data.users[payload.user.id] = undefined;
     }
-    db.update("surveys", payload.actions[0].name, data);
+    db.updateByName("surveys", payload.actions[0].name, data);
 
     for (var id in data.texts) {
       newMessage.attachments[0].actions[data.actions[id]].text =
@@ -121,10 +126,10 @@ exports.openIm = function(user, callback) {
   slack.openIm(user, callback);
 };
 
-exports.processDialog = function(collection, name) {
-  db.read('dialogs', name, function(data) {
+exports.processDialog = function(collection, id) {
+  db.read(collection, id, function(data) {
     if (data !== null) {
-      speakRecurse(data, "main");
+      speakRecurse(data, "0");
     }
   });
 };
@@ -139,7 +144,7 @@ exports.resumeDialogs = function() {
     }
     this.processDialog("daily", data.daily.toString());
     data.daily++;
-    db.update("global", "state", data);
+    db.updateByName("global", "state", data);
   });
 };
 
