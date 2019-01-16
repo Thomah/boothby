@@ -15,12 +15,20 @@ function refresh() {
 }
 
 function save() {
-  var newName = document.getElementById("new-name").value;
-  var oldName = document.getElementById("old-name").value;
-  console.log(`New Name : ${newName}`);
-  console.log(`Old Name : ${oldName}`);
-  doc_saveDialog();
+  var dialog = doc_getDialog();
   var xhr = new XMLHttpRequest();
+  var textButton = document.getElementById("save");
+  xhr.open("PUT", `/api/dialogs/${dialog._id}`, true);
+  xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
+  xhr.onload = function () {
+    if (xhr.status === 200) {
+      textButton.style["backgroundColor"] = "greenyellow";
+    } else {
+      textButton.style["backgroundColor"] = "red";
+      alert("Request failed.  Returned status of " + xhr.status);
+    }
+  }
+  xhr.send(dialog);
 };
 
 var addMessage = function addMessage() {
@@ -40,6 +48,7 @@ function doc_addRow(table, message) {
   var cell = document.createElement("td");
   var cellContent = document.createElement("input");
   cellContent.value = message.channel;
+  cellContent.className = "channel";
   cell.appendChild(cellContent);
   row.appendChild(cell);
 
@@ -48,7 +57,7 @@ function doc_addRow(table, message) {
   cellContent = document.createElement("input");
   cellContent.value = message.wait;
   cellContent.type = "number";
-  cellContent.setAttribute("max", "5");
+  cellContent.className = "wait";
   cell.appendChild(cellContent);
   row.appendChild(cell);
 
@@ -56,7 +65,8 @@ function doc_addRow(table, message) {
   cell = document.createElement("td");
   cellContent = document.createElement("textarea");
   cellContent.value = message.text;
-  cellContent.cols = "90";
+  cellContent.className = "text";
+  cellContent.cols = "120";
   cell.appendChild(cellContent);
   row.appendChild(cell);
 
@@ -65,7 +75,6 @@ function doc_addRow(table, message) {
   cellContent = document.createElement("span");
   var button = document.createElement("button");
   button.appendChild(document.createTextNode("Delete"));
-  button.id = message.id;
   button.onclick = deleteMessage;
   cellContent.appendChild(button);
   cell.appendChild(cellContent);
@@ -109,6 +118,7 @@ function doc_refreshDialog(dialog) {
     .getElementsByTagName("tbody")[0];
 
   // Add Value to simple fields
+  document.getElementById("id").value = dialog._id;
   document.getElementById("old-name").value = dialog.name;
   document.getElementById("new-name").value = dialog.name;
   document.getElementById("category").value = dialog.category;
@@ -123,15 +133,19 @@ function doc_refreshDialog(dialog) {
   }
 
   // Append new entries
-  doc_refreshDialogRecurse(dialogsTable, dialog, "main");
+  doc_refreshDialogRecurse(dialogsTable, dialog, "0");
 
   // Show table when update is finished
   dialogsTable.style.display = "table-row-group";
 }
 
-function doc_saveDialog() {
+function doc_getDialog() {
 
   var dialog = {};
+
+  // Get global data
+  dialog.name = document.getElementById("new-name").value;
+  dialog._id = document.getElementById("id").value;
 
   var dialogsTable = document
     .getElementById("edit-dialog")
@@ -139,8 +153,14 @@ function doc_saveDialog() {
 
   // Delete previous entries
   var rowCount = dialogsTable.childNodes.length;
+  var row;
   for (var x = 0 ; x < rowCount ; x++) {
-    console.log(dialogsTable.childNodes[x]);
+    row = dialogsTable.childNodes[x];
+    dialog[x] = {
+      channel: row.getElementsByClassName("channel")[0].value,
+      wait: parseInt(row.getElementsByClassName("wait")[0].value),
+      text: row.getElementsByClassName("text")[0].value
+    };
   }
 
   return dialog;

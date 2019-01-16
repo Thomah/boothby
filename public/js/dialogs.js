@@ -51,10 +51,10 @@ var edit = function edit() {
 var remove = function remove() {
   var xhr = new XMLHttpRequest();
   var textButton = this.firstChild.parentElement;
-  xhr.open("DELETE", `/api/dialogs/${textButton.id.replace("remove-", "")}`);
+  var row = textButton.parentElement.parentElement.parentElement;
+  xhr.open("DELETE", `/api/dialogs/${row.id.replace("remove-", "")}`);
   xhr.onload = function() {
     if (xhr.status === 200) {
-      var row = textButton.parentElement.parentElement.parentElement;
       var table = row.parentElement;
       table.removeChild(row);
     } else {
@@ -84,6 +84,7 @@ function doc_refreshDialogs(dialogs) {
   for (dialogId in dialogs) {
     dialog = dialogs[dialogId];
     newEntry = document.createElement("tr");
+    newEntry.id = dialog._id;
 
     // Name
     cell = document.createElement("td");

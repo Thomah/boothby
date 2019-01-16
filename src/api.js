@@ -24,9 +24,12 @@ var speakRecurse = function(dialog, currentId) {
 
 exports.createDialog = function(callback) {
   var dialog = {
-    "main": {
+    "0": {
+      "channel": "greenit",
+      "wait": 0,
       "text": "first message"
-    }
+    },
+    "category": "daily"
   };
   db.insert("dialogs", "new-dialog", dialog, callback);
 }
