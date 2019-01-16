@@ -13,6 +13,10 @@ input {
   width: 5em;
 }
 
+#id {
+  width: 22ch;
+}
+
 /* INDEX */
 #channels-and-users ul li {
     display: inline-block;
