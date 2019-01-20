@@ -7,10 +7,11 @@
     <link rel="stylesheet" type="text/css" href="boothby.css" />
   </head>
 
-  <body onload="refresh()">
+  <body onload="reloadIHM()">
     <a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a>
     <hr />
-    <button onclick="refresh()">Refresh</button>
+    <button onclick="syncDb()">Sync DB</button
+    ><button onclick="reloadIHM()">Reload IHM</button>
     <hr />
     <div id="channels-and-users">
       <ul id="channels"></ul>

@@ -12,6 +12,7 @@ var server = http.createServer(function(request, response) {
 });
 
 var io = require("socket.io").listen(server);
+router.setSocket(io);
 io.sockets.on("connection", function(socket) {
   console.log("Socket connected");
   socket.on("disconnect", function() {

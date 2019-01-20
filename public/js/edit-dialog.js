@@ -19,24 +19,25 @@ function save() {
   var xhr = new XMLHttpRequest();
   var textButton = document.getElementById("save");
   xhr.open("PUT", `/api/dialogs/${dialog._id}`, true);
-  xhr.setRequestHeader('Content-type','application/json; charset=utf-8');
-  xhr.onload = function () {
+  xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+  xhr.onload = function() {
     if (xhr.status === 200) {
       textButton.style["backgroundColor"] = "greenyellow";
     } else {
       textButton.style["backgroundColor"] = "red";
       alert("Request failed.  Returned status of " + xhr.status);
     }
-  }
+  };
   xhr.send(JSON.stringify(dialog));
-};
+}
 
 var addMessage = function addMessage() {
   doc_addMessage();
 };
 
 var deleteMessage = function deleteMessage() {
-  var row = this.firstChild.parentElement.parentElement.parentElement.parentElement;
+  var row = this.firstChild.parentElement.parentElement.parentElement
+    .parentElement;
   var table = row.parentElement;
   table.removeChild(row);
 };
@@ -106,7 +107,7 @@ function doc_addMessage() {
     message: ""
   };
   doc_addRow(dialogsTable, message);
-  
+
   // Show table when update is finished
   dialogsTable.style.display = "table-row-group";
 }
@@ -139,7 +140,6 @@ function doc_refreshDialog(dialog) {
 }
 
 function doc_getDialog() {
-
   var dialog = {};
 
   // Get global data
@@ -154,7 +154,7 @@ function doc_getDialog() {
   // Delete previous entries
   var rowCount = dialogsTable.childNodes.length;
   var row;
-  for (var x = 0 ; x < rowCount ; x++) {
+  for (var x = 0; x < rowCount; x++) {
     row = dialogsTable.childNodes[x];
     dialog[x] = {
       channel: row.getElementsByClassName("channel")[0].value,
@@ -163,7 +163,7 @@ function doc_getDialog() {
       next: `${x + 1}`
     };
   }
-  delete dialog[x-1].next;
+  delete dialog[x - 1].next;
 
   return dialog;
 }

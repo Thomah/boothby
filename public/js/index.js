@@ -1,6 +1,22 @@
-function refresh() {
+function reloadIHM() {
   channelsAndIMs();
   listMessages();
+}
+
+function syncDb() {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/api/channelsAndIMs/refresh");
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      doc_addIncommingMessage({
+        ts: new Date().getTime(),
+        text: "SYNC STARTED"
+      });
+    } else {
+      alert(`Request failed.  Returned status of : ${xhr.status}`);
+    }
+  };
+  xhr.send();
 }
 
 function channelsAndIMs() {
@@ -109,7 +125,7 @@ function doc_refreshChannelsAndIMs(channelsAndIMs) {
   util_dropTable(conversationsList);
 
   // Append channels
-  var conversations = channelsAndIMs.channels.channels;
+  var conversations = channelsAndIMs.channels;
   var li, conversationId, conversation, a, text;
   for (conversationId in conversations) {
     conversation = conversations[conversationId];
