@@ -15,7 +15,8 @@ exports.init = function() {
 };
 
 exports.delete = function(collection, id, callback) {
-  dbo.collection(collection)
+  dbo
+    .collection(collection)
     .deleteOne({ _id: new mongodb.ObjectId(id) }, function(err, result) {
       if (err) throw err;
       callback(result);
@@ -23,24 +24,25 @@ exports.delete = function(collection, id, callback) {
 };
 
 exports.read = function(collection, id, callback) {
-  dbo.collection(collection)
+  dbo
+    .collection(collection)
     .findOne({ _id: new mongodb.ObjectId(id) }, function(err, result) {
       if (err) throw err;
       callback(result);
-    }
-  );
+    });
 };
 
 exports.update = function(collection, id, content, callback) {
   delete content._id;
-  dbo.collection(collection).updateOne(
-    { _id: new mongodb.ObjectId(id) },
-    { $set: content },
-    function(error, results) {
+  dbo
+    .collection(collection)
+    .updateOne({ _id: new mongodb.ObjectId(id) }, { $set: content }, function(
+      error,
+      results
+    ) {
       if (error) throw error;
       callback(results);
-    }
-  );
+    });
 };
 
 exports.updateByName = function(collection, name, content) {
@@ -51,6 +53,20 @@ exports.updateByName = function(collection, name, content) {
     },
     function(error, results) {
       if (error) throw error;
+    }
+  );
+};
+
+exports.upsert = function(collection, content, callback) {
+  dbo.collection(collection).updateOne(
+    { id: content.id },
+    {
+      $set: content
+    },
+    { upsert: true },
+    (error, result) => {
+      if (error) throw error;
+      callback(result);
     }
   );
 };

@@ -20,6 +20,7 @@ const mimeTypes = {
 var channels = undefined;
 var ims = [];
 var nbIMs = 0;
+var socket;
 
 var getFilePath = function(request) {
   var extname = String(path.extname(request.simpleUrl)).toLowerCase();
@@ -57,14 +58,12 @@ var routeStatic = function(request, response) {
 };
 
 var routeApi = function(request, response) {
-
   if (request.url.startsWith("/api/dialogs")) {
     var regex_play = /^\/api\/dialogs\/([^/]+)\/play$/;
     var regex_dialogName = /^\/api\/dialogs\/([^/]+)$/;
-    
+
     // api/dialogs
     if (request.url.match(/^\/api\/dialogs\/?$/) !== null) {
-
       // GET : list dialogs
       if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
@@ -72,8 +71,8 @@ var routeApi = function(request, response) {
           response.write(JSON.stringify(data));
           response.end();
         });
-      } 
-      
+      }
+
       // POST : create new dialog
       else if (request.method === "POST") {
         response.writeHead(200, { "Content-Type": "application/json" });
@@ -82,23 +81,22 @@ var routeApi = function(request, response) {
           response.end();
         });
       }
-        
-        // Otherwise 404
+
+      // Otherwise 404
       else {
         response.writeHead(404, { "Content-Type": "application/octet-stream" });
         response.end();
       }
-
     }
-    
+
     // api/dialogs/<id>/play
     else if (request.url.match(regex_play) !== null) {
       var dialogId = request.url.match(regex_play)[1];
       api.processDialog("dialogs", dialogId);
       response.writeHead(200, { "Content-Type": "application/json" });
       response.end();
-    } 
-    
+    }
+
     // api/dialogs/<id>
     else if (request.url.match(regex_dialogName) !== null) {
       var dialogId = request.url.match(regex_dialogName)[1];
@@ -111,7 +109,7 @@ var routeApi = function(request, response) {
           response.end();
         });
       }
-      
+
       // PUT : update a dialog
       else if (request.method === "PUT") {
         response.writeHead(200, { "Content-Type": "application/json" });
@@ -127,7 +125,7 @@ var routeApi = function(request, response) {
           });
         });
       }
-      
+
       // DELETE : delete a dialog
       else if (request.method === "DELETE") {
         response.writeHead(200, { "Content-Type": "application/json" });
@@ -136,40 +134,71 @@ var routeApi = function(request, response) {
           response.end();
         });
       }
-      
-        // Otherwise 404
+
+      // Otherwise 404
       else {
         response.writeHead(404, { "Content-Type": "application/octet-stream" });
         response.end();
       }
-
-    } 
+    }
 
     // Otherwise 404
     else {
       response.writeHead(404, { "Content-Type": "application/octet-stream" });
       response.end();
     }
-  } else if (request.url === "/api/channelsAndIMs") {
+  }
+
+  // GET : retrieve channels and IMs
+  else if (request.url === "/api/channelsAndIMs") {
     response.writeHead(200, { "Content-Type": "application/json" });
-    api.listChannels(function(data) {
+    nbIMs = 1; // Hack to not pass the waitForChannelsAndIMs condition instantly
+    api.listObjectsInDb("channels", function(data) {
       channels = data;
+    });
+    api.listObjectsInDb("ims", function(data) {
+      ims = data;
+      nbIMs = ims.length;
+    });
+    waitForChannelsAndIMs(function(data) {
+      response.write(JSON.stringify(data));
+      response.end();
+    });
+  }
+
+  // GET : refresh channels and IMs stored in DB
+  else if (request.url === "/api/channelsAndIMs/refresh") {
+    api.listChannels(function(data) {
+      api.upsertObjectsInDb("channels", data.channels, function() {
+        channels = data;
+      });
     });
     api.listUsers(function(dataUsers) {
       var tmpUsers = dataUsers.members;
       nbIMs = tmpUsers.length;
       for (var userNb in tmpUsers) {
-        var user = tmpUsers[userNb];
-        if (!user.is_bot) {
-          api.openIm(user, function(data) {
-            ims.push(data.channel);
-          });
-        } else {
-          ims.push({ user: user });
-        }
+        setTimeout(() => {
+          var user = tmpUsers[userNb];
+          if (!user.is_bot) {
+            api.openIm(user, function(data) {
+              api.upsertObjectInDb("ims", data.channel, function() {
+                ims.push(data.channel);
+              });
+            });
+          } else {
+            ims.push({ user: user });
+          }
+        }, 1000);
       }
     });
-    waitForChannelsAndIMs(response);
+    waitForChannelsAndIMs(function(data) {
+      socket.emit("message", {
+        ts: new Date().getTime(),
+        text: "SYNC OVER"
+      });
+    });
+    response.writeHead(200, { "Content-Type": "application/octet-stream" });
+    response.end();
   } else if (request.url === "/api/interactive") {
     response.writeHead(200, { "Content-Type": "application/json" });
     let body = "";
@@ -224,23 +253,23 @@ var routeApi = function(request, response) {
   }
 };
 
-var waitForChannelsAndIMs = function(response) {
+var waitForChannelsAndIMs = function(callback) {
   if (channels === undefined || ims.length !== nbIMs) {
     setTimeout(function() {
-      waitForChannelsAndIMs(response);
+      waitForChannelsAndIMs(callback);
     }, 100);
   } else {
     var data = {
       channels: channels,
       ims: ims
     };
-
-    response.write(JSON.stringify(data));
-    response.end();
+    channels = undefined;
+    ims = [];
+    callback(data);
   }
 };
 
-var serve = function(request, response) {
+exports.serve = function(request, response) {
   if (!request.url.startsWith("/api/")) {
     var match_params = request.url.match(/^.*(\?.+)\/?$/);
     if (match_params !== null) {
@@ -255,4 +284,6 @@ var serve = function(request, response) {
   return response;
 };
 
-exports.serve = serve;
+exports.setSocket = function(io) {
+  socket = io;
+};

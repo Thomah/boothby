@@ -64,7 +64,7 @@ var initRtm = function(io) {
   const rtm = new RTMClient(SLACK_BOT_TOKEN);
   rtm.start();
   rtm.on("message", message => {
-    db.insert("messages", message.client_msg_id, message);
+    //db.insert("messages", message.client_msg_id, message);
     io.emit("message", message);
   });
 };

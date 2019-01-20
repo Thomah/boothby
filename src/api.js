@@ -1,6 +1,8 @@
 const db = require("./db.js");
 const slack = require("./slack.js");
 
+var nbObjects = 0;
+
 var speakRecurse = function(dialog, currentId) {
   console.log(dialog[currentId]);
   if (dialog[currentId].wait === undefined) {
@@ -26,14 +28,14 @@ var speakRecurse = function(dialog, currentId) {
 exports.createDialog = function(callback) {
   var dialog = {
     "0": {
-      "channel": "greenit",
-      "wait": 0,
-      "text": "first message"
+      channel: "greenit",
+      wait: 0,
+      text: "first message"
     },
-    "category": "daily"
+    category: "daily"
   };
   db.insert("dialogs", "new-dialog", dialog, callback);
-}
+};
 
 exports.deleteObjectInDb = function(collection, id, callback) {
   console.log("delete " + collection + " " + id);
@@ -44,9 +46,39 @@ exports.getObjectInDb = function(collection, id, callback) {
   db.read(collection, id, callback);
 };
 
+exports.listObjectsInDb = function(collection, callback) {
+  db.list(collection, callback);
+};
+
 exports.updateObjectInDb = function(collection, id, object, callback) {
   db.update(collection, id, object, callback);
-}
+};
+
+exports.upsertObjectInDb = function(collection, object, callback) {
+  db.upsert(collection, object, callback);
+};
+
+exports.upsertObjectsInDb = function(collection, objects, callback) {
+  for (var idObject in objects) {
+    db.upsert(collection, objects[idObject], incObjects);
+  }
+  waitForUpsertObjectsInDb(objects.length, callback);
+};
+
+var incObjects = function(result) {
+  nbObjects++;
+};
+
+var waitForUpsertObjectsInDb = function(nbObjectsWaited, callback) {
+  if (nbObjectsWaited !== nbObjects) {
+    setTimeout(function() {
+      waitForUpsertObjectsInDb(nbObjectsWaited, callback);
+    }, 100);
+  } else {
+    nbObjects = 0;
+    callback();
+  }
+};
 
 exports.interactive = function(rawPayload) {
   var payload = JSON.parse(rawPayload);
