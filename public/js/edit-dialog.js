@@ -42,6 +42,43 @@ var deleteMessage = function deleteMessage() {
   table.removeChild(row);
 };
 
+var addAttachment = function addAttachment() {
+  var button = this.firstChild.parentElement;
+  var cell = button.parentElement;
+
+  // Remove cellContent temporarily
+  cell.removeChild(button);
+
+  // Add select to adapt cell according to attachment type
+  var select = document.createElement("select");
+  var option = document.createElement("option");
+  option.value = "nothing";
+  option.appendChild(document.createTextNode("Survey"))
+  select.appendChild(option);
+  cell.appendChild(select);
+
+  // Add form for survey attachment (by default)
+  var inputName = document.createElement("input");
+  inputName.className = "survey-name";
+  inputName.placeholder = "Name (unique)";
+  cell.appendChild(inputName);
+
+  // Add hr and restore button add
+  cell.appendChild(document.createElement("hr"));
+  cell.appendChild(button);
+
+};
+
+function doc_getAttachmentContent(attachments) {
+  var cellContent;
+  if(attachments === undefined) {
+    cellContent = document.createElement("button");
+    cellContent.appendChild(document.createTextNode("+"));
+    cellContent.onclick = addAttachment;
+  }
+  return cellContent;
+}
+
 function doc_addRow(table, message) {
   var row = document.createElement("tr");
 
@@ -68,6 +105,12 @@ function doc_addRow(table, message) {
   cellContent.value = message.text;
   cellContent.className = "text";
   cellContent.cols = "120";
+  cell.appendChild(cellContent);
+  row.appendChild(cell);
+
+  // Attachments
+  var cell = document.createElement("td");
+  var cellContent = doc_getAttachmentContent(message.attachments);
   cell.appendChild(cellContent);
   row.appendChild(cell);
 
