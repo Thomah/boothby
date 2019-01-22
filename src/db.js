@@ -87,9 +87,11 @@ exports.insert = function (collection, name, content, callback) {
 };
 
 exports.list = function (collection, callback) {
+  var sort = { scheduling: 1 };
   dbo
     .collection(collection)
     .find({})
+    .sort(sort)
     .toArray(function (err, result) {
       if (err) throw err;
       callback(result);
