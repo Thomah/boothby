@@ -42,12 +42,82 @@ var deleteMessage = function deleteMessage() {
   table.removeChild(row);
 };
 
+// One type of attachment for now : surveys
 var addAttachment = function addAttachment() {
   var button = this.firstChild.parentElement;
   var cell = button.parentElement;
+  doc_appendAttachmentSurvey(cell);
+};
 
-  // Remove cellContent temporarily
-  cell.removeChild(button);
+// One type of attachment for now : surveys
+var addAttachmentSurveyAnswer = function addAttachmentSurveyAnswer() {
+  var button = this.firstChild.parentElement;
+  var tbody = button.parentElement.parentElement.parentElement.parentElement.getElementsByTagName("tbody")[0];
+  doc_appendAttachmentSurveyAnswer(tbody);
+};
+
+function doc_appendAttachmentSurveyAnswer(tbody, attachment) {
+
+  for(var numAction in attachment.actions) {
+
+    var action = attachment.actions[numAction];
+
+    // Create new row
+    var rowAnswer = document.createElement("tr");
+
+    // Answer Text
+    var cellAnswer = document.createElement("td");
+    var textAnswer = document.createElement("input");
+    textAnswer.className = "survey-answer-text";
+    textAnswer.placeholder = "Answer";
+    textAnswer.value = action.text;
+    cellAnswer.appendChild(textAnswer);
+    rowAnswer.appendChild(cellAnswer);
+
+    // Append new row
+    tbody.appendChild(rowAnswer);
+  }
+}
+
+// Prepend each element to preserve add button
+function doc_appendAttachmentSurvey(cell, attachment) {
+  console.log(attachment);
+
+  // Hide cell when updating it (Green IT Best Practice)
+  cell.style.display = "none";
+
+  // Add hr and restore button add
+  cell.insertBefore(document.createElement("hr"), cell.firstChild);
+
+  // Add table for answers
+  var tableAnswer = document.createElement("table");
+  tableAnswer.className = "survey-answer";
+
+  // -- Body with answer
+  var bodyAnswer = document.createElement("tbody");
+  doc_appendAttachmentSurveyAnswer(bodyAnswer, attachment);
+  tableAnswer.appendChild(bodyAnswer);
+
+  // -- Foot with add button
+  var footAnswer = document.createElement("tfoot");
+  var rowFoot = document.createElement("tr");
+  var cellFoot = document.createElement("td");
+  cellFoot.colSpan = 2;
+  var buttonFoot = document.createElement("button");
+  buttonFoot.appendChild(document.createTextNode("+"));
+  buttonFoot.onclick = addAttachmentSurveyAnswer;
+  cellFoot.appendChild(buttonFoot);
+  rowFoot.appendChild(cellFoot);
+  footAnswer.appendChild(rowFoot);
+  tableAnswer.appendChild(footAnswer);
+  cell.insertBefore(tableAnswer, cell.firstChild);
+
+  // Add form for survey attachment
+  var inputName = document.createElement("input");
+  inputName.value = attachment.callback_id.replace("survey_","");
+  inputName.className = "survey-name";
+  inputName.placeholder = "Name (unique)";
+  cell.insertBefore(inputName, cell.firstChild);
 
   // Add select to adapt cell according to attachment type
   var select = document.createElement("select");
@@ -55,28 +125,26 @@ var addAttachment = function addAttachment() {
   option.value = "nothing";
   option.appendChild(document.createTextNode("Survey"))
   select.appendChild(option);
-  cell.appendChild(select);
+  cell.insertBefore(select, cell.firstChild);
 
-  // Add form for survey attachment (by default)
-  var inputName = document.createElement("input");
-  inputName.className = "survey-name";
-  inputName.placeholder = "Name (unique)";
-  cell.appendChild(inputName);
+  // Show cell when update is finished
+  cell.style.display = "table-cell";
+}
 
-  // Add hr and restore button add
-  cell.appendChild(document.createElement("hr"));
-  cell.appendChild(button);
-
-};
-
-function doc_getAttachmentContent(attachments) {
+function doc_appendAttachmentContent(cell, attachments) {
   var cellContent;
   if(attachments === undefined) {
     cellContent = document.createElement("button");
     cellContent.appendChild(document.createTextNode("+"));
     cellContent.onclick = addAttachment;
+  } else {
+    for (numAttachment in attachments) {
+      var attachment = attachments[numAttachment];
+      if (attachment.callback_id != undefined && attachment.callback_id.startsWith("survey_")) {
+        doc_appendAttachmentSurvey(cell, attachment);
+      }
+    }
   }
-  return cellContent;
 }
 
 function doc_addRow(table, message) {
@@ -110,8 +178,7 @@ function doc_addRow(table, message) {
 
   // Attachments
   var cell = document.createElement("td");
-  var cellContent = doc_getAttachmentContent(message.attachments);
-  cell.appendChild(cellContent);
+  doc_appendAttachmentContent(cell, message.attachments);
   row.appendChild(cell);
 
   // Actions
@@ -194,7 +261,7 @@ function doc_getDialog() {
     .getElementById("edit-dialog")
     .getElementsByTagName("tbody")[0];
 
-  // Delete previous entries
+  // Get each entries
   var rowCount = dialogsTable.childNodes.length;
   var row;
   for (var x = 0; x < rowCount; x++) {

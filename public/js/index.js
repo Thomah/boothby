@@ -212,11 +212,11 @@ function doc_refreshMessages(messages) {
     // Actions
     cell = document.createElement("td");
     cellSpan = document.createElement("span");
-    button = document.createElement("button");
-    button.appendChild(document.createTextNode("Delete"));
-    button.id = message._id;
-    button.onclick = deleteMessage;
-    cellSpan.appendChild(button);
+    //button = document.createElement("button");
+    //button.appendChild(document.createTextNode("Delete"));
+    //button.id = message._id;
+    //button.onclick = deleteMessage;
+    //cellSpan.appendChild(button);
     cell.appendChild(cellSpan);
     row.appendChild(cell);
 
