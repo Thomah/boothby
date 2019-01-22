@@ -81,7 +81,6 @@ function doc_appendAttachmentSurveyAnswer(tbody, attachment) {
 
 // Prepend each element to preserve add button
 function doc_appendAttachmentSurvey(cell, attachment) {
-  console.log(attachment);
 
   // Hide cell when updating it (Green IT Best Practice)
   cell.style.display = "none";
@@ -132,11 +131,11 @@ function doc_appendAttachmentSurvey(cell, attachment) {
 }
 
 function doc_appendAttachmentContent(cell, attachments) {
-  var cellContent;
   if(attachments === undefined) {
-    cellContent = document.createElement("button");
+    var cellContent = document.createElement("button");
     cellContent.appendChild(document.createTextNode("+"));
     cellContent.onclick = addAttachment;
+    cell.appendChild(cellContent);
   } else {
     for (numAttachment in attachments) {
       var attachment = attachments[numAttachment];

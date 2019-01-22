@@ -35,3 +35,16 @@ label,
 #save {
   margin-right: 0.5em;
 }
+
+.survey-name {
+  display: block;
+  margin: auto;
+  width: auto;
+  text-align:center;
+}
+
+.survey-answer,
+.survey-answer th,
+.survey-answer td {
+  border: 0;
+}
