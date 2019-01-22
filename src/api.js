@@ -3,7 +3,7 @@ const slack = require("./slack.js");
 
 var nbObjects = 0;
 
-var speakRecurse = function(dialog, currentId) {
+var speakRecurse = function (dialog, currentId) {
   console.log(dialog[currentId]);
   if (dialog[currentId].wait === undefined) {
     dialog[currentId].wait = 0;
@@ -25,7 +25,7 @@ var speakRecurse = function(dialog, currentId) {
   }, dialog[currentId].wait);
 };
 
-exports.createDialog = function(callback) {
+exports.createDialog = function (callback) {
   var dialog = {
     "0": {
       channel: "greenit",
@@ -37,41 +37,41 @@ exports.createDialog = function(callback) {
   db.insert("dialogs", "new-dialog", dialog, callback);
 };
 
-exports.deleteObjectInDb = function(collection, id, callback) {
+exports.deleteObjectInDb = function (collection, id, callback) {
   console.log("delete " + collection + " " + id);
   db.delete(collection, id, callback);
 };
 
-exports.getObjectInDb = function(collection, id, callback) {
+exports.getObjectInDb = function (collection, id, callback) {
   db.read(collection, id, callback);
 };
 
-exports.listObjectsInDb = function(collection, callback) {
+exports.listObjectsInDb = function (collection, callback) {
   db.list(collection, callback);
 };
 
-exports.updateObjectInDb = function(collection, id, object, callback) {
+exports.updateObjectInDb = function (collection, id, object, callback) {
   db.update(collection, id, object, callback);
 };
 
-exports.upsertObjectInDb = function(collection, object, callback) {
+exports.upsertObjectInDb = function (collection, object, callback) {
   db.upsert(collection, object, callback);
 };
 
-exports.upsertObjectsInDb = function(collection, objects, callback) {
+exports.upsertObjectsInDb = function (collection, objects, callback) {
   for (var idObject in objects) {
     db.upsert(collection, objects[idObject], incObjects);
   }
   waitForUpsertObjectsInDb(objects.length, callback);
 };
 
-var incObjects = function(result) {
+var incObjects = function (result) {
   nbObjects++;
 };
 
-var waitForUpsertObjectsInDb = function(nbObjectsWaited, callback) {
+var waitForUpsertObjectsInDb = function (nbObjectsWaited, callback) {
   if (nbObjectsWaited !== nbObjects) {
-    setTimeout(function() {
+    setTimeout(function () {
       waitForUpsertObjectsInDb(nbObjectsWaited, callback);
     }, 100);
   } else {
@@ -80,9 +80,9 @@ var waitForUpsertObjectsInDb = function(nbObjectsWaited, callback) {
   }
 };
 
-exports.interactive = function(rawPayload) {
+exports.interactive = function (rawPayload) {
   var payload = JSON.parse(rawPayload);
-  db.read("surveys", payload.actions[0].name, function(data) {
+  db.read("surveys", payload.actions[0].name, function (data) {
     var newMessage = payload.original_message;
     if (data === null) {
       data = {};
@@ -138,36 +138,36 @@ exports.interactive = function(rawPayload) {
   });
 };
 
-exports.listDialogs = function(callback) {
+exports.listDialogs = function (callback) {
   db.list("dialogs", callback);
 };
 
-exports.listChannels = function(callback) {
+exports.listChannels = function (callback) {
   slack.listChannels(callback);
 };
 
-exports.listMessages = function(callback) {
+exports.listMessages = function (callback) {
   db.list("messages", callback);
 };
 
-exports.listUsers = function(callback) {
+exports.listUsers = function (callback) {
   slack.listUsers(callback);
 };
 
-exports.openIm = function(user, callback) {
+exports.openIm = function (user, callback) {
   slack.openIm(user, callback);
 };
 
-exports.processDialog = function(collection, id) {
-  db.read(collection, id, function(data) {
+exports.processDialog = function (collection, id) {
+  db.read(collection, id, function (data) {
     if (data !== null) {
       speakRecurse(data, "0");
     }
   });
 };
 
-exports.resumeDialogs = function() {
-  db.read("global", "state", function(data) {
+exports.resumeDialogs = function () {
+  db.read("global", "state", function (data) {
     if (data === null) {
       data = {};
       data.daily = 1;
@@ -180,6 +180,6 @@ exports.resumeDialogs = function() {
   });
 };
 
-exports.sendSimpleMessage = function(channelId, message) {
+exports.sendSimpleMessage = function (channelId, message) {
   slack.sendSimpleMessage(channelId, message);
 };

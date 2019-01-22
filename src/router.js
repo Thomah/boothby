@@ -22,7 +22,7 @@ var ims = [];
 var nbIMs = 0;
 var socket;
 
-var getFilePath = function(request) {
+var getFilePath = function (request) {
   var extname = String(path.extname(request.simpleUrl)).toLowerCase();
   var folder = resourceFolder[extname] || resourceFolder[".html"];
   var filePath = folder + request.simpleUrl;
@@ -32,13 +32,13 @@ var getFilePath = function(request) {
   return filePath;
 };
 
-var routeStatic = function(request, response) {
+var routeStatic = function (request, response) {
   var filePath = getFilePath(request);
   var extname = String(path.extname(filePath)).toLowerCase();
   var contentType = mimeTypes[extname] || "application/octet-stream";
 
   // Serving corresponding file
-  fs.readFile(filePath, function(error, content) {
+  fs.readFile(filePath, function (error, content) {
     if (error) {
       if (error.code === "ENOENT") {
         response.writeHead(404);
@@ -57,7 +57,7 @@ var routeStatic = function(request, response) {
   });
 };
 
-var routeApi = function(request, response) {
+var routeApi = function (request, response) {
   if (request.url.startsWith("/api/dialogs")) {
     var regex_play = /^\/api\/dialogs\/([^/]+)\/play$/;
     var regex_dialogName = /^\/api\/dialogs\/([^/]+)$/;
@@ -67,7 +67,7 @@ var routeApi = function(request, response) {
       // GET : list dialogs
       if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        api.listDialogs(function(data) {
+        api.listDialogs(function (data) {
           response.write(JSON.stringify(data));
           response.end();
         });
@@ -76,7 +76,7 @@ var routeApi = function(request, response) {
       // POST : create new dialog
       else if (request.method === "POST") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        api.createDialog(function(data) {
+        api.createDialog(function (data) {
           response.write(JSON.stringify(data));
           response.end();
         });
@@ -104,7 +104,7 @@ var routeApi = function(request, response) {
       // GET : get a dialog
       if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        api.getObjectInDb("dialogs", dialogId, function(data) {
+        api.getObjectInDb("dialogs", dialogId, function (data) {
           response.write(JSON.stringify(data));
           response.end();
         });
@@ -119,7 +119,7 @@ var routeApi = function(request, response) {
         });
         request.on("end", () => {
           var dialog = JSON.parse(body);
-          api.updateObjectInDb("dialogs", dialogId, dialog, function(data) {
+          api.updateObjectInDb("dialogs", dialogId, dialog, function (data) {
             response.write(JSON.stringify(data));
             response.end();
           });
@@ -129,7 +129,7 @@ var routeApi = function(request, response) {
       // DELETE : delete a dialog
       else if (request.method === "DELETE") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        api.deleteObjectInDb("dialogs", dialogId, function(data) {
+        api.deleteObjectInDb("dialogs", dialogId, function (data) {
           response.write(JSON.stringify(data));
           response.end();
         });
@@ -153,14 +153,14 @@ var routeApi = function(request, response) {
   else if (request.url === "/api/channelsAndIMs") {
     response.writeHead(200, { "Content-Type": "application/json" });
     nbIMs = 1; // Hack to not pass the waitForChannelsAndIMs condition instantly
-    api.listObjectsInDb("channels", function(data) {
+    api.listObjectsInDb("channels", function (data) {
       channels = data;
     });
-    api.listObjectsInDb("ims", function(data) {
+    api.listObjectsInDb("ims", function (data) {
       ims = data;
       nbIMs = ims.length;
     });
-    waitForChannelsAndIMs(function(data) {
+    waitForChannelsAndIMs(function (data) {
       response.write(JSON.stringify(data));
       response.end();
     });
@@ -168,30 +168,25 @@ var routeApi = function(request, response) {
 
   // GET : refresh channels and IMs stored in DB
   else if (request.url === "/api/channelsAndIMs/refresh") {
-    api.listChannels(function(data) {
-      api.upsertObjectsInDb("channels", data.channels, function() {
+    api.listChannels(function (data) {
+      api.upsertObjectsInDb("channels", data.channels, function () {
         channels = data;
       });
     });
-    api.listUsers(function(dataUsers) {
+    api.listUsers(function (dataUsers) {
       var tmpUsers = dataUsers.members;
+      console.log(tmpUsers.length);
       nbIMs = tmpUsers.length;
       for (var userNb in tmpUsers) {
-        setTimeout(() => {
-          var user = tmpUsers[userNb];
-          if (!user.is_bot) {
-            api.openIm(user, function(data) {
-              api.upsertObjectInDb("ims", data.channel, function() {
-                ims.push(data.channel);
-              });
-            });
-          } else {
-            ims.push({ user: user });
-          }
-        }, 1000);
+        var user = tmpUsers[userNb];
+        if (!user.is_bot) {
+          setTimeout(saveIM, userNb * 1000, user);
+        } else {
+          ims.push({ user: user });
+        }
       }
     });
-    waitForChannelsAndIMs(function(data) {
+    waitForChannelsAndIMs(function (data) {
       socket.emit("message", {
         ts: new Date().getTime(),
         text: "SYNC OVER"
@@ -214,7 +209,7 @@ var routeApi = function(request, response) {
   } else if (request.url.startsWith("/api/simple-messages")) {
     if (request.method === "GET") {
       response.writeHead(200, { "Content-Type": "application/json" });
-      api.listMessages(function(data) {
+      api.listMessages(function (data) {
         response.write(JSON.stringify(data));
         response.end();
       });
@@ -222,7 +217,7 @@ var routeApi = function(request, response) {
       var regex_delete = /^\/api\/simple-messages\/([^/]+)\/?$/;
       if (request.url.match(regex_delete) !== null) {
         var messageId = request.url.match(regex_delete)[1];
-        api.deleteObjectInDb("messages", messageId, function(data) {
+        api.deleteObjectInDb("messages", messageId, function (data) {
           response.writeHead(200, { "Content-Type": "application/json" });
           response.end();
         });
@@ -253,9 +248,17 @@ var routeApi = function(request, response) {
   }
 };
 
-var waitForChannelsAndIMs = function(callback) {
+var saveIM = function (user) {
+  api.openIm(user, function (data) {
+    api.upsertObjectInDb("ims", data.channel, function () {
+      ims.push(data.channel);
+    });
+  });
+};
+
+var waitForChannelsAndIMs = function (callback) {
   if (channels === undefined || ims.length !== nbIMs) {
-    setTimeout(function() {
+    setTimeout(function () {
       waitForChannelsAndIMs(callback);
     }, 100);
   } else {
@@ -269,7 +272,7 @@ var waitForChannelsAndIMs = function(callback) {
   }
 };
 
-exports.serve = function(request, response) {
+exports.serve = function (request, response) {
   if (!request.url.startsWith("/api/")) {
     var match_params = request.url.match(/^.*(\?.+)\/?$/);
     if (match_params !== null) {
@@ -284,6 +287,6 @@ exports.serve = function(request, response) {
   return response;
 };
 
-exports.setSocket = function(io) {
+exports.setSocket = function (io) {
   socket = io;
 };
