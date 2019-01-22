@@ -228,6 +228,7 @@ function doc_refreshDialog(dialog) {
 
   // Add Value to simple fields
   document.getElementById("id").value = dialog._id;
+  document.getElementById("scheduling").value = dialog.scheduling;
   document.getElementById("old-name").value = dialog.name;
   document.getElementById("new-name").value = dialog.name;
   document.getElementById("category").value = dialog.category;
@@ -252,6 +253,7 @@ function doc_getDialog() {
   var dialog = {};
 
   // Get global data
+  dialog.scheduling = document.getElementById("scheduling").value;
   dialog.name = document.getElementById("new-name").value;
   dialog.category = document.getElementById("category").value;
   dialog._id = document.getElementById("id").value;

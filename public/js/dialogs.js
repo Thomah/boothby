@@ -85,7 +85,12 @@ function doc_refreshDialogs(dialogs) {
     newEntry = document.createElement("tr");
     newEntry.id = dialog._id;
 
-    // Name
+    // Scheduling
+    cell = document.createElement("td");
+    cell.textContent = dialog.scheduling;
+    newEntry.appendChild(cell);
+
+    // Category
     cell = document.createElement("td");
     cell.textContent = dialog.category;
     newEntry.appendChild(cell);

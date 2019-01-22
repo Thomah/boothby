@@ -32,7 +32,8 @@ exports.createDialog = function (callback) {
       wait: 0,
       text: "first message"
     },
-    category: "daily"
+    category: "daily",
+    scheduling: 99999
   };
   db.insert("dialogs", "new-dialog", dialog, callback);
 };
