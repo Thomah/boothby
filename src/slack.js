@@ -6,11 +6,11 @@ const SLACK_USER_TOKEN = process.env.SLACK_USER_TOKEN;
 const bot = new WebClient(SLACK_BOT_TOKEN);
 const web = new WebClient(SLACK_USER_TOKEN);
 
-var join = function(channelName) {
+var join = function (channelName) {
   return web.channels.join({ name: channelName });
 };
 
-var listChannels = function(callback) {
+var listChannels = function (callback) {
   bot.channels
     .list()
     .then(res => {
@@ -19,7 +19,7 @@ var listChannels = function(callback) {
     .catch(console.error);
 };
 
-var listUsers = function(callback) {
+var listUsers = function (callback) {
   bot.users
     .list()
     .then(res => {
@@ -28,7 +28,7 @@ var listUsers = function(callback) {
     .catch(console.error);
 };
 
-var openIm = function(user, callback) {
+var openIm = function (user, callback) {
   bot.im
     .open({
       user: user.id
@@ -42,7 +42,7 @@ var openIm = function(user, callback) {
     .catch(console.error);
 };
 
-var postMessage = function(channelId, content) {
+var postMessage = function (channelId, content) {
   return bot.chat.postMessage({
     channel: channelId,
     text: content.text,
@@ -51,16 +51,16 @@ var postMessage = function(channelId, content) {
   });
 };
 
-var updateMessage = function(message) {
+var updateMessage = function (message) {
   return web.chat.update(message);
 };
 
-var sendSimpleMessage = function(channelId, message) {
+var sendSimpleMessage = function (channelId, message) {
   var content = { text: message };
   postMessage(channelId, content).catch(console.error);
 };
 
-var initRtm = function(io) {
+var initRtm = function (io) {
   const rtm = new RTMClient(SLACK_BOT_TOKEN);
   rtm.start();
   rtm.on("message", message => {
