@@ -87,7 +87,7 @@ exports.insert = function (collection, name, content, callback) {
 };
 
 exports.list = function (collection, callback) {
-  var sort = { scheduling: 1 };
+  var sort = { scheduling: -1 };
   dbo
     .collection(collection)
     .find({})

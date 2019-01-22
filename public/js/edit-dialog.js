@@ -253,7 +253,7 @@ function doc_getDialog() {
   var dialog = {};
 
   // Get global data
-  dialog.scheduling = document.getElementById("scheduling").value;
+  dialog.scheduling = parseInt(document.getElementById("scheduling").value);
   dialog.name = document.getElementById("new-name").value;
   dialog.category = document.getElementById("category").value;
   dialog._id = document.getElementById("id").value;
