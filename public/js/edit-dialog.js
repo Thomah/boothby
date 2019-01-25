@@ -46,14 +46,28 @@ var deleteMessage = function deleteMessage() {
 var addAttachment = function addAttachment() {
   var button = this.firstChild.parentElement;
   var cell = button.parentElement;
-  doc_appendAttachmentSurvey(cell);
+  var attachment = {
+    callback_id: ''
+  };  
+  var div = document.createElement("div");
+  div.className = "attachment"
+  doc_appendAttachmentSurvey(div, attachment);
+  cell.insertBefore(document.createElement("hr"), cell.firstChild);    
+  cell.insertBefore(div, cell.firstChild);
 };
 
 // One type of attachment for now : surveys
 var addAttachmentSurveyAnswer = function addAttachmentSurveyAnswer() {
   var button = this.firstChild.parentElement;
   var tbody = button.parentElement.parentElement.parentElement.parentElement.getElementsByTagName("tbody")[0];
-  doc_appendAttachmentSurveyAnswer(tbody);
+  var attachment = {
+    actions: [
+      {
+        text: ''
+      }
+    ]
+  };
+  doc_appendAttachmentSurveyAnswer(tbody, attachment);
 };
 
 function doc_appendAttachmentSurveyAnswer(tbody, attachment) {
@@ -80,13 +94,15 @@ function doc_appendAttachmentSurveyAnswer(tbody, attachment) {
 }
 
 // Prepend each element to preserve add button
-function doc_appendAttachmentSurvey(cell, attachment) {
+function doc_appendAttachmentSurvey(div, attachment) {
 
-  // Hide cell when updating it (Green IT Best Practice)
-  cell.style.display = "none";
-
-  // Add hr and restore button add
-  cell.insertBefore(document.createElement("hr"), cell.firstChild);
+  // Add select to adapt div according to attachment type
+  var select = document.createElement("select");
+  var option = document.createElement("option");
+  option.value = "nothing";
+  option.appendChild(document.createTextNode("Survey"))
+  select.appendChild(option);
+  div.appendChild(select);
 
   // Add table for answers
   var tableAnswer = document.createElement("table");
@@ -109,25 +125,14 @@ function doc_appendAttachmentSurvey(cell, attachment) {
   rowFoot.appendChild(cellFoot);
   footAnswer.appendChild(rowFoot);
   tableAnswer.appendChild(footAnswer);
-  cell.insertBefore(tableAnswer, cell.firstChild);
+  div.appendChild(tableAnswer);
 
   // Add form for survey attachment
   var inputName = document.createElement("input");
   inputName.value = attachment.callback_id.replace("survey_","");
   inputName.className = "survey-name";
   inputName.placeholder = "Name (unique)";
-  cell.insertBefore(inputName, cell.firstChild);
-
-  // Add select to adapt cell according to attachment type
-  var select = document.createElement("select");
-  var option = document.createElement("option");
-  option.value = "nothing";
-  option.appendChild(document.createTextNode("Survey"))
-  select.appendChild(option);
-  cell.insertBefore(select, cell.firstChild);
-
-  // Show cell when update is finished
-  cell.style.display = "table-cell";
+  div.appendChild(inputName);
 }
 
 function doc_appendAttachmentContent(cell, attachments) {
@@ -139,9 +144,13 @@ function doc_appendAttachmentContent(cell, attachments) {
   } else {
     for (numAttachment in attachments) {
       var attachment = attachments[numAttachment];
+      var div = document.createElement("div");
+      div.className = "attachment"
       if (attachment.callback_id != undefined && attachment.callback_id.startsWith("survey_")) {
-        doc_appendAttachmentSurvey(cell, attachment);
+        doc_appendAttachmentSurvey(div, attachment);
       }
+      cell.insertBefore(document.createElement("hr"), cell.firstChild);    
+      cell.insertBefore(div, cell.firstChild);
     }
   }
 }
@@ -251,6 +260,7 @@ function doc_refreshDialog(dialog) {
 
 function doc_getDialog() {
   var dialog = {};
+  var attachments = [];
 
   // Get global data
   dialog.scheduling = parseInt(document.getElementById("scheduling").value);
@@ -264,9 +274,21 @@ function doc_getDialog() {
 
   // Get each entries
   var rowCount = dialogsTable.childNodes.length;
-  var row;
+  var row, divAttachment, divsAttachment, divsAttachmentCount;
   for (var x = 0; x < rowCount; x++) {
     row = dialogsTable.childNodes[x];
+    divsAttachment = row.getElementsByClassName("attachment");
+    divsAttachmentCount = divsAttachment.length;
+    for(var y = 0 ; y < divsAttachmentCount ; y++) {
+      divAttachment = divsAttachment[y];
+      attachments[y] = {
+        text: "Choisissez une valeur",
+        fallback: "Vous ne pouvez pas choisir d'action",
+        attachment_type: "default",
+        callback_id: "survey_" + divAttachment.getElementsByClassName("survey-name")[0].value
+      };
+    }
+
     dialog[x] = {
       channel: row.getElementsByClassName("channel")[0].value,
       wait: parseInt(row.getElementsByClassName("wait")[0].value),
