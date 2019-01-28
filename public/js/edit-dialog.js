@@ -99,10 +99,17 @@ function doc_appendAttachmentSurvey(div, attachment) {
   // Add select to adapt div according to attachment type
   var select = document.createElement("select");
   var option = document.createElement("option");
-  option.value = "nothing";
+  option.value = "survey";
   option.appendChild(document.createTextNode("Survey"))
   select.appendChild(option);
   div.appendChild(select);
+
+  // Add form for survey attachment
+  var inputName = document.createElement("input");
+  inputName.value = attachment.callback_id.replace("survey_","");
+  inputName.className = "survey-name";
+  inputName.placeholder = "Name (unique)";
+  div.appendChild(inputName);
 
   // Add table for answers
   var tableAnswer = document.createElement("table");
@@ -126,22 +133,10 @@ function doc_appendAttachmentSurvey(div, attachment) {
   footAnswer.appendChild(rowFoot);
   tableAnswer.appendChild(footAnswer);
   div.appendChild(tableAnswer);
-
-  // Add form for survey attachment
-  var inputName = document.createElement("input");
-  inputName.value = attachment.callback_id.replace("survey_","");
-  inputName.className = "survey-name";
-  inputName.placeholder = "Name (unique)";
-  div.appendChild(inputName);
 }
 
 function doc_appendAttachmentContent(cell, attachments) {
-  if(attachments === undefined) {
-    var cellContent = document.createElement("button");
-    cellContent.appendChild(document.createTextNode("+"));
-    cellContent.onclick = addAttachment;
-    cell.appendChild(cellContent);
-  } else {
+  if(attachments !== undefined) {
     for (numAttachment in attachments) {
       var attachment = attachments[numAttachment];
       var div = document.createElement("div");
@@ -153,6 +148,10 @@ function doc_appendAttachmentContent(cell, attachments) {
       cell.insertBefore(div, cell.firstChild);
     }
   }
+  var cellContent = document.createElement("button");
+  cellContent.appendChild(document.createTextNode("+"));
+  cellContent.onclick = addAttachment;
+  cell.appendChild(cellContent);
 }
 
 function doc_addRow(table, message) {
@@ -261,6 +260,7 @@ function doc_refreshDialog(dialog) {
 function doc_getDialog() {
   var dialog = {};
   var attachments = [];
+  var actions = [];
 
   // Get global data
   dialog.scheduling = parseInt(document.getElementById("scheduling").value);
@@ -274,25 +274,43 @@ function doc_getDialog() {
 
   // Get each entries
   var rowCount = dialogsTable.childNodes.length;
-  var row, divAttachment, divsAttachment, divsAttachmentCount;
+  var row, divAttachment, divsAttachment, divsAttachmentCount, selectTypeAttachment, inputsAnswer, inputsAnswerCount, inputAnswer;
+  var callback_id;
   for (var x = 0; x < rowCount; x++) {
     row = dialogsTable.childNodes[x];
     divsAttachment = row.getElementsByClassName("attachment");
     divsAttachmentCount = divsAttachment.length;
     for(var y = 0 ; y < divsAttachmentCount ; y++) {
       divAttachment = divsAttachment[y];
-      attachments[y] = {
-        text: "Choisissez une valeur",
-        fallback: "Vous ne pouvez pas choisir d'action",
-        attachment_type: "default",
-        callback_id: "survey_" + divAttachment.getElementsByClassName("survey-name")[0].value
-      };
+      selectTypeAttachment = divAttachment.getElementsByTagName("select")[0];
+      if(selectTypeAttachment.value === "survey") {
+        inputsAnswer = divAttachment.getElementsByClassName("survey-answer-text");
+        inputsAnswerCount = inputsAnswer.length;
+        callback_id = "survey_" + divAttachment.getElementsByClassName("survey-name")[0].value;
+        for(var z = 0 ; z < inputsAnswerCount ; z++) {
+          inputAnswer = inputsAnswer[z];
+          actions[z] = {
+            name: callback_id,
+            text: inputAnswer.value,
+            type: "button",
+            value: Math.random().toString(36).substr(2, 9)
+          }
+        }
+        attachments[y] = {
+          text: "Choisissez une valeur",
+          fallback: "Vous ne pouvez pas choisir d'action",
+          attachment_type: "default",
+          callback_id: callback_id,
+          actions: actions
+        };
+      }
     }
 
     dialog[x] = {
       channel: row.getElementsByClassName("channel")[0].value,
       wait: parseInt(row.getElementsByClassName("wait")[0].value),
       text: row.getElementsByClassName("text")[0].value,
+      attachments: attachments,
       next: `${x + 1}`
     };
   }
