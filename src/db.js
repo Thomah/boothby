@@ -14,6 +14,10 @@ exports.init = function () {
   );
 };
 
+exports.mongodb = function() {
+  return mongodb;
+}
+
 exports.delete = function (collection, id, callback) {
   dbo
     .collection(collection)
@@ -23,13 +27,11 @@ exports.delete = function (collection, id, callback) {
     });
 };
 
-exports.read = function (collection, id, callback) {
-  dbo
-    .collection(collection)
-    .findOne({ _id: new mongodb.ObjectId(id) }, function (err, result) {
-      if (err) throw err;
-      callback(result);
-    });
+exports.read = function(collection, match, callback) {
+  dbo.collection(collection).findOne(match, function(err, result) {
+    if (err) throw err;
+    callback(result);
+  });
 };
 
 exports.update = function (collection, id, content, callback) {

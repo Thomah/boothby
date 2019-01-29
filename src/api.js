@@ -44,7 +44,7 @@ exports.deleteObjectInDb = function (collection, id, callback) {
 };
 
 exports.getObjectInDb = function (collection, id, callback) {
-  db.read(collection, id, callback);
+  db.read(collection, { _id: new db.mongodb().ObjectId(id) }, callback);
 };
 
 exports.listObjectsInDb = function (collection, callback) {
@@ -83,7 +83,7 @@ var waitForUpsertObjectsInDb = function (nbObjectsWaited, callback) {
 
 exports.interactive = function (rawPayload) {
   var payload = JSON.parse(rawPayload);
-  db.read("surveys", payload.actions[0].name, function (data) {
+  db.read("surveys", { name: payload.actions[0].name }, function (data) {
     var newMessage = payload.original_message;
     if (data === null) {
       data = {};
@@ -160,7 +160,7 @@ exports.openIm = function (user, callback) {
 };
 
 exports.processDialog = function (collection, id) {
-  db.read(collection, id, function (data) {
+  db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (data) {
     if (data !== null) {
       speakRecurse(data, "0");
     }
@@ -168,7 +168,7 @@ exports.processDialog = function (collection, id) {
 };
 
 exports.resumeDialogs = function () {
-  db.read("global", "state", function (data) {
+  db.read("global", { name: "state" }, function (data) {
     if (data === null) {
       data = {};
       data.daily = 1;

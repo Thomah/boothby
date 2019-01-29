@@ -52,7 +52,7 @@ var postMessage = function (channelId, content) {
 };
 
 var updateMessage = function (message) {
-  return web.chat.update(message);
+  return bot.chat.update(message);
 };
 
 var sendSimpleMessage = function (channelId, message) {
