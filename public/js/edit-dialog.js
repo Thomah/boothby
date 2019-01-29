@@ -57,6 +57,13 @@ var addAttachment = function addAttachment() {
 };
 
 // One type of attachment for now : surveys
+var deleteAttachment = function deleteAttachment() {
+  var button = this.firstChild.parentElement;
+  var div = button.parentElement;
+  div.remove();
+};
+
+// One type of attachment for now : surveys
 var addAttachmentSurveyAnswer = function addAttachmentSurveyAnswer() {
   var button = this.firstChild.parentElement;
   var tbody = button.parentElement.parentElement.parentElement.parentElement.getElementsByTagName("tbody")[0];
@@ -111,6 +118,12 @@ function doc_appendAttachmentSurvey(div, attachment) {
   inputName.placeholder = "Name (unique)";
   div.appendChild(inputName);
 
+  // Add button to delete attachment
+  var buttonDelete = document.createElement("button");
+  buttonDelete.appendChild(document.createTextNode("-"));
+  buttonDelete.onclick = deleteAttachment;
+  div.appendChild(buttonDelete);
+  
   // Add table for answers
   var tableAnswer = document.createElement("table");
   tableAnswer.className = "survey-answer";
@@ -277,10 +290,12 @@ function doc_getDialog() {
   var row, divAttachment, divsAttachment, divsAttachmentCount, selectTypeAttachment, inputsAnswer, inputsAnswerCount, inputAnswer;
   var callback_id;
   for (var x = 0; x < rowCount; x++) {
+    attachments = [];
     row = dialogsTable.childNodes[x];
     divsAttachment = row.getElementsByClassName("attachment");
     divsAttachmentCount = divsAttachment.length;
     for(var y = 0 ; y < divsAttachmentCount ; y++) {
+      actions = [];
       divAttachment = divsAttachment[y];
       selectTypeAttachment = divAttachment.getElementsByTagName("select")[0];
       if(selectTypeAttachment.value === "survey") {
