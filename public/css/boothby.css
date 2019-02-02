@@ -48,3 +48,8 @@ label,
 .survey-answer td {
   border: 0;
 }
+
+/* CONFIG */
+#next-execution-p {
+  display: inline;
+}

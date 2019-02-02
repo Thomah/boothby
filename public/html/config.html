@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Configuration</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="boothby.css" />
+  </head>
+
+  <body onload="refresh()">
+    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a></p>
+    <hr />
+    <button onclick="refresh()">Refresh</button>
+    <button id="save" onclick="save()">Save</button>
+    <p id="next-execution-p">Next execution on <span id="next-invocation"></span></p>
+    <hr />
+    <div>
+      <label for="cron">CRON Planning</label><input id="cron" type="text" name="cron" />
+    </div>
+    <div>
+      <label for="next-daily-dialog">Next dialog to play</label><input id="next-daily-dialog" type="number" name="next-daily-dialog" />
+    </div>
+    <script src="config.js"></script>
+  </body>
+</html>
