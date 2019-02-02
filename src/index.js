@@ -1,6 +1,6 @@
 const http = require("http");
-const schedule = require("node-schedule");
 const api = require("./api.js");
+const scheduler = require("./scheduler.js");
 const db = require("./db.js");
 const router = require("./router.js");
 const slack = require("./slack.js");
@@ -33,14 +33,12 @@ process.on("SIGINT", function () {
 });
 
 // Main Scheduler
-var cron = "42 9 * * 1,3,5";
-schedule.scheduleJob(cron, function (fireDate) {
+scheduler.schedule("42 9 * * 1,3,5", function (fireDate) {
   console.log(
     `This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`
   );
   api.resumeDialogs();
 });
-console.log(`CRON set : ${cron} on resume()`);
 
 server.listen(8080);
 console.log("Server running at " + ROOT_URL);

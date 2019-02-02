@@ -1,4 +1,5 @@
 const db = require("./db.js");
+const scheduler = require("./scheduler.js");
 const slack = require("./slack.js");
 
 var nbObjects = 0;
@@ -43,7 +44,26 @@ exports.deleteObjectInDb = function (collection, id, callback) {
   db.delete(collection, id, callback);
 };
 
-exports.getObjectInDb = function (collection, id, callback) {
+exports.getConfig = function(callback) {
+  db.read("global", { name: "state" }, function (data) {
+    if (data === null) {
+      data = {};
+      data.daily = 1;
+      data.name = "state";
+      data.cron = "42 9 * * 1,3,5";
+      db.insert("global", "state", data);
+    }
+    db.updateByName("global", "state", data);
+    data.nextInvocation = scheduler.nextInvocation();
+    callback(data);
+  });
+};
+
+exports.getObjectInDb = function (collection, condition, callback) {
+  db.read(collection, condition, callback);
+};
+
+exports.getObjectInDbById = function (collection, id, callback) {
   db.read(collection, { _id: new db.mongodb().ObjectId(id) }, callback);
 };
 
@@ -51,8 +71,12 @@ exports.listObjectsInDb = function (collection, callback) {
   db.list(collection, callback);
 };
 
-exports.updateObjectInDb = function (collection, id, object, callback) {
-  db.update(collection, id, object, callback);
+exports.updateObjectInDb = function (collection, condition, object, callback) {
+  db.update(collection, condition, object, callback);
+};
+
+exports.updateObjectInDbById = function (collection, id, object, callback) {
+  db.update(collection, { _id: new db.mongodb().ObjectId(id) }, object, callback);
 };
 
 exports.upsertObjectInDb = function (collection, object, callback) {

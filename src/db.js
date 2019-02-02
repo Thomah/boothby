@@ -34,11 +34,11 @@ exports.read = function(collection, match, callback) {
   });
 };
 
-exports.update = function (collection, id, content, callback) {
+exports.update = function (collection, condition, content, callback) {
   delete content._id;
   dbo
     .collection(collection)
-    .updateOne({ _id: new mongodb.ObjectId(id) }, { $set: content }, function (
+    .updateOne(condition, { $set: content }, function (
       error,
       results
     ) {

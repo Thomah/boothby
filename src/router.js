@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { parse } = require("querystring");
 const api = require("./api.js");
+const scheduler = require("./scheduler.js");
 
 const resourceFolder = {
   ".html": "./public/html",
@@ -58,7 +59,45 @@ var routeStatic = function (request, response) {
 };
 
 var routeApi = function (request, response) {
-  if (request.url.startsWith("/api/dialogs")) {
+  
+  // /api/config
+  if (request.url === "/api/config") {
+
+    // GET : retrieve config
+    if(request.method === "GET") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      api.getConfig(function (data) {
+        response.write(JSON.stringify(data));
+        response.end();
+      });
+    }
+
+    // POST : update config
+    else if(request.method === "PUT") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      let body = "";
+      request.on("data", chunk => {
+        body += chunk.toString();
+      });
+      request.on("end", () => {
+        var config = JSON.parse(body);
+        api.updateObjectInDb("global", {name: "state"}, config, function (data) {
+          scheduler.reschedule(data.cron);
+          response.write(JSON.stringify(data));
+          response.end();
+        });
+      });
+    }
+
+    // Otherwise 404
+    else {
+      response.writeHead(404, { "Content-Type": "application/octet-stream" });
+      response.end();
+    }
+  }
+  
+  // /api/dialogs*
+  else if (request.url.startsWith("/api/dialogs")) {
     var regex_play = /^\/api\/dialogs\/([^/]+)\/play$/;
     var regex_dialogName = /^\/api\/dialogs\/([^/]+)$/;
 
@@ -104,7 +143,7 @@ var routeApi = function (request, response) {
       // GET : get a dialog
       if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        api.getObjectInDb("dialogs", dialogId, function (data) {
+        api.getObjectInDbById("dialogs", dialogId, function (data) {
           response.write(JSON.stringify(data));
           response.end();
         });
@@ -119,7 +158,8 @@ var routeApi = function (request, response) {
         });
         request.on("end", () => {
           var dialog = JSON.parse(body);
-          api.updateObjectInDb("dialogs", dialogId, dialog, function (data) {
+          api.updateObjectInDbById("dialogs", dialogId, dialog, function (data) {
+            scheduler
             response.write(JSON.stringify(data));
             response.end();
           });
@@ -194,7 +234,10 @@ var routeApi = function (request, response) {
     });
     response.writeHead(200, { "Content-Type": "application/octet-stream" });
     response.end();
-  } else if (request.url === "/api/interactive") {
+  } 
+  
+  // GET : endpoint to interactive components
+  else if (request.url === "/api/interactive") {
     response.writeHead(200, { "Content-Type": "application/json" });
     let body = "";
     request.on("data", chunk => {
@@ -206,14 +249,22 @@ var routeApi = function (request, response) {
     });
     response.write("{}");
     response.end();
-  } else if (request.url.startsWith("/api/simple-messages")) {
+  } 
+  
+  // /api/simple-messages
+  else if (request.url.startsWith("/api/simple-messages")) {
+
+    // GET : retrieve messages
     if (request.method === "GET") {
       response.writeHead(200, { "Content-Type": "application/json" });
       api.listMessages(function (data) {
         response.write(JSON.stringify(data));
         response.end();
       });
-    } else if (request.method === "DELETE") {
+    } 
+    
+    // DELETE : delete a message
+    else if (request.method === "DELETE") {
       var regex_delete = /^\/api\/simple-messages\/([^/]+)\/?$/;
       if (request.url.match(regex_delete) !== null) {
         var messageId = request.url.match(regex_delete)[1];
@@ -225,7 +276,10 @@ var routeApi = function (request, response) {
         response.writeHead(404, { "Content-Type": "application/octet-stream" });
         response.end();
       }
-    } else if (request.method === "POST") {
+    } 
+    
+    // POST : send a message
+    else if (request.method === "POST") {
       if (request.url === "/api/simple-messages/send") {
         let body = "";
         request.on("data", chunk => {
