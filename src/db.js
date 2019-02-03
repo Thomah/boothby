@@ -3,13 +3,14 @@ const DB_NAME = "heroku_lqkdtf3k";
 const MONGODB_URI = process.env.MONGODB_URI;
 var dbo;
 
-exports.init = function () {
+exports.init = function (callback) {
   mongodb.MongoClient.connect(
     MONGODB_URI,
     { useNewUrlParser: true },
     function (err, database) {
       if (err) throw err;
       dbo = database.db(DB_NAME);
+      callback();
     }
   );
 };

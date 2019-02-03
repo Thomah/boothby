@@ -183,13 +183,15 @@ exports.openIm = function (user, callback) {
   slack.openIm(user, callback);
 };
 
-exports.processDialog = function (collection, id) {
+var processDialog = function (collection, id) {
   db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (data) {
+    console.log(data);
     if (data !== null) {
       speakRecurse(data, "0");
     }
   });
 };
+exports.processDialog = processDialog;
 
 exports.resumeDialogs = function () {
   db.read("global", { name: "state" }, function (data) {
@@ -199,7 +201,9 @@ exports.resumeDialogs = function () {
       data.name = "state";
       db.insert("global", "state", data);
     }
-    this.processDialog("daily", data.daily.toString());
+    db.read("dialogs", { scheduling: parseInt(data.daily) }, function (dialog) {
+      processDialog("dialogs", dialog._id);
+    });
     data.daily++;
     db.updateByName("global", "state", data);
   });

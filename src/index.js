@@ -21,7 +21,14 @@ io.sockets.on("connection", function (socket) {
 });
 
 slack.initRtm(io);
-db.init();
+db.init(function() {
+  api.getConfig(function(config) {
+    scheduler.schedule(config.cron, function (fireDate) {
+      console.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
+      api.resumeDialogs();
+    });
+  });
+});
 
 server.on("close", function () {
   console.log(" Stopping ...");
@@ -30,14 +37,6 @@ server.on("close", function () {
 
 process.on("SIGINT", function () {
   server.close();
-});
-
-// Main Scheduler
-scheduler.schedule("42 9 * * 1,3,5", function (fireDate) {
-  console.log(
-    `This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`
-  );
-  api.resumeDialogs();
 });
 
 server.listen(8080);
