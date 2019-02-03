@@ -82,7 +82,7 @@ var routeApi = function (request, response) {
       request.on("end", () => {
         var config = JSON.parse(body);
         api.updateObjectInDb("global", {name: "state"}, config, function (data) {
-          scheduler.reschedule(data.cron);
+          scheduler.reschedule(config.cron);
           response.write(JSON.stringify(data));
           response.end();
         });

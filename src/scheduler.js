@@ -7,9 +7,13 @@ exports.schedule = function (cron, callback) {
 };
 
 exports.reschedule = function (cron) {
-    job.reschedule(cron);
+    job = schedule.rescheduleJob(job, cron);
 };
 
 exports.nextInvocation = function () {
-    return job.nextInvocation();
+    if(job !== undefined && job !== null) {
+        return job.nextInvocation();
+    } else {
+        return "";
+    }
 };
