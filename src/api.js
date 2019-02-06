@@ -202,10 +202,14 @@ exports.resumeDialogs = function () {
       db.insert("global", "state", data);
     }
     db.read("dialogs", { scheduling: parseInt(data.daily) }, function (dialog) {
-      processDialog("dialogs", dialog._id);
+      if(dialog === null){
+        console.log('PROBLEM Captain\' : There is no dialog related to the global.daily :' + data.daily);
+      }else{
+        processDialog("dialogs", dialog._id);
+        data.daily++;
+        db.updateByName("global", "state", data);
+      }
     });
-    data.daily++;
-    db.updateByName("global", "state", data);
   });
 };
 
