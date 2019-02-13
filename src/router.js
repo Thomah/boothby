@@ -73,36 +73,32 @@ var routeStatic = function (request, response) {
 var routeApi = function (request, response) {
   // /api/user
   if (request.url === "/api/user") {
-    // FIXME : Should be GET, but I was never able to send the credentials through 
-    //         GET method, so I send the credentials datas via a POST method
-    //         Should be sent in the request headers I think
-    if(request.method === "POST") {
-      let body = "";
-      request.on("data", chunk => {
-        body += chunk.toString();
-      });
-      request.on("end", () => {
-        var credentials = JSON.parse(body);
-        api.checkCredentialsUser(credentials, function (data) {
 
-          if (data != false){
-            //On stocke dans le serveur en cache le user et le token associé
-            generated_token = generate_token();
-            username = data;
-            obj = { user: username, token: generated_token };
-            myCache.set( "Key"+username, obj, function( err, success ){
-              if( !err && success ){
-                //console.log( success );
-              }
-            });
-            response.writeHead(200, { "Content-Type": "application/json" });
-            response.end(JSON.stringify(obj));
-          }else{
-            //FIXME : If no user in database, which status code should I return ?
-            response.writeHead(201, { "Content-Type": "application/json" });
-            response.end();
-          }
-        });
+    // GET : retrieve existing user, and send back the username and the token
+    //       used during authentication
+    if(request.method === "GET") {
+      var credentials = {
+        username:request.headers.user,
+        password:request.headers.pwd
+      };
+      api.checkCredentialsUser(credentials, function (data) {
+        if (data != false){
+          //On stocke dans le serveur en cache le user et le token associé
+          generated_token = generate_token();
+          username = data;
+          obj = { user: username, token: generated_token };
+          myCache.set( "Key"+username, obj, function( err, success ){
+            if( !err && success ){
+              //console.log( success );
+            }
+          });
+          response.writeHead(200, { "Content-Type": "application/json" });
+          response.end(JSON.stringify(obj));
+        }else{
+        //FIXME : If no user in database, which status code should I return ?
+          response.writeHead(201, { "Content-Type": "application/json" });
+          response.end();
+        }
       });
     }
   }
@@ -410,7 +406,7 @@ exports.serve = function (request, response) {
   } else {
     // We can access the /api/user when not auth
     // TODO : When switched from POST to GET in /api/user, we need to add a strict check on the method = GET and the api = /api/user
-    if (!auth && request.url != '/api/user'){
+    if (!auth && request.url != '/api/user' && request.url != 'GET'){
       response.writeHead(401); // 401 status code = not allowed to access API
       response.end();
     }else{
