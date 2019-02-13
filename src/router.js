@@ -3,6 +3,7 @@ const path = require("path");
 const { parse } = require("querystring");
 const api = require("./api.js");
 const scheduler = require("./scheduler.js");
+const NodeCache = require( "node-cache");
 
 const resourceFolder = {
   ".html": "./public/html",
@@ -22,6 +23,17 @@ var channels = undefined;
 var ims = [];
 var nbIMs = 0;
 var socket;
+var myCache; //server cache
+
+//Functions used to generate the auth token
+//https://stackoverflow.com/questions/8532406/create-a-random-token-in-javascript-based-on-user-details
+var rand = function() {
+  return Math.random().toString(36).substr(2);
+};
+
+var generate_token = function() {
+  return rand() + rand();
+}
 
 var getFilePath = function (request) {
   var extname = String(path.extname(request.simpleUrl)).toLowerCase();
@@ -59,9 +71,43 @@ var routeStatic = function (request, response) {
 };
 
 var routeApi = function (request, response) {
-  
+  // /api/user
+  if (request.url === "/api/user") {
+    // FIXME : Should be GET, but I was never able to send the credentials through 
+    //         GET method, so I send the credentials datas via a POST method
+    //         Should be sent in the request headers I think
+    if(request.method === "POST") {
+      let body = "";
+      request.on("data", chunk => {
+        body += chunk.toString();
+      });
+      request.on("end", () => {
+        var credentials = JSON.parse(body);
+        api.checkCredentialsUser(credentials, function (data) {
+
+          if (data != false){
+            //On stocke dans le serveur en cache le user et le token associé
+            generated_token = generate_token();
+            username = data;
+            obj = { user: username, token: generated_token };
+            myCache.set( "Key"+username, obj, function( err, success ){
+              if( !err && success ){
+                //console.log( success );
+              }
+            });
+            response.writeHead(200, { "Content-Type": "application/json" });
+            response.end(JSON.stringify(obj));
+          }else{
+            //FIXME : If no user in database, which status code should I return ?
+            response.writeHead(201, { "Content-Type": "application/json" });
+            response.end();
+          }
+        });
+      });
+    }
+  }
   // /api/config
-  if (request.url === "/api/config") {
+  else if (request.url === "/api/config") {
 
     // GET : retrieve config
     if(request.method === "GET") {
@@ -249,7 +295,7 @@ var routeApi = function (request, response) {
     });
     response.write("{}");
     response.end();
-  } 
+  }
   
   // /api/simple-messages
   else if (request.url.startsWith("/api/simple-messages")) {
@@ -276,7 +322,7 @@ var routeApi = function (request, response) {
         response.writeHead(404, { "Content-Type": "application/octet-stream" });
         response.end();
       }
-    } 
+    }
     
     // POST : send a message
     else if (request.method === "POST") {
@@ -327,6 +373,32 @@ var waitForChannelsAndIMs = function (callback) {
 };
 
 exports.serve = function (request, response) {
+
+  //If API request, there is a token in the request header which proves that 
+  //   the user is authenticated
+  if (request.headers.token){
+    username = request.headers.username;
+    token = request.headers.token;
+  }
+
+  var auth = false;
+  
+  // We check if the token in the request header, is the same that matches the one
+  //   which has been saved in the cache server
+  if (typeof token !== 'undefined'){
+    myCache.get( "Key"+username, function( err, value ){
+      if( !err ){
+        if(value == undefined){
+          auth = false;
+        }else{
+          if(value['token'] == token && value['user'] == username){
+            auth = true;          
+          }
+        }
+      }
+    });
+  }
+    
   if (!request.url.startsWith("/api/")) {
     var match_params = request.url.match(/^.*(\?.+)\/?$/);
     if (match_params !== null) {
@@ -336,7 +408,14 @@ exports.serve = function (request, response) {
     }
     routeStatic(request, response);
   } else {
-    routeApi(request, response);
+    // We can access the /api/user when not auth
+    // TODO : When switched from POST to GET in /api/user, we need to add a strict check on the method = GET and the api = /api/user
+    if (!auth && request.url != '/api/user'){
+      response.writeHead(401); // 401 status code = not allowed to access API
+      response.end();
+    }else{
+      routeApi(request, response);
+    }
   }
   return response;
 };
@@ -344,3 +423,7 @@ exports.serve = function (request, response) {
 exports.setSocket = function (io) {
   socket = io;
 };
+
+exports.initCache = function (){
+  myCache = new NodeCache();
+}

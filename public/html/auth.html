@@ -8,16 +8,17 @@
   </head>
 
   <body>
-    <form>
-        <div>
-            <label for="uname"><b>Username</b></label>
-            <input type="text" placeholder="Enter Username" name="uname" required>
+    <div>
+        <label for="uname"><b>Username</b></label>
+        <input type="text" placeholder="Enter Username" name="uname" id="username" required>
 
-            <label for="psw"><b>Password</b></label>
-            <input type="password" placeholder="Enter Password" name="psw" required>
+        <label for="psw"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" name="psw" id="password" required>
 
-            <button type="submit">Login</button>
-        </div>
-    </form>
+        <button type="submit" onclick="send_infos()">Login</button>
+    </div>
+    <p hidden id='alert-login' style='color:red;'> The username and the password are not correct </p>
+    <script src="request.js"></script>
+    <script src="auth.js"></script>
   </body>
 </html>

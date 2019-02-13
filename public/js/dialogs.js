@@ -1,44 +1,38 @@
 function add() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "/api/dialogs");
-  xhr.onload = function() {
-    if (xhr.status === 200) {
+  overload_xhr(
+    "POST", 
+    "/api/dialogs",
+    function(){
       refresh();
-    } else {
-      alert("Request failed.  Returned status of " + xhr.status);
     }
-  };
-  xhr.send();
+  );
 }
 
-function refresh() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/api/dialogs");
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      var json = JSON.parse(this.responseText);
+function refresh(){
+  overload_xhr(
+    "GET", 
+    "/api/dialogs",
+    function(xhr){
+      var json = JSON.parse(xhr.responseText);
       doc_refreshDialogs(json);
-    } else {
-      alert("Request failed.  Returned status of " + xhr.status);
     }
-  };
-  xhr.send();
-}
+  );
+};
 
 var play = function play() {
-  var xhr = new XMLHttpRequest();
   var textButton = this.firstChild.parentElement;
   var row = textButton.parentElement.parentElement.parentElement;
-  xhr.open("GET", `/api/dialogs/${row.id}/play`);
-  xhr.onload = function() {
-    if (xhr.status === 200) {
+  overload_xhr(
+    "GET", 
+    `/api/dialogs/${row.id}/play`,
+    function(){
       textButton.style["backgroundColor"] = "greenyellow";
-    } else {
+    },
+    function(){},
+    function(){
       textButton.style["backgroundColor"] = "red";
-      alert("Request failed.  Returned status of " + xhr.status);
     }
-  };
-  xhr.send();
+  );
 };
 
 var edit = function edit() {
@@ -48,20 +42,21 @@ var edit = function edit() {
 };
 
 var remove = function remove() {
-  var xhr = new XMLHttpRequest();
   var textButton = this.firstChild.parentElement;
   var row = textButton.parentElement.parentElement.parentElement;
-  xhr.open("DELETE", `/api/dialogs/${row.id}`);
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      var table = row.parentElement;
-      table.removeChild(row);
-    } else {
+  var table = row.parentElement;
+
+  overload_xhr(
+    "DELETE",
+    `/api/dialogs/${row.id}`,
+    function(){    
+      table.removeChild(row);    
+    },
+    function(){},
+    function(){
       textButton.style["backgroundColor"] = "red";
-      alert("Request failed.  Returned status of " + xhr.status);
     }
-  };
-  xhr.send();
+  );
 };
 
 function doc_refreshDialogs(dialogs) {
@@ -130,4 +125,4 @@ function doc_refreshDialogs(dialogs) {
 
   // Show table when update is finished
   dialogsTable.style.display = "table-row-group";
-}
+};
