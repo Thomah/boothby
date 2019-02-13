@@ -216,12 +216,12 @@ exports.sendSimpleMessage = function (channelId, message) {
   slack.sendSimpleMessage(channelId, message);
 };
 
-exports.checkCredentialsUser = function (credentials, callback) { 
-  db.read("user", credentials,function (data) {
+exports.checkCredentialsUser = function (credentials, callback) {
+  db.read("user", {username:credentials['username']},function (data) {
     if (data == null){
       callback(false);
     }else{
-      callback(credentials['username']);
+      callback(data);
     }
   });
 };

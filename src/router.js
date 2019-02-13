@@ -4,6 +4,7 @@ const { parse } = require("querystring");
 const api = require("./api.js");
 const scheduler = require("./scheduler.js");
 const NodeCache = require( "node-cache");
+const bcrypt = require('bcrypt');
 
 const resourceFolder = {
   ".html": "./public/html",
@@ -77,24 +78,32 @@ var routeApi = function (request, response) {
     // GET : retrieve existing user, and send back the username and the token
     //       used during authentication
     if(request.method === "GET") {
+      //FIXME : The password can be seen in the request header, should be crypted in the client side
       var credentials = {
         username:request.headers.user,
         password:request.headers.pwd
       };
       api.checkCredentialsUser(credentials, function (data) {
-        if (data != false){
-          //On stocke dans le serveur en cache le user et le token associé
-          generated_token = generate_token();
-          username = data;
-          obj = { user: username, token: generated_token };
-          myCache.set( "Key"+username, obj, function( err, success ){
-            if( !err && success ){
-              //console.log( success );
+        if (data != false){ //if the user exists
+          bcrypt.compare(credentials['password'], data['password'], function(err, res) {
+            if (res == true){
+              generated_token = generate_token();
+              username = data['username'];
+              obj = { user: username, token: generated_token };
+             //On stocke dans le serveur en cache le user et le token associé
+              myCache.set( "Key"+username, obj, function( err, success ){
+                if( !err && success ){
+                  //console.log( success );
+                }
+              });
+              response.writeHead(200, { "Content-Type": "application/json" });
+              response.end(JSON.stringify(obj));    
+            }else{
+              response.writeHead(201, { "Content-Type": "application/json" });
+              response.end();    
             }
           });
-          response.writeHead(200, { "Content-Type": "application/json" });
-          response.end(JSON.stringify(obj));
-        }else{
+        }else{// The username does not exist in the DB
         //FIXME : If no user in database, which status code should I return ?
           response.writeHead(201, { "Content-Type": "application/json" });
           response.end();
@@ -103,11 +112,16 @@ var routeApi = function (request, response) {
     }
 
     else if(request.method === "POST") {
+      //FIXME : The password can be seen in the request header, should be crypted in the client side
       var credentials = {
         username:request.headers.user,
         password:request.headers.pwd
       };
-      api.addUser(credentials, function (data) {
+      //See usage of bcrypt library : https://www.npmjs.com/package/bcrypt
+      saltRounds = 10;
+      bcrypt.hash(credentials['password'], saltRounds, function(err, hash) {
+        credentials['password'] = hash;
+        api.addUser(credentials, function (data) {
           if (data == false){//User already existing
             //FIXME : Status code
             response.writeHead(201, { "Content-Type": "application/json" });
@@ -116,6 +130,7 @@ var routeApi = function (request, response) {
             response.writeHead(200, { "Content-Type": "application/json" });
             response.end();
           }
+        });      
       });
     }
   }
@@ -423,7 +438,13 @@ exports.serve = function (request, response) {
   } else {
     if (!auth){
       if (request.url == '/api/user' && request.method == 'GET'){
-        // We can access the /api/user (GET) when not auth
+      //if (request.url == '/api/user'){ // To create a new user when no one has been created,
+                                         // Comment the line above and uncomment this line,
+                                         // you should be allowed to create a user in 
+                                         // the db, then you can shut down the server
+                                         // Comment this line, and uncomment the other one
+                                         // FIXME : Need to create a general user, or some other stuff
+      // We can access the /api/user (GET) when not auth
         routeApi(request, response);
       }else{
         response.writeHead(401); // 401 status code = not allowed to access API
