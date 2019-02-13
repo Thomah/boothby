@@ -221,3 +221,14 @@ exports.checkCredentialsUser = function (credentials, callback) {
     }
   });
 };
+
+exports.addUser = function (credentials, callback) {
+  db.read("user", {username:credentials['username']},function (data) {
+    if (data == null){
+      db.insert("user",credentials['username'],credentials,callback);
+    }else{
+      //the user already exists
+      callback(false);
+    }
+  });
+};

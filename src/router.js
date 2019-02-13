@@ -101,6 +101,23 @@ var routeApi = function (request, response) {
         }
       });
     }
+
+    else if(request.method === "POST") {
+      var credentials = {
+        username:request.headers.user,
+        password:request.headers.pwd
+      };
+      api.addUser(credentials, function (data) {
+          if (data == false){//User already existing
+            //FIXME : Status code
+            response.writeHead(201, { "Content-Type": "application/json" });
+            response.end();
+          }else {
+            response.writeHead(200, { "Content-Type": "application/json" });
+            response.end();
+          }
+      });
+    }
   }
   // /api/config
   else if (request.url === "/api/config") {
@@ -404,11 +421,14 @@ exports.serve = function (request, response) {
     }
     routeStatic(request, response);
   } else {
-    // We can access the /api/user when not auth
-    // TODO : When switched from POST to GET in /api/user, we need to add a strict check on the method = GET and the api = /api/user
-    if (!auth && request.url != '/api/user' && request.url != 'GET'){
-      response.writeHead(401); // 401 status code = not allowed to access API
-      response.end();
+    if (!auth){
+      if (request.url == '/api/user' && request.method == 'GET'){
+        // We can access the /api/user (GET) when not auth
+        routeApi(request, response);
+      }else{
+        response.writeHead(401); // 401 status code = not allowed to access API
+        response.end();
+      }
     }else{
       routeApi(request, response);
     }

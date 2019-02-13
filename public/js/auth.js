@@ -20,6 +20,30 @@ function send_infos() {
       var par = document.getElementById("alert-login");
       par.style.display = "block";
     },
-    JSON.stringify()
+  );
+}
+
+function add_user() {
+  var user = document.getElementById("username").value;
+  var pwd = document.getElementById("password").value;
+
+  var par_success = document.getElementById("user-created");
+  var par_not_success = document.getElementById("user-not-created");
+
+  overload_xhr(
+    "POST",
+    "/api/user",
+    function(){
+      par_success.style.display = "block";
+      par_not_success.style.display = "none";
+    },
+    function(xhr){
+      xhr.setRequestHeader('user', user);
+      xhr.setRequestHeader('pwd', pwd);
+    },
+    function(){
+      par_success.style.display = "none";
+      par_not_success.style.display = "block";
+    },
   );
 }
