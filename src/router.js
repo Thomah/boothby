@@ -250,6 +250,29 @@ var routeApi = function (request, response) {
     response.write("{}");
     response.end();
   } 
+
+  // /api/oauth
+  else if(request.url.startsWith("/api/oauth") && request.method === "GET") {
+    var response_400 = function(err, response) {
+      response.writeHead(400, { "Content-Type": "application/json" });
+      response.write(JSON.stringify(err));
+      response.end();
+    };
+    if(request.params.code != undefined) {
+      api.getAccessToken(request.params.code, function(infos) {
+        if(!infos.ok) {
+          response_400(infos, response);
+        } else {
+          response.writeHead(302, {
+            'Location': `slack://channel?team=${infos.team_id}`
+          });
+          response.end();
+        }
+      }, response_400);
+    } else {
+      response_400("No code provided", response);
+    }
+  }
   
   // /api/simple-messages
   else if (request.url.startsWith("/api/simple-messages")) {
@@ -327,6 +350,18 @@ var waitForChannelsAndIMs = function (callback) {
 };
 
 exports.serve = function (request, response) {
+  var regex_params = /(\?|&)([^=]+)=([^&]+)/g;
+  if (request.url.match(regex_params) !== null) {
+    var matchs = request.url.match(regex_params);
+    var params = {};
+    var match, k;
+    for(k = 0 ; k < matchs.length ; k++) {
+      match = matchs[k].match(/(\?|&)([^=]+)=([^&]+)/);
+      params[match[2]] = match[3];
+    }
+    request.params = params;
+  }
+
   if (!request.url.startsWith("/api/")) {
     var match_params = request.url.match(/^.*(\?.+)\/?$/);
     if (match_params !== null) {

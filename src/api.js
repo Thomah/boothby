@@ -1,6 +1,12 @@
+const https = require("https");
+var querystring = require("querystring");
 const db = require("./db.js");
 const scheduler = require("./scheduler.js");
 const slack = require("./slack.js");
+
+const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
+const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
+const ROOT_URL = process.env.ROOT_URL;
 
 var nbObjects = 0;
 
@@ -43,6 +49,44 @@ exports.deleteObjectInDb = function (collection, id, callback) {
   console.log("delete " + collection + " " + id);
   db.delete(collection, id, callback);
 };
+
+exports.getAccessToken = function(code, callback_end, callback_err) {
+
+  var b = new Buffer(SLACK_CLIENT_ID + ":" + SLACK_CLIENT_SECRET);
+  var basicAuth = b.toString('base64');
+
+  var postData = querystring.stringify({
+    code: code
+  });
+
+  var options = {
+    host: 'slack.com',
+    path: '/api/oauth.access',
+    method: 'POST',
+    headers: {
+      "Authorization": "Basic " + basicAuth,
+      "Content-Type": 'application/x-www-form-urlencoded'
+    }
+  };
+
+  var req = https.request(options, function(response) {
+    var str = ''
+    response.on('data', function (chunk) {
+      str += chunk;
+    });
+
+    response.on('end', function () {
+      callback_end(JSON.parse(str));
+    });
+  });
+  
+  req.on('error', function (err) {
+    callback_err(JSON.parse(err));
+  });
+ 
+  req.write(postData);
+  req.end();
+}
 
 exports.getConfig = function(callback) {
   db.read("global", { name: "state" }, function (data) {
