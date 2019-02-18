@@ -19,7 +19,6 @@ npm install
 cp bin/setenv.sh.template bin/setenv.sh
 ```
 - Fill the file `bin/setenv.sh` with the following values (1) :
-
 ```bash
 export SLACK_USER_TOKEN=<ask-someone-of-the-team>
 export SLACK_BOT_TOKEN=<ask-someone-of-the-team>
