@@ -8,7 +8,7 @@
   </head>
 
   <body onload="refresh()">
-    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a> <a href="add-user.html">Add user</a></p>
+    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a> <a href="add-user.html">Add user</a> <a onclick="logout()" href="#">Logout</a></p>
     <hr />
     <button onclick="add()">Add</button>
     <button onclick="refresh()">Refresh</button>
@@ -24,6 +24,7 @@
       </thead>
       <tbody></tbody>
     </table>
+    <script src="auth.js"></script>
     <script src="request.js"></script>
     <script src="dialogs.js"></script>
   </body>

@@ -11,7 +11,7 @@ function overload_xhr(method,
     before_function(xhr);
     token = getCookie('token');
     //When the user is not auth, the token is not in the cookie, there is no token to send
-    if (typeof token !== ''){
+    if (token !== ''){
         xhr.setRequestHeader('Token', token);
     }
     xhr.onload = function() {
@@ -27,7 +27,7 @@ function overload_xhr(method,
         }
       };
     xhr.send(params_url);
-};
+}
 
 function setCookie(cname, cvalue, exhours) {
   var d = new Date();

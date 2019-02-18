@@ -129,6 +129,26 @@ var routeApi = function (request, response) {
       });
     }
   }
+  else if (request.url === "/api/user/logout") {
+    if(request.method === "POST") {
+      myCache.get( "tokens", function( err, value ){
+        if( !err ){
+          //We remove this specific token from the server cache
+          tokens = value;
+          var index_token_to_remove = tokens.indexOf(request.headers.token);
+          tokens.splice(index_token_to_remove, 1);
+          myCache.set( "tokens", tokens, function( err, success ){
+            if (err){
+              response.writeHead(201, { "Content-Type": "application/json" });
+              response.end();
+            }
+          });
+        }
+      });
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end();
+    }
+  }
   else if (request.url === "/api/user") {
    if(request.method === "POST") {
       //FIXME : The password can be seen in the request header, should be crypted in the client side

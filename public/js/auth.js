@@ -21,6 +21,17 @@ function login() {
   );
 }
 
+function logout() {
+  overload_xhr(
+    "POST",
+    "/api/user/logout",
+    function(xhr){
+      setCookie('token','',0);//Delete the cookie
+      window.location = 'auth.html';
+    }
+  );
+}
+
 function add_user() {
   var user = document.getElementById("username").value;
   var pwd = document.getElementById("password").value;

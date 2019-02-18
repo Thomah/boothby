@@ -8,7 +8,7 @@
   </head>
 
   <body onload="reloadIHM()">
-    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a> <a href="add-user.html">Add user</a></p>
+    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a> <a href="add-user.html">Add user</a> <a onclick="logout()" href="#">Logout</a></p>
     <hr />
     <button onclick="syncDb()">Sync DB</button
     ><button onclick="reloadIHM()">Reload IHM</button>
@@ -42,6 +42,7 @@
       <tbody></tbody>
     </table>
     <script src="/socket.io/socket.io.js"></script>
+    <script src="auth.js"></script>
     <script src="request.js"></script>
     <script src="index.js"></script>
   </body>
