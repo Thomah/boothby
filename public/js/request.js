@@ -9,9 +9,9 @@ function overload_xhr(method,
     var xhr = new XMLHttpRequest();
     xhr.open(method, path);
     before_function(xhr);
-    token = sessionStorage.getItem('Token');
-    //When the user is not auth, the token is not in db, there is no token to send
-    if (typeof token !== 'undefined'){
+    token = getCookie('token');
+    //When the user is not auth, the token is not in the cookie, there is no token to send
+    if (typeof token !== ''){
         xhr.setRequestHeader('Token', token);
     }
     xhr.onload = function() {
@@ -28,3 +28,26 @@ function overload_xhr(method,
       };
     xhr.send(params_url);
 };
+
+function setCookie(cname, cvalue, exhours) {
+  var d = new Date();
+  d.setTime(d.getTime() + (exhours*60*60*1000));
+  var expires = "expires="+ d.toUTCString();
+  document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
+}

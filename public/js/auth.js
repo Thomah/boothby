@@ -1,4 +1,4 @@
-function send_infos() {
+function login() {
   var user = document.getElementById("username").value;
   var pwd = document.getElementById("password").value;
 
@@ -7,7 +7,7 @@ function send_infos() {
     "/api/user/login",
     function(xhr){
       token = JSON.parse(xhr.response)['token'];
-      sessionStorage.setItem('Token',token);
+      setCookie('token',token,10);
       window.location = 'index.html';
     },
     function(xhr){
