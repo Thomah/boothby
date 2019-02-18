@@ -9,12 +9,10 @@ function overload_xhr(method,
     var xhr = new XMLHttpRequest();
     xhr.open(method, path);
     before_function(xhr);
-    token = sessionStorage.getItem('token');
-    username = sessionStorage.getItem('username');
+    token = sessionStorage.getItem('Token');
     //When the user is not auth, the token is not in db, there is no token to send
     if (typeof token !== 'undefined'){
-        xhr.setRequestHeader('token', token);
-        xhr.setRequestHeader('username', username);
+        xhr.setRequestHeader('Token', token);
     }
     xhr.onload = function() {
         if (xhr.status === 200) {

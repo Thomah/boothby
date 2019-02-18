@@ -3,13 +3,11 @@ function send_infos() {
   var pwd = document.getElementById("password").value;
 
   overload_xhr(
-    "GET",
-    "/api/user",
+    "POST",
+    "/api/user/login",
     function(xhr){
       token = JSON.parse(xhr.response)['token'];
-      username = JSON.parse(xhr.response)['user'];
-      sessionStorage.setItem('username',username);
-      sessionStorage.setItem('token',token);
+      sessionStorage.setItem('Token',token);
       window.location = 'index.html';
     },
     function(xhr){

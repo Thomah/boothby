@@ -25,6 +25,7 @@ var ims = [];
 var nbIMs = 0;
 var socket;
 var myCache; //server cache
+var ttlCache = 36000; //After 36000 sec (10 hrs), the variables in the cache will be reset
 
 //Functions used to generate the auth token
 //https://stackoverflow.com/questions/8532406/create-a-random-token-in-javascript-based-on-user-details
@@ -73,11 +74,11 @@ var routeStatic = function (request, response) {
 
 var routeApi = function (request, response) {
   // /api/user
-  if (request.url === "/api/user") {
+  if (request.url === "/api/user/login") {
 
     // GET : retrieve existing user, and send back the username and the token
     //       used during authentication
-    if(request.method === "GET") {
+    if(request.method === "POST") {
       //FIXME : The password can be seen in the request header, should be crypted in the client side
       var credentials = {
         username:request.headers.user,
@@ -88,19 +89,36 @@ var routeApi = function (request, response) {
           bcrypt.compare(credentials['password'], data['password'], function(err, res) {
             if (res == true){
               generated_token = generate_token();
-              username = data['username'];
-              obj = { user: username, token: generated_token };
-             //On stocke dans le serveur en cache le user et le token associé
-              myCache.set( "Key"+username, obj, function( err, success ){
-                if( !err && success ){
-                  //console.log( success );
+              //We get the array tokens in the server cache
+              myCache.get( "tokens", function( err, value ){
+                if( !err ){
+                  if(value == undefined){
+                    //The array in the cache does not exist : Init of the array containing the tokens
+                    myCache.set( "tokens", [generated_token], function( err, success ){
+                      if (err){
+                        response.writeHead(201, { "Content-Type": "application/json" });
+                        response.end();
+                      }
+                    });
+                  }else{
+                    //The array tokens already exists in the cache
+                    tokens = value;
+                    tokens.push(generated_token);
+                    //Already a token in the server, we add the new generated token in the tokens cache array
+                    myCache.set( "tokens", tokens, function( err, success ){
+                      if (err){
+                        response.writeHead(201, { "Content-Type": "application/json" });
+                        response.end();
+                      }
+                    });
+                  }
                 }
               });
               response.writeHead(200, { "Content-Type": "application/json" });
-              response.end(JSON.stringify(obj));    
+              response.end(JSON.stringify({token:generated_token}));
             }else{
               response.writeHead(201, { "Content-Type": "application/json" });
-              response.end();    
+              response.end();
             }
           });
         }else{// The username does not exist in the DB
@@ -110,8 +128,9 @@ var routeApi = function (request, response) {
         }
       });
     }
-
-    else if(request.method === "POST") {
+  }
+  else if (request.url === "/api/user") {
+   if(request.method === "POST") {
       //FIXME : The password can be seen in the request header, should be crypted in the client side
       var credentials = {
         username:request.headers.user,
@@ -405,7 +424,6 @@ exports.serve = function (request, response) {
   //If API request, there is a token in the request header which proves that 
   //   the user is authenticated
   if (request.headers.token){
-    username = request.headers.username;
     token = request.headers.token;
   }
 
@@ -414,13 +432,13 @@ exports.serve = function (request, response) {
   // We check if the token in the request header, is the same that matches the one
   //   which has been saved in the cache server
   if (typeof token !== 'undefined'){
-    myCache.get( "Key"+username, function( err, value ){
+    myCache.get( "tokens", function( err, value ){
       if( !err ){
         if(value == undefined){
           auth = false;
         }else{
-          if(value['token'] == token && value['user'] == username){
-            auth = true;          
+          if(value.includes(token)){
+            auth = true;
           }
         }
       }
@@ -437,7 +455,7 @@ exports.serve = function (request, response) {
     routeStatic(request, response);
   } else {
     if (!auth){
-      if (request.url == '/api/user' && request.method == 'GET'){
+      if (request.url == '/api/user/login' && request.method == 'POST'){
       //if (request.url == '/api/user'){ // To create a new user when no one has been created,
                                          // Comment the line above and uncomment this line,
                                          // you should be allowed to create a user in 
@@ -462,5 +480,5 @@ exports.setSocket = function (io) {
 };
 
 exports.initCache = function (){
-  myCache = new NodeCache();
+  myCache = new NodeCache({ stdTTL: ttlCache });
 }
