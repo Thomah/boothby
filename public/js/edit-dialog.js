@@ -1,34 +1,38 @@
 function refresh() {
   var url = new URL(window.location.href);
   var id = url.searchParams.get("id");
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", `/api/dialogs/${id}`);
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      var json = JSON.parse(this.responseText);
+  overload_xhr(
+    "GET", 
+    `/api/dialogs/${id}`,
+    function(xhr){
+      var json = JSON.parse(xhr.responseText);
       doc_refreshDialog(json);
-    } else {
-      alert("Request failed.  Returned status of " + xhr.status);
+    },
+    function(){},
+    function(){
+      textButton.style["backgroundColor"] = "red";
     }
-  };
-  xhr.send();
+  );
 }
 
 function save() {
   var dialog = doc_getDialog();
-  var xhr = new XMLHttpRequest();
   var textButton = document.getElementById("save");
-  xhr.open("PUT", `/api/dialogs/${dialog._id}`, true);
-  xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
-  xhr.onload = function() {
-    if (xhr.status === 200) {
+
+  overload_xhr(
+    "PUT", 
+    `/api/dialogs/${dialog._id}`,    
+    function(){
       textButton.style["backgroundColor"] = "greenyellow";
-    } else {
+    },
+    function(xhr){
+      xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+    },
+    function(){
       textButton.style["backgroundColor"] = "red";
-      alert("Request failed.  Returned status of " + xhr.status);
-    }
-  };
-  xhr.send(JSON.stringify(dialog));
+    },
+    JSON.stringify(dialog)
+  );
 }
 
 var addMessage = function addMessage() {

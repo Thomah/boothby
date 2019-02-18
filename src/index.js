@@ -39,5 +39,7 @@ process.on("SIGINT", function () {
   server.close();
 });
 
+router.initCache();
+
 server.listen(8080);
 console.log("Server running at " + ROOT_URL);

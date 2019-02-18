@@ -8,7 +8,7 @@
   </head>
 
   <body onload="refresh()">
-    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a></p>
+    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a> <a href="add-user.html">Add user</a> <a onclick="logout()" href="#">Logout</a></p>
     <hr />
     <button onclick="refresh()">Refresh</button>
     <button id="save" onclick="save()">Save</button>
@@ -20,6 +20,8 @@
     <div>
       <label for="next-daily-dialog">Next dialog to play</label><input id="next-daily-dialog" type="number" name="next-daily-dialog" />
     </div>
+    <script src="auth.js"></script>
+    <script src="request.js"></script>
     <script src="config.js"></script>
   </body>
 </html>
