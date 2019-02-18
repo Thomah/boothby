@@ -28,6 +28,7 @@ function channelsAndIMs() {
   );
 };
 
+//The index page is like a playground. Features on this page are not prioritized (maybe in a loooooong time).
 var deleteMessage = function deleteMessage() {
   var textButton = this.firstChild.parentElement;
   overload_xhr(
