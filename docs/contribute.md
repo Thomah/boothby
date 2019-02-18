@@ -17,3 +17,7 @@ Any code modification should be done on a dedicated branch and when your modific
 When the Pull Request is merged, you can close the issue, move it inside the Kanban and pick another one.
 
 If you have any idea, just propose them in the [Issue](https://github.com/valeuriad-techlab/Boothby/issues) page and don't hesitate to ping someone of the team to discuss them :)
+
+## Technical documentation
+
+This site is just a formal presentation of Boothby. Every technical information (detailed architecture, data model, etc.) must be written in the [Wiki](https://github.com/valeuriad-techlab/Boothby/wiki). We're still kicking off the project so be indulgent with the lack of information please :)
