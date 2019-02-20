@@ -308,12 +308,11 @@ function doc_getDialog() {
         callback_id = "survey_" + divAttachment.getElementsByClassName("survey-name")[0].value;
         for(var z = 0 ; z < inputsAnswerCount ; z++) {
           inputAnswer = inputsAnswer[z];
-          var hashed = hash('SHA-256', inputAnswer.value);
           actions[z] = {
             name: callback_id,
             text: inputAnswer.value,
             type: "button",
-            value: buf2hex(hashed.value)
+            value: dialog._id + "-" + x + "-" + convertToHex(inputAnswer.value)
           }
         }
         attachments[y] = {
@@ -339,14 +338,10 @@ function doc_getDialog() {
   return dialog;
 }
 
-function buf2hex(buffer) {
-  return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
-}
-
-async function hash(algo, str) {
-  var hash;
-  await crypto.subtle.digest(algo, new TextEncoder().encode(str)).then(hashed => {
-    hash = hashed;
-  });
-  return hash;
+function convertToHex(str) {
+  var hex = '';
+  for(var i=0;i<str.length;i++) {
+      hex += ''+str.charCodeAt(i).toString(16);
+  }
+  return hex;
 }

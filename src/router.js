@@ -358,10 +358,11 @@ var routeApi = function (request, response) {
     });
     request.on("end", () => {
       var parsedBody = parse(body);
-      api.interactive(parsedBody.payload);
+      api.interactive(parsedBody.payload, function(data) {
+        response.write(JSON.stringify(data));
+        response.end();
+      });
     });
-    response.write("{}");
-    response.end();
   }
   
   // /api/simple-messages

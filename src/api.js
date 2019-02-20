@@ -105,8 +105,15 @@ var waitForUpsertObjectsInDb = function (nbObjectsWaited, callback) {
   }
 };
 
-exports.interactive = function (rawPayload) {
+exports.interactive = function (rawPayload, callback) {
   var payload = JSON.parse(rawPayload);
+
+  // Quick answer
+  splitActionValue = payload.actions[0].value.split("-");
+  db.read("dialogs", { _id: new db.mongodb().ObjectId(splitActionValue[0]) }, function(data) {
+    callback(data[splitActionValue[1]]);
+  });
+
   db.read("surveys", { name: payload.actions[0].name }, function (data) {
     var newMessage = payload.original_message;
     if (data === null) {
