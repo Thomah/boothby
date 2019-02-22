@@ -39,10 +39,11 @@ exports.createDialog = function (callback) {
       wait: 0,
       text: "first message"
     },
+    name: "new-dialog",
     category: "daily",
     scheduling: 99999
   };
-  db.insert("dialogs", "new-dialog", dialog, callback);
+  db.insert("dialogs", dialog, callback);
 };
 
 exports.deleteObjectInDb = function (collection, id, callback) {
@@ -95,7 +96,7 @@ exports.getConfig = function(callback) {
       data.daily = 1;
       data.name = "state";
       data.cron = "42 9 * * 1,3,5";
-      db.insert("global", "state", data);
+      db.insert("global", data);
     }
     db.updateByName("global", "state", data);
     data.nextInvocation = scheduler.nextInvocation();
@@ -163,7 +164,7 @@ exports.interactive = function (rawPayload, callback) {
     if (data === null) {
       data = {};
       data.name = payload.actions[0].name;
-      db.insert("surveys", payload.actions[0].name, data);
+      db.insert("surveys", data);
     }
     if (data.texts === undefined) {
       data.texts = {};
@@ -249,7 +250,7 @@ exports.resumeDialogs = function () {
       data = {};
       data.daily = 1;
       data.name = "state";
-      db.insert("global", "state", data);
+      db.insert("global", data);
     }
     db.read("dialogs", { scheduling: parseInt(data.daily) }, function (dialog) {
       if(dialog === null){
@@ -280,7 +281,8 @@ exports.checkCredentialsUser = function (credentials, callback) {
 exports.addUser = function (credentials, callback) {
   db.read("user", {username:credentials['username']},function (data) {
     if (data == null){
-      db.insert("user",credentials['username'],credentials,callback);
+      credentials.name = credentials['username'];
+      db.insert("user",credentials,callback);
     }else{
       //the user already exists
       callback(false);

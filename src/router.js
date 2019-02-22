@@ -38,9 +38,9 @@ var generate_token = function() {
 }
 
 var getFilePath = function (request) {
-  var extname = String(path.extname(request.simpleUrl)).toLowerCase();
+  var extname = String(path.extname(request.url)).toLowerCase();
   var folder = resourceFolder[extname] || resourceFolder[".html"];
-  var filePath = folder + request.simpleUrl;
+  var filePath = folder + request.url;
   if (filePath === resourceFolder[".html"] + "/") {
     filePath = resourceFolder[".html"] + "/index.html";
   }
@@ -379,10 +379,12 @@ var routeApi = function (request, response) {
         if(!infos.ok) {
           response_400(infos, response);
         } else {
-          response.writeHead(302, {
-            'Location': `slack://channel?team=${infos.team_id}`
-          });
-          response.end();
+          api.upsertObjectInDb("workspaces", infos, function(result) {
+            response.writeHead(302, {
+              'Location': `slack://channel?team=${infos.team_id}`
+            });
+            response.end();
+          })
         }
       }, response_400);
     } else {
@@ -502,17 +504,17 @@ exports.serve = function (request, response) {
     });
   }
     
+  var match_params = request.url.match(/^.*(\?.+)\/?$/);
+  if (match_params !== null) {
+    request.url = request.url.replace(match_params[1], "");
+  }
+
   if (!request.url.startsWith("/api/")) {
-    var match_params = request.url.match(/^.*(\?.+)\/?$/);
-    if (match_params !== null) {
-      request.simpleUrl = request.url.replace(match_params[1], "");
-    } else {
-      request.simpleUrl = request.url;
-    }
     routeStatic(request, response);
   } else {
     if (!auth){
-      if (request.url == '/api/user/login' && request.method == 'POST'){
+      if ((request.url == '/api/user/login' && request.method == 'POST')
+      || (request.url == '/api/oauth' && request.method == 'GET')){
       //if (request.url == '/api/user'){ // To create a new user when no one has been created,
                                          // Comment the line above and uncomment this line,
                                          // you should be allowed to create a user in 
