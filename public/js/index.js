@@ -3,75 +3,78 @@ function reloadIHM() {
   listMessages();
 }
 
+
 function syncDb() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/api/channelsAndIMs/refresh");
-  xhr.onload = function() {
-    if (xhr.status === 200) {
+  overload_xhr(
+    "GET", 
+    "/api/channelsAndIMs/refresh",
+    function(){
       doc_addIncommingMessage({
         ts: new Date().getTime(),
         text: "SYNC STARTED"
       });
-    } else {
-      alert(`Request failed.  Returned status of : ${xhr.status}`);
     }
-  };
-  xhr.send();
-}
+  );
+};
 
 function channelsAndIMs() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/api/channelsAndIMs");
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      var json = JSON.parse(this.responseText);
+  overload_xhr(
+    "GET",
+    "/api/channelsAndIMs",
+    success_function = function(xhr){
+      var json = JSON.parse(xhr.responseText);
       doc_refreshChannelsAndIMs(json);
-    } else {
-      alert(`Request failed.  Returned status of : ${xhr.status}`);
     }
-  };
-  xhr.send();
-}
+  );
+};
 
+//The index page is like a playground. Features on this page are not prioritized (maybe in a loooooong time).
 var deleteMessage = function deleteMessage() {
-  var xhr = new XMLHttpRequest();
   var textButton = this.firstChild.parentElement;
-  xhr.open("DELETE", `/api/simple-messages/${textButton.id}`);
-  xhr.onload = function() {
-    if (xhr.status === 200) {
+  overload_xhr(
+    "DELETE", 
+    `/api/simple-messages/${textButton.id}`,
+    function(){
       var row = textButton.parentElement.parentElement.parentElement;
       var table = row.parentElement;
       table.removeChild(row);
-    } else {
+    },
+    function(){},
+    function(){
       textButton.style["backgroundColor"] = "red";
-      alert("Request failed.  Returned status of " + xhr.status);
     }
-  };
-  xhr.send();
+  );
 };
 
 function listMessages() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/api/simple-messages");
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      var json = JSON.parse(this.responseText);
+  overload_xhr(
+    "GET",
+    "/api/simple-messages",
+    function(xhr){
+      var json = JSON.parse(xhr.responseText);
       doc_refreshMessages(json);
-    } else {
-      alert(`Request failed.  Returned status of : ${xhr.status}`);
     }
-  };
-  xhr.send();
+  );
 }
 
 function sendSimpleMessage() {
-  var xhr = new XMLHttpRequest();
-  xhr.open("POST", "/api/simple-messages/send", true);
-  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   var channel = document.getElementById("message-channel").value;
   var content = document.getElementById("message-text").value;
-  xhr.send(`channel=${channel}&message=${content}`);
-}
+
+  overload_xhr(
+    "POST", 
+    "/api/simple-messages/send",
+    function(xhr){
+      var json = JSON.parse(xhr.responseText);
+      doc_refreshMessages(json);
+    },
+    function(xhr){
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    },
+    function(){},
+    `channel=${channel}&message=${content}`
+  );
+};
 
 function doc_addIncommingMessage(message) {
   var incommingMessages = document

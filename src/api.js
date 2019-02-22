@@ -149,8 +149,15 @@ var waitForUpsertObjectsInDb = function (nbObjectsWaited, callback) {
   }
 };
 
-exports.interactive = function (rawPayload) {
+exports.interactive = function (rawPayload, callback) {
   var payload = JSON.parse(rawPayload);
+
+  // Quick answer
+  splitActionValue = payload.actions[0].value.split("-");
+  db.read("dialogs", { _id: new db.mongodb().ObjectId(splitActionValue[0]) }, function(data) {
+    callback(data[splitActionValue[1]]);
+  });
+
   db.read("surveys", { name: payload.actions[0].name }, function (data) {
     var newMessage = payload.original_message;
     if (data === null) {
@@ -229,7 +236,6 @@ exports.openIm = function (user, callback) {
 
 var processDialog = function (collection, id) {
   db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (data) {
-    console.log(data);
     if (data !== null) {
       speakRecurse(data, "0");
     }
@@ -259,4 +265,25 @@ exports.resumeDialogs = function () {
 
 exports.sendSimpleMessage = function (channelId, message) {
   slack.sendSimpleMessage(channelId, message);
+};
+
+exports.checkCredentialsUser = function (credentials, callback) {
+  db.read("user", {username:credentials['username']},function (data) {
+    if (data == null){
+      callback(false);
+    }else{
+      callback(data);
+    }
+  });
+};
+
+exports.addUser = function (credentials, callback) {
+  db.read("user", {username:credentials['username']},function (data) {
+    if (data == null){
+      db.insert("user",credentials['username'],credentials,callback);
+    }else{
+      //the user already exists
+      callback(false);
+    }
+  });
 };

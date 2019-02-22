@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Auth</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="boothby.css" />
+  </head>
+
+  <body>
+    <div>
+        <label for="username"><b>Username</b></label>
+        <input type="text" placeholder="Enter Username" name="uname" id="username" required>
+
+        <label for="password"><b>Password</b></label>
+        <input type="password" placeholder="Enter Password" name="psw" id="password" required>
+
+        <button type="submit" onclick="login()">Login</button>
+    </div>
+    <p hidden id='alert-login' style='color:red;'> The username and the password are not correct </p>
+    <script src="request.js"></script>
+    <script src="auth.js"></script>
+  </body>
+</html>

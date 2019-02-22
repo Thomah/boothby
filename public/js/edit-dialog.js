@@ -1,34 +1,38 @@
 function refresh() {
   var url = new URL(window.location.href);
   var id = url.searchParams.get("id");
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", `/api/dialogs/${id}`);
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      var json = JSON.parse(this.responseText);
+  overload_xhr(
+    "GET", 
+    `/api/dialogs/${id}`,
+    function(xhr){
+      var json = JSON.parse(xhr.responseText);
       doc_refreshDialog(json);
-    } else {
-      alert("Request failed.  Returned status of " + xhr.status);
+    },
+    function(){},
+    function(){
+      textButton.style["backgroundColor"] = "red";
     }
-  };
-  xhr.send();
+  );
 }
 
 function save() {
   var dialog = doc_getDialog();
-  var xhr = new XMLHttpRequest();
   var textButton = document.getElementById("save");
-  xhr.open("PUT", `/api/dialogs/${dialog._id}`, true);
-  xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
-  xhr.onload = function() {
-    if (xhr.status === 200) {
+
+  overload_xhr(
+    "PUT", 
+    `/api/dialogs/${dialog._id}`,    
+    function(){
       textButton.style["backgroundColor"] = "greenyellow";
-    } else {
+    },
+    function(xhr){
+      xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+    },
+    function(){
       textButton.style["backgroundColor"] = "red";
-      alert("Request failed.  Returned status of " + xhr.status);
-    }
-  };
-  xhr.send(JSON.stringify(dialog));
+    },
+    JSON.stringify(dialog)
+  );
 }
 
 var addMessage = function addMessage() {
@@ -304,12 +308,11 @@ function doc_getDialog() {
         callback_id = "survey_" + divAttachment.getElementsByClassName("survey-name")[0].value;
         for(var z = 0 ; z < inputsAnswerCount ; z++) {
           inputAnswer = inputsAnswer[z];
-          var hashed = hash('SHA-256', inputAnswer.value);
           actions[z] = {
             name: callback_id,
             text: inputAnswer.value,
             type: "button",
-            value: buf2hex(hashed.value)
+            value: dialog._id + "-" + x + "-" + convertToHex(inputAnswer.value)
           }
         }
         attachments[y] = {
@@ -335,14 +338,10 @@ function doc_getDialog() {
   return dialog;
 }
 
-function buf2hex(buffer) {
-  return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
-}
-
-async function hash(algo, str) {
-  var hash;
-  await crypto.subtle.digest(algo, new TextEncoder().encode(str)).then(hashed => {
-    hash = hashed;
-  });
-  return hash;
+function convertToHex(str) {
+  var hex = '';
+  for(var i=0;i<str.length;i++) {
+      hex += ''+str.charCodeAt(i).toString(16);
+  }
+  return hex;
 }
