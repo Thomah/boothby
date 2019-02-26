@@ -6,7 +6,7 @@ function login() {
     "POST",
     "/api/user/login",
     function(xhr){
-      token = JSON.parse(xhr.response)['token'];
+      var token = JSON.parse(xhr.response)['token'];
       setCookie('token',token,10);
       window.location = 'index.html';
     },
