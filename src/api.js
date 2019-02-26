@@ -6,24 +6,22 @@ const slack = require("./slack.js");
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
-const ROOT_URL = process.env.ROOT_URL;
 
 var nbObjects = 0;
 
-var speakRecurse = function (dialog, currentId) {
-  console.log(dialog[currentId]);
+var speakRecurse = function (user_access_token, bot_access_token, dialog, currentId) {
   if (dialog[currentId].wait === undefined) {
     dialog[currentId].wait = 0;
   }
   setTimeout(() => {
     slack
-      .join(dialog[currentId].channel)
+      .join(user_access_token, dialog[currentId].channel)
       .then(res => {
         slack
-          .postMessage(res.channel.id, dialog[currentId])
+          .postMessage(bot_access_token, res.channel.id, dialog[currentId])
           .then(res => {
             if (dialog[currentId].next !== undefined) {
-              speakRecurse(dialog, dialog[currentId].next);
+              speakRecurse(user_access_token, bot_access_token, dialog, dialog[currentId].next);
             }
           })
           .catch(console.error);
@@ -47,7 +45,6 @@ exports.createDialog = function (callback) {
 };
 
 exports.deleteObjectInDb = function (collection, id, callback) {
-  console.log("delete " + collection + " " + id);
   db.delete(collection, id, callback);
 };
 
@@ -104,6 +101,10 @@ exports.getConfig = function(callback) {
   });
 };
 
+exports.insertObjectInDb = function(collection, content, callback) {
+  db.insert(collection, content, callback);
+}
+
 exports.getObjectInDb = function (collection, condition, callback) {
   db.read(collection, condition, callback);
 };
@@ -152,6 +153,7 @@ var waitForUpsertObjectsInDb = function (nbObjectsWaited, callback) {
 
 exports.interactive = function (rawPayload, callback) {
   var payload = JSON.parse(rawPayload);
+  console.log(interactive);
 
   // Quick answer
   splitActionValue = payload.actions[0].value.split("-");
@@ -238,7 +240,13 @@ exports.openIm = function (user, callback) {
 var processDialog = function (collection, id) {
   db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (data) {
     if (data !== null) {
-      speakRecurse(data, "0");
+      db.list("workspaces", function(workspaces) {
+        for(var workspaceId in workspaces) {
+          var user_access_token = workspaces[workspaceId].access_token;
+          var bot_access_token = workspaces[workspaceId].bot.bot_access_token;
+          speakRecurse(user_access_token, bot_access_token, data, "0");
+        }
+      });
     }
   });
 };

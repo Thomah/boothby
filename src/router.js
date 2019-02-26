@@ -379,7 +379,7 @@ var routeApi = function (request, response) {
         if(!infos.ok) {
           response_400(infos, response);
         } else {
-          api.upsertObjectInDb("workspaces", infos, function(result) {
+          api.insertObjectInDb("workspaces", infos, function(result) {
             response.writeHead(302, {
               'Location': `slack://channel?team=${infos.team_id}`
             });
