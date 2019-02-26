@@ -38,9 +38,9 @@ var generate_token = function() {
 }
 
 var getFilePath = function (request) {
-  var extname = String(path.extname(request.simpleUrl)).toLowerCase();
+  var extname = String(path.extname(request.url)).toLowerCase();
   var folder = resourceFolder[extname] || resourceFolder[".html"];
-  var filePath = folder + request.simpleUrl;
+  var filePath = folder + request.url;
   if (filePath === resourceFolder[".html"] + "/") {
     filePath = resourceFolder[".html"] + "/index.html";
   }
@@ -363,6 +363,33 @@ var routeApi = function (request, response) {
         response.end();
       });
     });
+    response.write("{}");
+    response.end();
+  } 
+
+  // /api/oauth
+  else if(request.url.startsWith("/api/oauth") && request.method === "GET") {
+    var response_400 = function(err, response) {
+      response.writeHead(400, { "Content-Type": "application/json" });
+      response.write(JSON.stringify(err));
+      response.end();
+    };
+    if(request.params.code != undefined) {
+      api.getAccessToken(request.params.code, function(infos) {
+        if(!infos.ok) {
+          response_400(infos, response);
+        } else {
+          api.upsertObjectInDb("workspaces", infos, function(result) {
+            response.writeHead(302, {
+              'Location': `slack://channel?team=${infos.team_id}`
+            });
+            response.end();
+          })
+        }
+      }, response_400);
+    } else {
+      response_400("No code provided", response);
+    }
   }
   
   // /api/simple-messages
@@ -441,6 +468,17 @@ var waitForChannelsAndIMs = function (callback) {
 };
 
 exports.serve = function (request, response) {
+  var regex_params = /(\?|&)([^=]+)=([^&]+)/g;
+  if (request.url.match(regex_params) !== null) {
+    var matchs = request.url.match(regex_params);
+    var params = {};
+    var match, k;
+    for(k = 0 ; k < matchs.length ; k++) {
+      match = matchs[k].match(/(\?|&)([^=]+)=([^&]+)/);
+      params[match[2]] = match[3];
+    }
+    request.params = params;
+  }
 
   //If API request, there is a token in the request header which proves that 
   //   the user is authenticated
@@ -466,17 +504,17 @@ exports.serve = function (request, response) {
     });
   }
     
+  var match_params = request.url.match(/^.*(\?.+)\/?$/);
+  if (match_params !== null) {
+    request.url = request.url.replace(match_params[1], "");
+  }
+
   if (!request.url.startsWith("/api/")) {
-    var match_params = request.url.match(/^.*(\?.+)\/?$/);
-    if (match_params !== null) {
-      request.simpleUrl = request.url.replace(match_params[1], "");
-    } else {
-      request.simpleUrl = request.url;
-    }
     routeStatic(request, response);
   } else {
     if (!auth){
-      if (request.url == '/api/user/login' && request.method == 'POST'){
+      if ((request.url == '/api/user/login' && request.method == 'POST')
+      || (request.url == '/api/oauth' && request.method == 'GET')){
       //if (request.url == '/api/user'){ // To create a new user when no one has been created,
                                          // Comment the line above and uncomment this line,
                                          // you should be allowed to create a user in 

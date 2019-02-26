@@ -74,18 +74,12 @@ exports.upsert = function (collection, content, callback) {
   );
 };
 
-exports.insert = function (collection, name, content) {
-  content.name = name;
+exports.insert = function (collection, content, callback) {
   dbo.collection(collection).insertOne(content, function (error, result) {
     if (error) throw error;
-  });
-};
-
-exports.insert = function (collection, name, content, callback) {
-  content.name = name;
-  dbo.collection(collection).insertOne(content, function (error, result) {
-    if (error) throw error;
-    callback(result);
+    if(callback !== undefined) {
+      callback(result);
+    }
   });
 };
 

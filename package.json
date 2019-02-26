@@ -1,13 +1,13 @@
 {
-  "name": "boothbyzero",
+  "name": "boothby",
   "version": "1.0.0",
-  "description": "Re-creation of Boothby from scratch with zero useless addition",
+  "description": "A bot to provide tips about how to make our softwares greener",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js"
   },
   "dependencies": {
-    "@slack/client": "4.8.0",
+    "@slack/client": "4.9.0",
     "bcrypt": "^3.0.4",
     "mongodb": "3.1.8",
     "node-cache": "^4.2.0",
