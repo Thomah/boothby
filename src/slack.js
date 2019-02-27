@@ -1,10 +1,11 @@
 const { RTMClient, WebClient } = require("@slack/client");
+const db = require("./db.js");
 
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 const bot = new WebClient(SLACK_BOT_TOKEN);
 
-var join = function (token, channelName) {
-  return new WebClient(token).channels.join({ name: channelName });
+var join = function (tokens, channelName) {
+  return new WebClient(tokens.user_access_token).channels.join({ name: channelName });
 };
 
 var listChannels = function (callback) {
@@ -39,8 +40,8 @@ var openIm = function (user, callback) {
     .catch(console.error);
 };
 
-var postMessage = function (token, channelId, content) {
-  return new WebClient(token).chat.postMessage({
+var postMessage = function (tokens, channelId, content) {
+  return new WebClient(tokens.bot_access_token).chat.postMessage({
     channel: channelId,
     text: content.text,
     link_names: true,
@@ -48,13 +49,13 @@ var postMessage = function (token, channelId, content) {
   });
 };
 
-var updateMessage = function (message) {
-  return bot.chat.update(message);
+var updateMessage = function (tokens, message) {
+  return new WebClient(tokens.bot_access_token).chat.update(message);
 };
 
 var sendSimpleMessage = function (channelId, message) {
   var content = { text: message };
-  postMessage(SLACK_BOT_TOKEN, channelId, content).catch(console.error);
+  postMessage({bot_access_token: SLACK_BOT_TOKEN}, channelId, content).catch(console.error);
 };
 
 var initRtm = function (io) {
