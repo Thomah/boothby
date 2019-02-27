@@ -1,3 +1,12 @@
+//When we press the enter button, we trigger the login button
+document.getElementById("password")
+    .addEventListener("keyup", function(event) {
+    event.preventDefault();
+    if (event.keyCode === 13) {
+        document.getElementById("login").click(); // or just login()
+    }
+});
+
 function login() {
   var user = document.getElementById("username").value;
   var pwd = document.getElementById("password").value;
