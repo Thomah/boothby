@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { parse } = require("querystring");
 const api = require("./api.js");
+const slack = require("./slack.js");
 const scheduler = require("./scheduler.js");
 const NodeCache = require( "node-cache");
 const bcrypt = require('bcrypt');
@@ -321,12 +322,12 @@ var routeApi = function (request, response) {
 
   // GET : refresh channels and IMs stored in DB
   else if (request.url === "/api/channelsAndIMs/refresh") {
-    api.listChannels(function (data) {
+    slack.listChannels(function (data) {
       api.upsertObjectsInDb("channels", data.channels, function () {
         channels = data;
       });
     });
-    api.listUsers(function (dataUsers) {
+    slack.listUsers(function (dataUsers) {
       var tmpUsers = dataUsers.members;
       console.log(tmpUsers.length);
       nbIMs = tmpUsers.length;
@@ -363,8 +364,6 @@ var routeApi = function (request, response) {
         response.end();
       });
     });
-    response.write("{}");
-    response.end();
   } 
 
   // /api/oauth
@@ -379,7 +378,7 @@ var routeApi = function (request, response) {
         if(!infos.ok) {
           response_400(infos, response);
         } else {
-          api.upsertObjectInDb("workspaces", infos, function(result) {
+          api.insertObjectInDb("workspaces", infos, function(result) {
             response.writeHead(302, {
               'Location': `slack://channel?team=${infos.team_id}`
             });
@@ -444,7 +443,7 @@ var routeApi = function (request, response) {
 };
 
 var saveIM = function (user) {
-  api.openIm(user, function (data) {
+  slack.openIm(user, function (data) {
     api.upsertObjectInDb("ims", data.channel, function () {
       ims.push(data.channel);
     });
@@ -513,8 +512,9 @@ exports.serve = function (request, response) {
     routeStatic(request, response);
   } else {
     if (!auth){
-      if ((request.url == '/api/user/login' && request.method == 'POST')
-      || (request.url == '/api/oauth' && request.method == 'GET')){
+      if ((request.url === '/api/user/login' && request.method === 'POST')
+      || (request.url === '/api/oauth' && request.method === 'GET')
+      || (request.url === '/api/interactive' && request.method === 'POST')){
       //if (request.url == '/api/user'){ // To create a new user when no one has been created,
                                          // Comment the line above and uncomment this line,
                                          // you should be allowed to create a user in 

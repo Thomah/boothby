@@ -6,24 +6,34 @@ const slack = require("./slack.js");
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
-const ROOT_URL = process.env.ROOT_URL;
 
 var nbObjects = 0;
 
-var speakRecurse = function (dialog, currentId) {
-  console.log(dialog[currentId]);
+var forEachWorkspace = function(callback) {
+  db.list("workspaces", function(workspaces) {
+    for(var workspaceId in workspaces) {
+      var tokens = {
+        user_access_token: workspaces[workspaceId].access_token,
+        bot_access_token: workspaces[workspaceId].bot.bot_access_token
+      }
+      callback(tokens);
+    }
+  });
+};
+
+var speakRecurse = function (tokens, dialog, currentId) {
   if (dialog[currentId].wait === undefined) {
     dialog[currentId].wait = 0;
   }
   setTimeout(() => {
     slack
-      .join(dialog[currentId].channel)
+      .join(tokens, dialog[currentId].channel)
       .then(res => {
         slack
-          .postMessage(res.channel.id, dialog[currentId])
-          .then(res => {
+          .postMessage(tokens, res.channel.id, dialog[currentId])
+          .then(() => {
             if (dialog[currentId].next !== undefined) {
-              speakRecurse(dialog, dialog[currentId].next);
+              speakRecurse(tokens, dialog, dialog[currentId].next);
             }
           })
           .catch(console.error);
@@ -47,7 +57,6 @@ exports.createDialog = function (callback) {
 };
 
 exports.deleteObjectInDb = function (collection, id, callback) {
-  console.log("delete " + collection + " " + id);
   db.delete(collection, id, callback);
 };
 
@@ -104,6 +113,10 @@ exports.getConfig = function(callback) {
   });
 };
 
+exports.insertObjectInDb = function(collection, content, callback) {
+  db.insert(collection, content, callback);
+}
+
 exports.getObjectInDb = function (collection, condition, callback) {
   db.read(collection, condition, callback);
 };
@@ -154,7 +167,7 @@ exports.interactive = function (rawPayload, callback) {
   var payload = JSON.parse(rawPayload);
 
   // Quick answer
-  splitActionValue = payload.actions[0].value.split("-");
+  var splitActionValue = payload.actions[0].value.split("-");
   db.read("dialogs", { _id: new db.mongodb().ObjectId(splitActionValue[0]) }, function(data) {
     callback(data[splitActionValue[1]]);
   });
@@ -205,12 +218,15 @@ exports.interactive = function (rawPayload, callback) {
       newMessage.attachments[0].actions[data.actions[id]].text =
         data.texts[id] + " (" + data.values[id] + ")";
     }
-    slack.updateMessage({
-      channel: payload.channel.id,
-      text: newMessage.text,
-      link_names: true,
-      ts: payload.message_ts,
-      attachments: newMessage.attachments
+
+    forEachWorkspace(function(tokens) {
+      slack.updateMessage(tokens, {
+        channel: payload.channel.id,
+        text: newMessage.text,
+        link_names: true,
+        ts: payload.message_ts,
+        attachments: newMessage.attachments
+      });
     });
   });
 };
@@ -219,32 +235,21 @@ exports.listDialogs = function (callback) {
   db.list("dialogs", callback);
 };
 
-exports.listChannels = function (callback) {
-  slack.listChannels(callback);
-};
-
 exports.listMessages = function (callback) {
   db.list("messages", callback);
-};
-
-exports.listUsers = function (callback) {
-  slack.listUsers(callback);
-};
-
-exports.openIm = function (user, callback) {
-  slack.openIm(user, callback);
 };
 
 var processDialog = function (collection, id) {
   db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (data) {
     if (data !== null) {
-      speakRecurse(data, "0");
+      forEachWorkspace(function(tokens) {
+        speakRecurse(tokens, data, "0");
+      });
     }
   });
 };
-exports.processDialog = processDialog;
 
-exports.resumeDialogs = function () {
+var resumeDialogs = function () {
   db.read("global", { name: "state" }, function (data) {
     if (data === null) {
       data = {};
@@ -264,11 +269,11 @@ exports.resumeDialogs = function () {
   });
 };
 
-exports.sendSimpleMessage = function (channelId, message) {
+var sendSimpleMessage = function (channelId, message) {
   slack.sendSimpleMessage(channelId, message);
 };
 
-exports.checkCredentialsUser = function (credentials, callback) {
+var checkCredentialsUser = function (credentials, callback) {
   db.read("user", {username:credentials['username']},function (data) {
     if (data == null){
       callback(false);
@@ -278,7 +283,7 @@ exports.checkCredentialsUser = function (credentials, callback) {
   });
 };
 
-exports.addUser = function (credentials, callback) {
+var addUser = function (credentials, callback) {
   db.read("user", {username:credentials['username']},function (data) {
     if (data == null){
       credentials.name = credentials['username'];
@@ -289,3 +294,9 @@ exports.addUser = function (credentials, callback) {
     }
   });
 };
+
+exports.addUser = addUser;
+exports.checkCredentialsUser = checkCredentialsUser;
+exports.processDialog = processDialog;
+exports.resumeDialogs = resumeDialogs;
+exports.sendSimpleMessage = sendSimpleMessage;
