@@ -3,6 +3,7 @@ const path = require("path");
 const { parse } = require("querystring");
 const api = require("./api.js");
 const slack = require("./slack.js");
+const workspaces = require("./workspaces.js");
 const scheduler = require("./scheduler.js");
 const NodeCache = require( "node-cache");
 const bcrypt = require('bcrypt');
@@ -389,6 +390,11 @@ var routeApi = function (request, response) {
     } else {
       response_400("No code provided", response);
     }
+  }
+
+  // /api/workspaces
+  else if (request.url.startsWith("/api/workspaces")) {
+    workspaces.route(request, response);
   }
   
   // /api/simple-messages
