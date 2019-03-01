@@ -89,7 +89,7 @@ var routeApi = function (request, response) {
         if (data != false){ //if the user exists
           bcrypt.compare(credentials['password'], data['password'], function(err, res) {
             if (res == true){
-              generated_token = generate_token();
+              var generated_token = generate_token();
               //We get the array tokens in the server cache
               myCache.get( "tokens", function( err, value ){
                 if( !err ){
@@ -103,7 +103,7 @@ var routeApi = function (request, response) {
                     });
                   }else{
                     //The array tokens already exists in the cache
-                    tokens = value;
+                    var tokens = value;
                     tokens.push(generated_token);
                     //Already a token in the server, we add the new generated token in the tokens cache array
                     myCache.set( "tokens", tokens, function( err, success ){
@@ -135,7 +135,7 @@ var routeApi = function (request, response) {
       myCache.get( "tokens", function( err, value ){
         if( !err ){
           //We remove this specific token from the server cache
-          tokens = value;
+          var tokens = value;
           var index_token_to_remove = tokens.indexOf(request.headers.token);
           tokens.splice(index_token_to_remove, 1);
           myCache.set( "tokens", tokens, function( err, success ){
@@ -158,7 +158,7 @@ var routeApi = function (request, response) {
         password:request.headers.pwd
       };
       //See usage of bcrypt library : https://www.npmjs.com/package/bcrypt
-      saltRounds = 10;
+      var saltRounds = 10;
       bcrypt.hash(credentials['password'], saltRounds, function(err, hash) {
         credentials['password'] = hash;
         api.addUser(credentials, function (data) {
@@ -166,7 +166,7 @@ var routeApi = function (request, response) {
             //FIXME : Status code
             response.writeHead(201, { "Content-Type": "application/json" });
             response.end();
-          }else {
+          }else {
             response.writeHead(200, { "Content-Type": "application/json" });
             response.end();
           }
@@ -401,7 +401,7 @@ var routeApi = function (request, response) {
         response.write(JSON.stringify(data));
         response.end();
       });
-    } 
+    }
     
     // DELETE : delete a message
     else if (request.method === "DELETE") {
@@ -482,7 +482,7 @@ exports.serve = function (request, response) {
   //If API request, there is a token in the request header which proves that 
   //   the user is authenticated
   if (request.headers.token){
-    token = request.headers.token;
+    var token = request.headers.token;
   }
 
   var auth = false;

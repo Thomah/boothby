@@ -9,7 +9,7 @@ function overload_xhr(method,
     var xhr = new XMLHttpRequest();
     xhr.open(method, path);
     before_function(xhr);
-    token = getCookie('token');
+    var token = getCookie('token');
     //When the user is not auth, the token is not in the cookie, there is no token to send
     if (token !== ''){
         xhr.setRequestHeader('Token', token);
@@ -17,7 +17,7 @@ function overload_xhr(method,
     xhr.onload = function() {
         if (xhr.status === 200) {
             success_function(this);
-        } else if (xhr.status === 401){
+        } else if(xhr.status === 401){
           alert("Not authorized, you need to autenticate : Error " + xhr.status);
           window.location = '/auth.html';
         }

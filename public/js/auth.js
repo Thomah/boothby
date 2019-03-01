@@ -1,3 +1,12 @@
+//When we press the enter button, we trigger the login button
+document.getElementById("password")
+    .addEventListener("keyup", function(event) {
+    event.preventDefault();
+    if (event.keyCode === 13) {
+        document.getElementById("login").click(); // or just login()
+    }
+});
+
 function login() {
   var user = document.getElementById("username").value;
   var pwd = document.getElementById("password").value;
@@ -6,7 +15,7 @@ function login() {
     "POST",
     "/api/user/login",
     function(xhr){
-      token = JSON.parse(xhr.response)['token'];
+      var token = JSON.parse(xhr.response)['token'];
       setCookie('token',token,10);
       window.location = 'index.html';
     },
