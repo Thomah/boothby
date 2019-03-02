@@ -1,4 +1,5 @@
 const db = require("./db.js");
+const slack = require("./slack.js");
 
 var response404 = function (response) {
     response.writeHead(404, { "Content-Type": "application/octet-stream" });
@@ -21,7 +22,13 @@ var route = function (request, response) {
         var regex_delete = /^\/api\/workspaces\/([^/]+)\/?$/;
         if (request.url.match(regex_delete) !== null) {
             var objectId = request.url.match(regex_delete)[1];
-            db.delete("workspaces", objectId, function () {
+            db.read("workspaces", { _id: new db.mongodb().ObjectId(objectId) }, function(workspace) {
+                slack.revokeToken({
+                    user_access_token: workspace.access_token,
+                    bot_access_token: workspace.bot.bot_access_token
+                  });
+            });
+            db.delete("workspaces", objectId, function (_result) {
                 response.writeHead(200, { "Content-Type": "application/json" });
                 response.end();
             });
