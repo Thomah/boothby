@@ -21,45 +21,6 @@ var forEachWorkspace = function(callback) {
   });
 };
 
-var speakRecurse = function (tokens, dialog, currentId) {
-  if (dialog[currentId].wait === undefined) {
-    dialog[currentId].wait = 0;
-  }
-  setTimeout(() => {
-    slack
-      .join(tokens, dialog[currentId].channel)
-      .then(res => {
-        slack
-          .postMessage(tokens, res.channel.id, dialog[currentId])
-          .then(() => {
-            if (dialog[currentId].next !== undefined) {
-              speakRecurse(tokens, dialog, dialog[currentId].next);
-            }
-          })
-          .catch(console.error);
-      })
-      .catch(console.error);
-  }, dialog[currentId].wait);
-};
-
-exports.createDialog = function (callback) {
-  var dialog = {
-    "0": {
-      channel: "greenit",
-      wait: 0,
-      text: "first message"
-    },
-    name: "new-dialog",
-    category: "daily",
-    scheduling: 99999
-  };
-  db.insert("dialogs", dialog, callback);
-};
-
-exports.deleteObjectInDb = function (collection, id, callback) {
-  db.delete(collection, id, callback);
-};
-
 exports.getAccessToken = function(code, callback_end, callback_err) {
 
   var b = new Buffer(SLACK_CLIENT_ID + ":" + SLACK_CLIENT_SECRET);
@@ -121,20 +82,12 @@ exports.getObjectInDb = function (collection, condition, callback) {
   db.read(collection, condition, callback);
 };
 
-exports.getObjectInDbById = function (collection, id, callback) {
-  db.read(collection, { _id: new db.mongodb().ObjectId(id) }, callback);
-};
-
 exports.listObjectsInDb = function (collection, callback) {
   db.list(collection, callback);
 };
 
 exports.updateObjectInDb = function (collection, condition, object, callback) {
   db.update(collection, condition, object, callback);
-};
-
-exports.updateObjectInDbById = function (collection, id, object, callback) {
-  db.update(collection, { _id: new db.mongodb().ObjectId(id) }, object, callback);
 };
 
 exports.upsertObjectInDb = function (collection, object, callback) {
@@ -231,42 +184,8 @@ exports.interactive = function (rawPayload, callback) {
   });
 };
 
-exports.listDialogs = function (callback) {
-  db.list("dialogs", callback);
-};
-
 exports.listMessages = function (callback) {
   db.list("messages", callback);
-};
-
-var processDialog = function (collection, id) {
-  db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (data) {
-    if (data !== null) {
-      forEachWorkspace(function(tokens) {
-        speakRecurse(tokens, data, "0");
-      });
-    }
-  });
-};
-
-var resumeDialogs = function () {
-  db.read("global", { name: "state" }, function (data) {
-    if (data === null) {
-      data = {};
-      data.daily = 1;
-      data.name = "state";
-      db.insert("global", data);
-    }
-    db.read("dialogs", { scheduling: parseInt(data.daily) }, function (dialog) {
-      if(dialog === null){
-        console.log('PROBLEM Captain\' : There is no dialog related to the global.daily :' + data.daily);
-      }else{
-        processDialog("dialogs", dialog._id);
-        data.daily++;
-        db.updateByName("global", "state", data);
-      }
-    });
-  });
 };
 
 var sendSimpleMessage = function (channelId, message) {
@@ -297,6 +216,5 @@ var addUser = function (credentials, callback) {
 
 exports.addUser = addUser;
 exports.checkCredentialsUser = checkCredentialsUser;
-exports.processDialog = processDialog;
-exports.resumeDialogs = resumeDialogs;
+exports.forEachWorkspace = forEachWorkspace;
 exports.sendSimpleMessage = sendSimpleMessage;
