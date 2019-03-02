@@ -4,6 +4,15 @@ const db = require("./db.js");
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
 const bot = new WebClient(SLACK_BOT_TOKEN);
 
+var initRtm = function (io) {
+  const rtm = new RTMClient(SLACK_BOT_TOKEN);
+  rtm.start();
+  rtm.on("message", message => {
+    //db.insert("messages", message.client_msg_id, message);
+    io.emit("message", message);
+  });
+};
+
 var join = function (tokens, channelName) {
   return new WebClient(tokens.user_access_token).channels.join({ name: channelName });
 };
@@ -49,8 +58,8 @@ var postMessage = function (tokens, channelId, content) {
   });
 };
 
-var updateMessage = function (tokens, message) {
-  return new WebClient(tokens.bot_access_token).chat.update(message);
+var revokeToken = function (tokens) {
+  return new WebClient(tokens.bot_access_token).auth.revoke(tokens.user_access_token);
 };
 
 var sendSimpleMessage = function (channelId, message) {
@@ -58,13 +67,8 @@ var sendSimpleMessage = function (channelId, message) {
   postMessage({bot_access_token: SLACK_BOT_TOKEN}, channelId, content).catch(console.error);
 };
 
-var initRtm = function (io) {
-  const rtm = new RTMClient(SLACK_BOT_TOKEN);
-  rtm.start();
-  rtm.on("message", message => {
-    //db.insert("messages", message.client_msg_id, message);
-    io.emit("message", message);
-  });
+var updateMessage = function (tokens, message) {
+  return new WebClient(tokens.bot_access_token).chat.update(message);
 };
 
 exports.initRtm = initRtm;
@@ -73,5 +77,6 @@ exports.listChannels = listChannels;
 exports.listUsers = listUsers;
 exports.openIm = openIm;
 exports.postMessage = postMessage;
+exports.revokeToken = revokeToken;
 exports.sendSimpleMessage = sendSimpleMessage;
 exports.updateMessage = updateMessage;
