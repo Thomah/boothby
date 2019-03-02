@@ -2,6 +2,7 @@ const http = require("http");
 const api = require("./api.js");
 const scheduler = require("./scheduler.js");
 const db = require("./db.js");
+const dialogs = require("./dialogs.js");
 const router = require("./router.js");
 const slack = require("./slack.js");
 
@@ -25,7 +26,7 @@ db.init(function() {
   api.getConfig(function(config) {
     scheduler.schedule(config.cron, function (fireDate) {
       console.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
-      api.resumeDialogs();
+      dialogs.resumeDialogs();
     });
   });
 });
