@@ -1,52 +1,16 @@
 const { RTMClient, WebClient } = require("@slack/client");
 const db = require("./db.js");
 
-const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
-const bot = new WebClient(SLACK_BOT_TOKEN);
-
-var initRtm = function (io) {
-  const rtm = new RTMClient(SLACK_BOT_TOKEN);
+var initRtm = function (tokens) {
+  const rtm = new RTMClient(tokens.bot_access_token);
   rtm.start();
   rtm.on("message", message => {
-    //db.insert("messages", message.client_msg_id, message);
-    io.emit("message", message);
+    db.insert("messages", message);
   });
 };
 
 var join = function (tokens, channelName) {
   return new WebClient(tokens.user_access_token).channels.join({ name: channelName });
-};
-
-var listChannels = function (callback) {
-  bot.channels
-    .list()
-    .then(res => {
-      if (res.ok) callback(res);
-    })
-    .catch(console.error);
-};
-
-var listUsers = function (callback) {
-  bot.users
-    .list()
-    .then(res => {
-      if (res.ok) callback(res);
-    })
-    .catch(console.error);
-};
-
-var openIm = function (user, callback) {
-  bot.im
-    .open({
-      user: user.id
-    })
-    .then(res => {
-      if (res.ok) {
-        res.channel.user = user;
-        callback(res);
-      }
-    })
-    .catch(console.error);
 };
 
 var postMessage = function (tokens, channelId, content) {
@@ -62,9 +26,9 @@ var revokeToken = function (tokens) {
   return new WebClient(tokens.bot_access_token).auth.revoke(tokens.user_access_token);
 };
 
-var sendSimpleMessage = function (channelId, message) {
+var sendSimpleMessage = function (token, channelId, message) {
   var content = { text: message };
-  postMessage({bot_access_token: SLACK_BOT_TOKEN}, channelId, content).catch(console.error);
+  postMessage({bot_access_token: token}, channelId, content).catch(console.error);
 };
 
 var updateMessage = function (tokens, message) {
@@ -73,9 +37,6 @@ var updateMessage = function (tokens, message) {
 
 exports.initRtm = initRtm;
 exports.join = join;
-exports.listChannels = listChannels;
-exports.listUsers = listUsers;
-exports.openIm = openIm;
 exports.postMessage = postMessage;
 exports.revokeToken = revokeToken;
 exports.sendSimpleMessage = sendSimpleMessage;

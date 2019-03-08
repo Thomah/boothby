@@ -1,28 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Accueil</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" type="text/css" href="boothby.css" />
-  </head>
 
-  <body>
-    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a> <a href="add-user.html">Add user</a> <a onclick="logout()" href="#">Logout</a></p>
-    <hr />
-    <div>
-        <label for="username"><b>Username</b></label>
-        <input type="text" placeholder="Enter Username" name="uname" id="username" required>
+<head>
+  <meta charset="UTF-8" />
+  <title>Users</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="boothby.css" />
+</head>
 
-        <label for="password"><b>Password</b></label>
-        <input type="password" placeholder="Enter Password" name="psw" id="password" required>
+<body>
+  <p>
+    <a href="index.html"> Home</a>
+    <a href="dialogs.html">Dialogs</a>
+    <a href="workspaces.html">Workspaces</a>
+    <a href="config.html">Config</a>
+    <a href="add-user.html">Users</a>
+    <a onclick="logout()" href="#">Logout</a>
+  </p>
+  <hr />
+  <div>
+    <label for="username"><b>Username</b></label>
+    <input type="text" placeholder="Enter Username" name="uname" id="username" required>
 
-        <button type="submit" onclick="add_user()">Add user</button>
-    </div>
-    <p hidden id='user-created' style='color:green;'> The user has been created </p>
-    <p hidden id='user-not-created' style='color:red;'> The user already exists </p>
+    <label for="password"><b>Password</b></label>
+    <input type="password" placeholder="Enter Password" name="psw" id="password" required>
 
-    <script src="request.js"></script>
-    <script src="auth.js"></script>
-  </body>
+    <button type="submit" onclick="add_user()">Add user</button>
+  </div>
+  <p hidden id='user-created' style='color:green;'> The user has been created </p>
+  <p hidden id='user-not-created' style='color:red;'> The user already exists </p>
+
+  <script src="request.js"></script>
+  <script src="auth.js"></script>
+</body>
+
 </html>

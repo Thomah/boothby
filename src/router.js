@@ -2,8 +2,8 @@ const fs = require("fs");
 const path = require("path");
 const { parse } = require("querystring");
 const api = require("./api.js");
-const dialogs = require("./dialogs.js")
-const slack = require("./slack.js");
+const db = require("./db.js");
+const dialogs = require("./dialogs.js");
 const workspaces = require("./workspaces.js");
 const scheduler = require("./scheduler.js");
 const NodeCache = require("node-cache");
@@ -23,10 +23,6 @@ const mimeTypes = {
   ".ico": "image/x-icon"
 };
 
-var channels = undefined;
-var ims = [];
-var nbIMs = 0;
-var socket;
 var myCache; //server cache
 var ttlCache = 36000; //After 36000 sec (10 hrs), the variables in the cache will be reset
 
@@ -217,53 +213,6 @@ var routeApi = function (request, response) {
     dialogs.route(request, response);
   }
 
-  // GET : retrieve channels and IMs
-  else if (request.url === "/api/channelsAndIMs") {
-    response.writeHead(200, { "Content-Type": "application/json" });
-    nbIMs = 1; // Hack to not pass the waitForChannelsAndIMs condition instantly
-    api.listObjectsInDb("channels", function (data) {
-      channels = data;
-    });
-    api.listObjectsInDb("ims", function (data) {
-      ims = data;
-      nbIMs = ims.length;
-    });
-    waitForChannelsAndIMs(function (data) {
-      response.write(JSON.stringify(data));
-      response.end();
-    });
-  }
-
-  // GET : refresh channels and IMs stored in DB
-  else if (request.url === "/api/channelsAndIMs/refresh") {
-    slack.listChannels(function (data) {
-      api.upsertObjectsInDb("channels", data.channels, function () {
-        channels = data;
-      });
-    });
-    slack.listUsers(function (dataUsers) {
-      var tmpUsers = dataUsers.members;
-      console.log(tmpUsers.length);
-      nbIMs = tmpUsers.length;
-      for (var userNb in tmpUsers) {
-        var user = tmpUsers[userNb];
-        if (!user.is_bot) {
-          setTimeout(saveIM, userNb * 1000, user);
-        } else {
-          ims.push({ user: user });
-        }
-      }
-    });
-    waitForChannelsAndIMs(function (data) {
-      socket.emit("message", {
-        ts: new Date().getTime(),
-        text: "SYNC OVER"
-      });
-    });
-    response.writeHead(200, { "Content-Type": "application/octet-stream" });
-    response.end();
-  }
-
   // GET : endpoint to interactive components
   else if (request.url === "/api/interactive") {
     response.writeHead(200, { "Content-Type": "application/json" });
@@ -346,7 +295,7 @@ var routeApi = function (request, response) {
         });
         request.on("end", () => {
           var parsedBody = parse(body);
-          api.sendSimpleMessage(parsedBody.channel, parsedBody.message);
+          api.sendSimpleMessage(parsedBody.workspace, parsedBody.channel, parsedBody.message);
         });
         response.writeHead(200, { "Content-Type": "application/octet-stream" });
         response.end();
@@ -358,30 +307,6 @@ var routeApi = function (request, response) {
   } else {
     response.writeHead(404, { "Content-Type": "application/octet-stream" });
     response.end();
-  }
-};
-
-var saveIM = function (user) {
-  slack.openIm(user, function (data) {
-    api.upsertObjectInDb("ims", data.channel, function () {
-      ims.push(data.channel);
-    });
-  });
-};
-
-var waitForChannelsAndIMs = function (callback) {
-  if (channels === undefined || ims.length !== nbIMs) {
-    setTimeout(function () {
-      waitForChannelsAndIMs(callback);
-    }, 100);
-  } else {
-    var data = {
-      channels: channels,
-      ims: ims
-    };
-    channels = undefined;
-    ims = [];
-    callback(data);
   }
 };
 
@@ -451,10 +376,6 @@ exports.serve = function (request, response) {
     }
   }
   return response;
-};
-
-exports.setSocket = function (io) {
-  socket = io;
 };
 
 exports.initCache = function () {
