@@ -1,31 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Dialogs</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" type="text/css" href="boothby.css" />
-  </head>
 
-  <body onload="refresh()">
-    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a> <a href="add-user.html">Add user</a> <a onclick="logout()" href="#">Logout</a></p>
-    <hr />
-    <button onclick="add()">Add</button>
-    <button onclick="refresh()">Refresh</button>
-    <hr />
-    <table id="dialogs">
-      <thead>
-        <tr>
-          <th>Scheduling</th>
-          <th>Category</th>
-          <th>Name</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <script src="auth.js"></script>
-    <script src="request.js"></script>
-    <script src="dialogs.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <title>Dialogs</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="boothby.css" />
+</head>
+
+<body onload="refresh()">
+  <p>
+    <a href="index.html"> Home</a>
+    <a href="dialogs.html">Dialogs</a>
+    <a href="workspaces.html">Workspaces</a>
+    <a href="config.html">Config</a>
+    <a href="add-user.html">Users</a>
+    <a onclick="logout()" href="#">Logout</a>
+  </p>
+  <hr />
+  <button onclick="add()">Add</button>
+  <button onclick="refresh()">Refresh</button>
+  <hr />
+  <table id="dialogs">
+    <thead>
+      <tr>
+        <th>Scheduling</th>
+        <th>Category</th>
+        <th>Name</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script src="auth.js"></script>
+  <script src="request.js"></script>
+  <script src="dialogs.js"></script>
+</body>
+
 </html>

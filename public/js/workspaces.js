@@ -7,7 +7,7 @@ function refresh(){
       doc_refreshWorkspaces(json);
     }
   );
-};
+}
 
 var remove = function remove() {
   var textButton = this.firstChild.parentElement;
@@ -81,4 +81,4 @@ function doc_refreshWorkspaces(workspaces) {
 
   // Show table when update is finished
   table.style.display = "table-row-group";
-};
+}

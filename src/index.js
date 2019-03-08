@@ -12,16 +12,6 @@ var server = http.createServer(function (request, response) {
   router.serve(request, response);
 });
 
-var io = require("socket.io").listen(server);
-router.setSocket(io);
-io.sockets.on("connection", function (socket) {
-  console.log("Socket connected");
-  socket.on("disconnect", function () {
-    console.log("Socket disconnected");
-  });
-});
-
-slack.initRtm(io);
 db.init(function() {
   api.getConfig(function(config) {
     scheduler.schedule(config.cron, function (fireDate) {
@@ -29,6 +19,10 @@ db.init(function() {
       dialogs.resumeDialogs();
     });
   });
+  api.forEachWorkspace(function (tokens) {
+    slack.initRtm(tokens);
+  });
+  
 });
 
 server.on("close", function () {

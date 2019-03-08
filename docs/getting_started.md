@@ -20,8 +20,8 @@ cp bin/setenv.sh.template bin/setenv.sh
 ```
 - Fill the file `bin/setenv.sh` with the following values (1) :
 ```bash
-export SLACK_USER_TOKEN=<ask-someone-of-the-team>
-export SLACK_BOT_TOKEN=<ask-someone-of-the-team>
+export SLACK_CLIENT_ID=<ask-someone-of-the-team>
+export SLACK_CLIENT_SECRET=<ask-someone-of-the-team>
 export ROOT_URL=http://localhost:8080
 export MONGODB_URI=mongodb://localhost:27017/heroku_lqkdtf3k
 ```

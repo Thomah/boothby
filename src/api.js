@@ -11,12 +11,16 @@ var nbObjects = 0;
 
 var forEachWorkspace = function(callback) {
   db.list("workspaces", function(workspaces) {
+    var previous_bot_access_token = [];
     for(var workspaceId in workspaces) {
       var tokens = {
         user_access_token: workspaces[workspaceId].access_token,
         bot_access_token: workspaces[workspaceId].bot.bot_access_token
       }
-      callback(tokens);
+      if(previous_bot_access_token.indexOf(tokens.bot_access_token) < 0) {
+        callback(tokens);
+        previous_bot_access_token.push(tokens.bot_access_token);
+      }
     }
   });
 };
@@ -188,8 +192,10 @@ exports.listMessages = function (callback) {
   db.list("messages", callback);
 };
 
-var sendSimpleMessage = function (channelId, message) {
-  slack.sendSimpleMessage(channelId, message);
+var sendSimpleMessage = function (workspace, channelId, message) {
+  db.read("workspaces", {team_id: workspace}, function(workspace) {
+    slack.sendSimpleMessage(workspace.bot.bot_access_token, channelId, message);
+  });
 };
 
 var checkCredentialsUser = function (credentials, callback) {

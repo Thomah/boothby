@@ -1,44 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Edit Dialog</title>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" type="text/css" href="boothby.css" />
-  </head>
 
-  <body onload="refresh()">
-    <p><a href="index.html"> Home</a> <a href="dialogs.html">Dialogs</a> <a href="config.html">Config</a> <a href="add-user.html">Add user</a> <a onclick="logout()" href="#">Logout</a></p>
-    <hr />
-    <input id="old-name" type="hidden" name="old-name" />
-    <label for="id">Technical ID</label
-    ><input id="id" type="text" name="id" disabled="true" size="24" />
-    <label for="category">Scheduling</label><input id="scheduling" type="number" name="scheduling" min="0" />
-    <label for="category">Category</label
-    ><input id="category" type="text" name="category" />
-    <label for="new-name">Name</label
-    ><input id="new-name" type="text" name="new-name" />
-    <button id="save" onclick="save()">Save this dialog</button>
-    <hr />
-    <table id="edit-dialog">
-      <thead>
-        <tr>
-          <th>Channel</th>
-          <th>Wait</th>
-          <th>Message</th>
-          <th>Attachments</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr>
-          <th colspan="5"><button onclick="addMessage()">+</button></th>
-        </tr>
-      </tfoot>
-    </table>
-    <script src="auth.js"></script>
-    <script src="request.js"></script>
-    <script src="edit-dialog.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <title>Edit Dialog</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="boothby.css" />
+</head>
+
+<body onload="refresh()">
+  <p>
+    <a href="index.html"> Home</a>
+    <a href="dialogs.html">Dialogs</a>
+    <a href="workspaces.html">Workspaces</a>
+    <a href="config.html">Config</a>
+    <a href="add-user.html">Users</a>
+    <a onclick="logout()" href="#">Logout</a>
+  </p>
+  <hr />
+  <input id="old-name" type="hidden" name="old-name" />
+  <label for="id">Technical ID</label><input id="id" type="text" name="id" disabled="true" size="24" />
+  <label for="category">Scheduling</label><input id="scheduling" type="number" name="scheduling" min="0" />
+  <label for="category">Category</label><input id="category" type="text" name="category" />
+  <label for="new-name">Name</label><input id="new-name" type="text" name="new-name" />
+  <button id="save" onclick="save()">Save this dialog</button>
+  <hr />
+  <table id="edit-dialog">
+    <thead>
+      <tr>
+        <th>Channel</th>
+        <th>Wait</th>
+        <th>Message</th>
+        <th>Attachments</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <th colspan="5"><button onclick="addMessage()">+</button></th>
+      </tr>
+    </tfoot>
+  </table>
+  <script src="auth.js"></script>
+  <script src="request.js"></script>
+  <script src="edit-dialog.js"></script>
+</body>
+
 </html>
