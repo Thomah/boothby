@@ -5,6 +5,7 @@ const db = require("./db.js");
 const dialogs = require("./dialogs.js");
 const router = require("./router.js");
 const slack = require("./slack.js");
+const users = require("./users.js");
 
 const ROOT_URL = process.env.ROOT_URL;
 
@@ -34,7 +35,7 @@ process.on("SIGINT", function () {
   server.close();
 });
 
-router.initCache();
+users.initCache();
 
 server.listen(8080);
 console.log("Server running at " + ROOT_URL);
