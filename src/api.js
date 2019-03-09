@@ -192,12 +192,6 @@ exports.listMessages = function (callback) {
   db.list("messages", callback);
 };
 
-var sendSimpleMessage = function (workspace, channelId, message) {
-  db.read("workspaces", {team_id: workspace}, function(workspace) {
-    slack.sendSimpleMessage(workspace.bot.bot_access_token, channelId, message);
-  });
-};
-
 var checkCredentialsUser = function (credentials, callback) {
   db.read("user", {username:credentials['username']},function (data) {
     if (data == null){
@@ -223,4 +217,3 @@ var addUser = function (credentials, callback) {
 exports.addUser = addUser;
 exports.checkCredentialsUser = checkCredentialsUser;
 exports.forEachWorkspace = forEachWorkspace;
-exports.sendSimpleMessage = sendSimpleMessage;

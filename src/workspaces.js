@@ -8,7 +8,7 @@ var response404 = function (response) {
 
 var route = function (request, response) {
 
-    // GET : retrieve messages
+    // GET : retrieve workspaces
     if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
         db.list("workspaces", function (data) {
@@ -17,7 +17,7 @@ var route = function (request, response) {
         });
     }
 
-    // DELETE : delete a message
+    // DELETE : revoke a workspace token
     else if (request.method === "DELETE") {
         var regex_delete = /^\/api\/workspaces\/([^/]+)\/?$/;
         if (request.url.match(regex_delete) !== null) {
