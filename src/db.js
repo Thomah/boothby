@@ -1,5 +1,4 @@
 const mongodb = require("mongodb");
-const DB_NAME = "heroku_lqkdtf3k";
 const MONGODB_URI = process.env.MONGODB_URI;
 var dbo;
 
@@ -9,7 +8,8 @@ exports.init = function (callback) {
     { useNewUrlParser: true },
     function (err, database) {
       if (err) throw err;
-      dbo = database.db(DB_NAME);
+      var dbNameSplit = MONGODB_URI.split('/');
+      dbo = database.db(dbNameSplit[dbNameSplit.length-1]);
       callback();
     }
   );
