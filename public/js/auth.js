@@ -4,7 +4,7 @@ if (document.getElementById("password")){
       .addEventListener("keyup", function(event) {
       event.preventDefault();
       if (event.keyCode === 13) {
-          document.getElementById("login").click(); // or just login()
+          login(); // or just login()
       }
   });
 }
@@ -97,8 +97,8 @@ function login() {
       window.location = 'index.html';
     },
     function(xhr){
-      xhr.setRequestHeader('user', user);
-      xhr.setRequestHeader('pwd', pwd);
+      xhr.setRequestHeader("user", user);
+      xhr.setRequestHeader("pwd", pwd);
     },
     function(){
       var par = document.getElementById("alert-login");
@@ -137,8 +137,8 @@ function add_user() {
       refresh();
     },
     function(xhr){
-      xhr.setRequestHeader('user', user);
-      xhr.setRequestHeader('pwd', pwd);
+      xhr.setRequestHeader("user", user);
+      xhr.setRequestHeader("pwd", pwd);
     },
     function(){
       par_success.style.display = "none";
