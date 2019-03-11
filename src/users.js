@@ -5,6 +5,11 @@ const api = require("./api.js");
 var myCache;
 var ttlCache = 36000;
 
+var saltRounds = 10;
+
+const ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD;
+
 var rand = function () {
     return Math.random().toString(36).substr(2);
 };
@@ -108,7 +113,6 @@ var route = function (request, response) {
             if (request.method === "POST") {
                 //FIXME : The password can be seen in the request header, should be crypted in the client side
                 //See usage of bcrypt library : https://www.npmjs.com/package/bcrypt
-                var saltRounds = 10;
                 bcrypt.hash(credentials['password'], saltRounds, function (err, hash) {
                     credentials['password'] = hash;
                     api.addUser(credentials, function (data) {
@@ -133,6 +137,24 @@ var route = function (request, response) {
     }
 };
 
+var createDefaultUser = function(){
+    bcrypt.hash(ADMIN_PASSWORD, saltRounds, function (err, hash) {
+        var credentials = {
+            'username':ADMIN_USERNAME,
+            'password':hash
+        }
+        console.log(credentials);
+        api.createDefaultUser(credentials, function (data) {
+            if (data == false) {//Already users in the database
+                console.log('No need to create default admin : already users in database ');
+            } else {
+                console.log('Default admin user created');
+            }
+        });
+    });
+};
+
 exports.initCache = initCache;
 exports.getInCache = getInCache;
 exports.route = route;
+exports.createDefaultUser = createDefaultUser;

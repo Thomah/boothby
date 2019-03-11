@@ -211,13 +211,6 @@ exports.serve = function (request, response) {
       if ((request.url === '/api/user/login' && request.method === 'POST')
         || (request.url === '/api/oauth' && request.method === 'GET')
         || (request.url === '/api/interactive' && request.method === 'POST')) {
-        //if (request.url == '/api/user'){ // To create a new user when no one has been created,
-        // Comment the line above and uncomment this line,
-        // you should be allowed to create a user in 
-        // the db, then you can shut down the server
-        // Comment this line, and uncomment the other one
-        // FIXME : Need to create a general user, or some other stuff
-        // We can access the /api/user (GET) when not auth
         routeApi(request, response);
       } else {
         response.writeHead(401); // 401 status code = not allowed to access API
