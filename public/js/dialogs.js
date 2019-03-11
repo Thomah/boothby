@@ -17,7 +17,7 @@ function refresh(){
       doc_refreshDialogs(json);
     }
   );
-};
+}
 
 var play = function play() {
   var textButton = this.firstChild.parentElement;
@@ -49,8 +49,8 @@ var remove = function remove() {
   overload_xhr(
     "DELETE",
     `/api/dialogs/${row.id}`,
-    function(){    
-      table.removeChild(row);    
+    function(){
+      table.removeChild(row);
     },
     function(){},
     function(){

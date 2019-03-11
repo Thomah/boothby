@@ -20,8 +20,7 @@ function overload_xhr(method,
         } else if(xhr.status === 401){
           alert("Not authorized, you need to autenticate : Error " + xhr.status);
           window.location = '/auth.html';
-        }
-         else {
+        }else {
           error_function();
           console.log("Request failed.  Returned status of " + xhr.status);
         }

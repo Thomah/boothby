@@ -57,7 +57,7 @@ var route = function (request, response) {
                                     //The array in the cache does not exist : Init of the array containing the tokens
                                     myCache.set("tokens", [generated_token], function (err) {
                                         if (err) {
-                                            response.writeHead(201, { "Content-Type": "application/json" });
+                                            response.writeHead(500, { "Content-Type": "application/json" });
                                             response.end();
                                         }
                                     });
@@ -68,7 +68,7 @@ var route = function (request, response) {
                                     //Already a token in the server, we add the new generated token in the tokens cache array
                                     myCache.set("tokens", tokens, function (err) {
                                         if (err) {
-                                            response.writeHead(201, { "Content-Type": "application/json" });
+                                            response.writeHead(500, { "Content-Type": "application/json" });
                                             response.end();
                                         }
                                     });
@@ -78,13 +78,13 @@ var route = function (request, response) {
                         response.writeHead(200, { "Content-Type": "application/json" });
                         response.end(JSON.stringify({ token: generated_token }));
                     } else {
-                        response.writeHead(201, { "Content-Type": "application/json" });
+                        response.writeHead(500, { "Content-Type": "application/json" });
                         response.end();
                     }
                 });
             } else {// The username does not exist in the DB
                 //FIXME : If no user in database, which status code should I return ?
-                response.writeHead(201, { "Content-Type": "application/json" });
+                response.writeHead(500, { "Content-Type": "application/json" });
                 response.end();
             }
         });
@@ -99,7 +99,7 @@ var route = function (request, response) {
                 tokens.splice(index_token_to_remove, 1);
                 myCache.set("tokens", tokens, function (err) {
                     if (err) {
-                        response.writeHead(201, { "Content-Type": "application/json" });
+                        response.writeHead(500, { "Content-Type": "application/json" });
                         response.end();
                     }
                 });
@@ -119,7 +119,7 @@ var route = function (request, response) {
                 api.addUser(credentials, function (data) {
                     if (data == false) {//User already existing
                         //FIXME : Status code
-                        response.writeHead(201, { "Content-Type": "application/json" });
+                        response.writeHead(500, { "Content-Type": "application/json" });
                         response.end();
                     } else {
                         response.writeHead(200, { "Content-Type": "application/json" });
@@ -140,7 +140,7 @@ var route = function (request, response) {
         if (request.method === "DELETE") {
             db.list("user", function (data) {
                 if(data.length <= 1){ //Last user in DB
-                    response.writeHead(402, { "Content-Type": "application/json" });
+                    response.writeHead(403, { "Content-Type": "application/json" });
                     response.end();
                 }else{
                     db.delete("user", userId, function (data) {
