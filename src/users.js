@@ -8,8 +8,8 @@ var ttlCache = 36000;
 
 var saltRounds = 10;
 
-const ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME;
-const ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD;
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = 'admin';
 
 var rand = function () {
     return Math.random().toString(36).substr(2);
@@ -117,7 +117,7 @@ var route = function (request, response) {
             bcrypt.hash(credentials['password'], saltRounds, function (err, hash) {
                 credentials['password'] = hash;
                 api.addUser(credentials, function (data) {
-                    if (data == false) {//User already existing
+                    if (data === false) {//User already existing
                         //FIXME : Status code
                         response.writeHead(500, { "Content-Type": "application/json" });
                         response.end();
@@ -167,7 +167,7 @@ var createDefaultUser = function(){
             'password':hash
         }
         api.createDefaultUser(credentials, function (data) {
-            if (data == false) {//Already users in the database
+            if (data === false) {//Already users in the database
                 console.log('No need to create default admin : already users in database ');
             } else {
                 console.log('Default admin user created');

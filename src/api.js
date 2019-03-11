@@ -214,7 +214,7 @@ var addUser = function (credentials, callback) {
   });
 };
 
-exports.createDefaultUser = function(credentials,callback) {
+var createDefaultUser = function(credentials,callback) {
   db.read("user", { }, function (data) {
     if (data === null) {
       credentials.name = credentials['username'];
@@ -228,3 +228,4 @@ exports.createDefaultUser = function(credentials,callback) {
 exports.addUser = addUser;
 exports.checkCredentialsUser = checkCredentialsUser;
 exports.forEachWorkspace = forEachWorkspace;
+exports.createDefaultUser = createDefaultUser;
