@@ -214,6 +214,17 @@ var addUser = function (credentials, callback) {
   });
 };
 
+exports.createDefaultUser = function(credentials,callback) {
+  db.read("user", { }, function (data) {
+    if (data === null) {
+      credentials.name = credentials['username'];
+      db.insert("user",credentials,callback);
+    }else{
+      callback(false);
+    }
+  });
+};
+
 exports.addUser = addUser;
 exports.checkCredentialsUser = checkCredentialsUser;
 exports.forEachWorkspace = forEachWorkspace;

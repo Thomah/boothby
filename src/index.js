@@ -23,6 +23,7 @@ db.init(function() {
   api.forEachWorkspace(function (tokens) {
     slack.initRtm(tokens);
   });
+  users.createDefaultUser();
   
 });
 
