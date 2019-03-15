@@ -13,14 +13,16 @@ const resourceFolder = {
   ".html": "./public/html",
   ".css": "./public/css",
   ".js": "./public/js",
-  ".ico": "./public/img"
+  ".ico": "./public/img",
+  ".png": "./public/img"
 };
 
 const mimeTypes = {
   ".html": "text/html",
   ".js": "text/javascript",
   ".css": "text/css",
-  ".ico": "image/x-icon"
+  ".ico": "image/x-icon",
+  ".png": "image/png"
 };
 
 var getFilePath = function (request) {
@@ -29,6 +31,8 @@ var getFilePath = function (request) {
   var filePath = folder + request.url;
   if (filePath === resourceFolder[".html"] + "/") {
     filePath = resourceFolder[".html"] + "/index.html";
+  } else if(filePath === resourceFolder[".html"] + "/admin/") {
+    filePath = resourceFolder[".html"] + "/admin/index.html";
   }
   return filePath;
 };
