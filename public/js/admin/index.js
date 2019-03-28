@@ -6,7 +6,7 @@ var deleteMessage = function deleteMessage() {
   var textButton = this.firstChild.parentElement;
   overload_xhr(
     "DELETE", 
-    `/api/simple-messages/${textButton.id}`,
+    `/api/messages/${textButton.id}`,
     function(){
       var row = textButton.parentElement.parentElement.parentElement;
       var table = row.parentElement;
@@ -22,7 +22,7 @@ var deleteMessage = function deleteMessage() {
 function listMessages() {
   overload_xhr(
     "GET",
-    "/api/simple-messages",
+    "/api/messages",
     function(xhr){
       var json = JSON.parse(xhr.responseText);
       doc_refreshMessages(json);
@@ -37,7 +37,7 @@ function sendMessage() {
 
   overload_xhr(
     "POST", 
-    "/api/simple-messages/send",
+    "/api/messages/send",
     function(xhr){
       var json = JSON.parse(xhr.responseText);
       doc_refreshMessages(json);
