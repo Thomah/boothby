@@ -125,6 +125,16 @@ var routeApi = function (request, response) {
     });
   }
 
+  // /api/dialogs*
+  else if (request.url == "/api/links") {
+    var slackLink = "https://slack.com/oauth/authorize?client_id=" + process.env.SLACK_CLIENT_ID + "&scope=channels:read,channels:write,emoji:read,bot,chat:write:bot"
+    response.writeHead(200, { "Content-Type": "application/json" });
+    response.write(JSON.stringify({
+      "slack": slackLink
+    }));
+    response.end();
+  }
+
   // /api/oauth
   else if (request.url.startsWith("/api/oauth") && request.method === "GET") {
     var response_400 = function (err, response) {
@@ -213,6 +223,7 @@ exports.serve = function (request, response) {
   } else {
     if (!auth) {
       if ((request.url === '/api/user/login' && request.method === 'POST')
+        || (request.url === '/api/links' && request.method === 'GET')
         || (request.url === '/api/oauth' && request.method === 'GET')
         || (request.url === '/api/interactive' && request.method === 'POST')) {
         routeApi(request, response);
