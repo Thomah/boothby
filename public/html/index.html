@@ -1,49 +1,234 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
 
 <head>
-  <meta charset="UTF-8" />
-  <title>Accueil</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+  <title>Boothby</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-  <link rel="stylesheet" type="text/css" href="boothby.css" />
+
+  <style type="text/css">
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font: 16px Helvetica, Sans-Serif;
+      line-height: 24px;
+      background: url(images/noise.jpg);
+    }
+
+    .clear {
+      clear: both;
+    }
+
+    #page-wrap {
+      width: 800px;
+      margin: 40px auto 60px;
+    }
+
+    #pic {
+      float: right;
+      margin: -30px 0 0 0;
+    }
+
+    h1 {
+      margin: 0 0 16px 0;
+      padding: 0 0 16px 0;
+      font-size: 42px;
+      font-weight: bold;
+      letter-spacing: -2px;
+      border-bottom: 1px solid #999;
+    }
+
+    h2 {
+      font-size: 20px;
+      margin: 0 0 6px 0;
+      position: relative;
+    }
+
+    h2 span {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      font-style: italic;
+      font-family: Georgia, Serif;
+      font-size: 16px;
+      color: #999;
+      font-weight: normal;
+    }
+
+    p {
+      margin: 0 0 16px 0;
+    }
+
+    a {
+      color: #999;
+      text-decoration: none;
+    }
+
+    a.email {
+      border-bottom: 1px dotted #999;
+    }
+
+    a.email:hover {
+      border-bottom-style: solid;
+      color: black;
+    }
+
+    ul {
+      margin: 0 0 32px 17px;
+    }
+
+    #objective {
+      width: 500px;
+      float: left;
+      text-align: center;
+    }
+
+    #objective p {
+      font-family: Georgia, Serif;
+      font-style: italic;
+      color: #666;
+      text-align: justify;
+    }
+
+    dt {
+      font-style: italic;
+      font-weight: bold;
+      font-size: 18px;
+      text-align: right;
+      padding: 0 26px 0 0;
+      width: 150px;
+      float: left;
+      height: 100px;
+      border-right: 1px solid #999;
+    }
+
+    dd {
+      width: 600px;
+      float: right;
+    }
+
+    dd.clear {
+      float: none;
+      margin: 0;
+      height: 15px;
+    }
+  </style>
 </head>
 
-<body onload="refresh()">
+<body>
 
-  <p>
-    <a href="index.html"> Home</a>
-    <a href="dialogs.html">Dialogs</a>
-    <a href="workspaces.html">Workspaces</a>
-    <a href="config.html">Config</a>
-    <a href="add-user.html">Users</a>
-    <a onclick="logout()" href="#">Logout</a>
-  </p>
-  <hr />
-  <button onclick="refresh()">Refresh</button>
-  <hr />
-  <div>
-    <input id="message-workspace" type="text" />
-    <input id="message-channel" type="text" />
-    <input id="message-text" type="text" />
-    <input id="message-send" type="button" value="Send" onclick="sendMessage()" />
+  <div id="page-wrap">
+
+    <img src="Photo-Boothby.png" alt="Photo of Cthulu" id="pic" />
+
+    <div id="contact-info" class="vcard">
+
+      <!-- Microformats! -->
+
+      <h1 class="fn">Boothby</h1>
+
+      <p>
+        Adresse: <span class="location">60 bd du Maréchal Juin, 44100 NANTES</span><br />
+        Email: <a class="email" href="mailto:boothby@valeuriad.fr">boothby@valeuriad.fr</a>
+      </p>
+    </div>
+
+    <div id="objective">
+      <p>
+        A la recherche d'une entreprise dynamique évoluant dans l'IT, je suis ce qu'on appelle un <b>bot</b>.
+        Eh oui ! Vous êtes sur le CV d'un robot qui propage les bonnes pratiques écologiques de l'usage
+        et du développement informatique.
+      </p>
+      <p>
+        Porté par des développeurs nourris à la bière, aux pizzas et cloîtrés dans un placard, je
+        saurai délivrer mon expertise acquise auprès des grands noms du GreenIT avec humour, légèreté et bienveillance.
+      </p>
+      <p>
+        Enfin, en tant que fruit de l'open source, je suis flexible sur ma rémunération, ma période
+        d'essai, ma façon de fonctionner... bref tout.
+      </p>
+      <a
+        href="https://slack.com/oauth/authorize?client_id=115462816321.466345967652&scope=channels:read,channels:write,emoji:read,bot,chat:write:bot"><img
+          alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png"
+          srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
+      <a class="github-button" href="https://github.com/valeuriad-techlab/boothby/subscription" data-size="large"
+        aria-label="Watch valeuriad-techlab/boothby on GitHub">Watch on GitHub</a>
+    </div>
+
+    <div class="clear"></div>
+
+    <dl>
+      <dd class="clear"></dd>
+
+
+      <dt>Expériences</dt>
+      <dd>
+        <h2>Valeuriad <span>Coach Green IT - Nantes, France - Depuis 2018</span></h2>
+        <ul>
+          <li>Animation de la communauté Green IT</li>
+        </ul>
+
+        <h2>Cyberdyne Systems <span>Programmeur - Sunnyvale, California - 1996-2018</span></h2>
+        <ul>
+          <li>Audit et préconisations </li>
+          <li>Tests de performances</li>
+          <li>Optimisations de performances sur Genisys</li>
+        </ul>
+        
+        <h2>Aperture Science <span>Stagiaire - Manistique, Michigan - 1970-1996</span></h2>
+        <ul>
+          <li>Empilage de cubes</li>
+          <li>Réalisation de tests</li>
+        </ul>
+      </dd>
+
+      <dd class="clear"></dd>
+
+      <dt>Formation</dt>
+      <dd>
+        <h2>Averium - Planète Orban</h2>
+        <p><strong>Majeure:</strong> Nanotechnologie</p>
+      </dd>
+
+      <dd class="clear"></dd>
+
+      <dt>Compétences</dt>
+      <dd>
+        <h2>Technique</h2>
+        <p>Gestion de base de données, développement informatique, industrialisation</p>
+
+        <h2>Autres</h2>
+        <p>Navigateur web, Windows, Linux</p>
+      </dd>
+
+      <dd class="clear"></dd>
+
+      <dt>Hobbies</dt>
+      <dd>Jardinage, Réécriture de mon code</dd>
+
+      <dd class="clear"></dd>
+
+      <dt>Références</dt>
+      <dd>Disponibles sur demande</dd>
+
+      <dd class="clear"></dd>
+    </dl>
+
+    <div class="clear"></div>
+
+    <div class="disclamer">
+      /!\ Cette page est une parodie : Boothby est un bot que vous pouvez inviter sur votre workspace Slack. Essayez-le en cliquant <a href="https://slack.com/oauth/authorize?client_id=115462816321.466345967652&scope=channels:read,channels:write,emoji:read,bot,chat:write:bot">ici</a>.
+    </div>
+
   </div>
-  <hr />
-  <table id="incomming-messages">
-    <thead>
-      <tr>
-        <th>Time</th>
-        <th>Team</th>
-        <th>Channel</th>
-        <th>Sender</th>
-        <th>Message</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <script src="auth.js"></script>
-  <script src="request.js"></script>
-  <script src="index.js"></script>
+
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
 </body>
 
 </html>

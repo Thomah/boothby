@@ -113,7 +113,7 @@ function logout() {
     "/api/user/logout",
     function(xhr){
       setCookie('token','',0);//Delete the cookie
-      window.location = 'auth.html';
+      window.location = 'admin/auth.html';
     }
   );
 }

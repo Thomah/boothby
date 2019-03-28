@@ -19,7 +19,7 @@ function overload_xhr(method,
             success_function(this);
         } else if(xhr.status === 401){
           alert("Not authorized, you need to autenticate : Error " + xhr.status);
-          window.location = '/auth.html';
+          window.location = '/admin/auth.html';
         }else {
           error_function();
           console.log("Request failed.  Returned status of " + xhr.status);
