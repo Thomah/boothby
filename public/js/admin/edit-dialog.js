@@ -46,16 +46,31 @@ var deleteMessage = function deleteMessage() {
   table.removeChild(row);
 };
 
+// Called when a attachment selection changes
+var onChangeAttachment = function onChangeAttachment() {
+  var button = this.firstChild.parentElement;
+  var div = button.parentElement;
+  var attachment = {
+    callback_id: ''
+  };
+  if (button.value == "survey") {
+    attachment.callback_id = 'survey_';
+  } else if(button.value == "file") {
+    attachment.callback_id = 'file_';
+  }
+  doc_updateAttachment(div, attachment);
+};
+
 // One type of attachment for now : surveys
 var addAttachment = function addAttachment() {
   var button = this.firstChild.parentElement;
   var cell = button.parentElement;
   var attachment = {
     callback_id: ''
-  };  
+  };
   var div = document.createElement("div");
   div.className = "attachment"
-  doc_appendAttachmentSurvey(div, attachment);
+  doc_createAttachment(div, attachment);
   cell.insertBefore(document.createElement("hr"), cell.firstChild);    
   cell.insertBefore(div, cell.firstChild);
 };
@@ -107,26 +122,12 @@ function doc_appendAttachmentSurveyAnswer(tbody, attachment) {
 // Prepend each element to preserve add button
 function doc_appendAttachmentSurvey(div, attachment) {
 
-  // Add select to adapt div according to attachment type
-  var select = document.createElement("select");
-  var option = document.createElement("option");
-  option.value = "survey";
-  option.appendChild(document.createTextNode("Survey"))
-  select.appendChild(option);
-  div.appendChild(select);
-
   // Add form for survey attachment
   var inputName = document.createElement("input");
   inputName.value = attachment.callback_id.replace("survey_","");
   inputName.className = "survey-name";
   inputName.placeholder = "Name (unique)";
   div.appendChild(inputName);
-
-  // Add button to delete attachment
-  var buttonDelete = document.createElement("button");
-  buttonDelete.appendChild(document.createTextNode("-"));
-  buttonDelete.onclick = deleteAttachment;
-  div.appendChild(buttonDelete);
   
   // Add table for answers
   var tableAnswer = document.createElement("table");
@@ -150,17 +151,84 @@ function doc_appendAttachmentSurvey(div, attachment) {
   footAnswer.appendChild(rowFoot);
   tableAnswer.appendChild(footAnswer);
   div.appendChild(tableAnswer);
+
+  // Add button to delete attachment
+  var buttonDelete = document.createElement("button");
+  buttonDelete.appendChild(document.createTextNode("-"));
+  buttonDelete.onclick = deleteAttachment;
+  div.appendChild(buttonDelete);
 }
 
-function doc_appendAttachmentContent(cell, attachments) {
+// Prepend each element to preserve add button
+function doc_appendAttachmentFile(div, attachment) {
+
+  // Add form for survey attachment
+  var inputName = document.createElement("input");
+  inputName.value = attachment.callback_id.replace("file_","");
+  inputName.className = "file-name";
+  inputName.placeholder = "Name (unique)";
+  div.appendChild(inputName);
+
+  var inputFile = document.createElement("input");
+  inputFile.type = "file";
+  inputFile.className = "file-file";
+  div.appendChild(inputFile);
+  
+  // Add button to delete attachment
+  var buttonDelete = document.createElement("button");
+  buttonDelete.appendChild(document.createTextNode("-"));
+  buttonDelete.onclick = deleteAttachment;
+  div.appendChild(buttonDelete);
+}
+
+function doc_updateAttachment(div, attachment) {
+  div.style.display = "none";
+  while (div.firstChild) {
+    div.removeChild(div.firstChild);
+  }
+  doc_createAttachment(div, attachment);
+  div.style.display = "block";
+}
+
+function doc_createAttachment(div, attachment) {
+
+  // Add select to adapt div according to attachment type
+  var select = document.createElement("select");
+
+  // -- Option 0 : Nothing
+  var option = document.createElement("option");
+  option.value = "nothing";
+  option.appendChild(document.createTextNode("--"));
+  select.appendChild(option);
+
+  option = document.createElement("option");
+  option.value = "survey";
+  option.appendChild(document.createTextNode("Survey"));
+  select.appendChild(option);
+
+  // -- Option 2 : Find errors
+  option = document.createElement("option");
+  option.value = "file";
+  option.appendChild(document.createTextNode("File"));
+  select.appendChild(option);
+  select.onchange = onChangeAttachment;
+  div.appendChild(select);
+
+  if (attachment.callback_id != undefined && attachment.callback_id.startsWith("survey_")) {
+    select.selectedIndex = 1;
+    doc_appendAttachmentSurvey(div, attachment);
+  } else if(attachment.callback_id != undefined && attachment.callback_id.startsWith("file_")) {
+    select.selectedIndex = 2;
+    doc_appendAttachmentFile(div, attachment);
+  }
+}
+
+function doc_appendAttachments(cell, attachments) {
   if(attachments !== undefined) {
-    for (numAttachment in attachments) {
-      var attachment = attachments[numAttachment];
+    for (var numAttachment in attachments) {
       var div = document.createElement("div");
       div.className = "attachment"
-      if (attachment.callback_id != undefined && attachment.callback_id.startsWith("survey_")) {
-        doc_appendAttachmentSurvey(div, attachment);
-      }
+      doc_createAttachment(div, attachments[numAttachment]);
       cell.insertBefore(document.createElement("hr"), cell.firstChild);    
       cell.insertBefore(div, cell.firstChild);
     }
@@ -201,8 +269,8 @@ function doc_addRow(table, message) {
   row.appendChild(cell);
 
   // Attachments
-  var cell = document.createElement("td");
-  doc_appendAttachmentContent(cell, message.attachments);
+  cell = document.createElement("td");
+  doc_appendAttachments(cell, message.attachments);
   row.appendChild(cell);
 
   // Actions

@@ -38,7 +38,7 @@ var play = function play() {
 var edit = function edit() {
   var textButton = this.firstChild.parentElement;
   var row = textButton.parentElement.parentElement.parentElement;
-  window.location.href = `/edit-dialog.html?id=${row.id}`;
+  window.location.href = `/admin/edit-dialog.html?id=${row.id}`;
 };
 
 var remove = function remove() {
@@ -125,4 +125,4 @@ function doc_refreshDialogs(dialogs) {
 
   // Show table when update is finished
   dialogsTable.style.display = "table-row-group";
-};
+}
