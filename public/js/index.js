@@ -3,14 +3,15 @@ function refresh() {
 }
 
 function getLinks() {
-  overload_xhr(
-    "GET",
-    "/api/links",
-    function(xhr){
-      var json = JSON.parse(xhr.responseText);
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "/api/links");
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      var json = JSON.parse(this.responseText);
       doc_refreshLinks(json);
     }
-  );
+  };
+  xhr.send();
 }
 
 function doc_refreshLinks(links) {
@@ -21,4 +22,3 @@ function doc_refreshLinks(links) {
   }
   linkSlack.href = links.slack;
 }
-
