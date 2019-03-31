@@ -109,6 +109,21 @@ var routeApi = function (request, response) {
     dialogs.route(request, response);
   }
 
+  // /api/files/upload
+  else if (request.url == "/api/files/upload") {
+    response.writeHead(200, { "Content-Type": "application/json" });
+    let body = "";
+    request.on("data", chunk => {
+      body += chunk.toString();
+    });
+    request.on("end", () => {
+      var parsedBody = parse(body);
+      console.log(parsedBody);
+      response.write("{}");
+      response.end();
+    });
+  }
+
   // GET : endpoint to interactive components
   else if (request.url === "/api/interactive") {
     response.writeHead(200, { "Content-Type": "application/json" });

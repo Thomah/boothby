@@ -9,9 +9,7 @@ function refresh() {
       doc_refreshDialog(json);
     },
     function(){},
-    function(){
-      textButton.style["backgroundColor"] = "red";
-    }
+    function(){}
   );
 }
 
@@ -364,6 +362,7 @@ function doc_getDialog() {
   // Get each entries
   var rowCount = dialogsTable.childNodes.length;
   var row, divAttachment, divsAttachment, divsAttachmentCount, selectTypeAttachment, inputsAnswer, inputsAnswerCount, inputAnswer;
+  var inputFile;
   var callback_id;
   for (var x = 0; x < rowCount; x++) {
     attachments = [];
@@ -394,6 +393,16 @@ function doc_getDialog() {
           callback_id: callback_id,
           actions: actions
         };
+      } else if(selectTypeAttachment.value === "file") {
+        inputFile = divAttachment.querySelector(".file-file");
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/files/upload');
+        xhr.addEventListener('load', function() {
+            alert('Upload terminé !');
+        });
+        var form = new FormData();
+        form.append('file', inputFile.files[0]);
+        xhr.send(form);
       }
     }
 
