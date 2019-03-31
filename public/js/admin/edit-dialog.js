@@ -35,15 +35,25 @@ function save() {
   );
 }
 
-var addMessage = function addMessage() {
+function addMessage() {
   doc_addMessage();
-};
+}
 
 var deleteMessage = function deleteMessage() {
   var row = this.firstChild.parentElement.parentElement.parentElement
     .parentElement;
   var table = row.parentElement;
   table.removeChild(row);
+};
+
+var onChangeMessage = function onChangeMessage() {
+  var wordsCount = (this.value.match(/\s/g) || []).length + 1;
+  var wait = wordsCount * 1000 * 60 / 150;
+  var row = this.parentElement.parentElement;
+  var nextRow = row.nextElementSibling;
+  if(nextRow != null) {
+    nextRow.childNodes[0].childNodes[0].value = wait;
+  }
 };
 
 // Called when a attachment selection changes
@@ -242,17 +252,9 @@ function doc_appendAttachments(cell, attachments) {
 function doc_addRow(table, message) {
   var row = document.createElement("tr");
 
-  // Channel
+  // Wait
   var cell = document.createElement("td");
   var cellContent = document.createElement("input");
-  cellContent.value = message.channel;
-  cellContent.className = "channel";
-  cell.appendChild(cellContent);
-  row.appendChild(cell);
-
-  // Wait
-  cell = document.createElement("td");
-  cellContent = document.createElement("input");
   cellContent.value = message.wait;
   cellContent.type = "number";
   cellContent.className = "wait";
@@ -265,6 +267,7 @@ function doc_addRow(table, message) {
   cellContent.value = message.text;
   cellContent.className = "text";
   cellContent.cols = "120";
+  cellContent.onchange = onChangeMessage;
   cell.appendChild(cellContent);
   row.appendChild(cell);
 
@@ -304,7 +307,6 @@ function doc_addMessage() {
   dialogsTable.style.display = "none";
 
   var message = {
-    channel: "",
     wait: 0,
     message: ""
   };
@@ -322,6 +324,7 @@ function doc_refreshDialog(dialog) {
   // Add Value to simple fields
   document.getElementById("id").value = dialog._id;
   document.getElementById("scheduling").value = dialog.scheduling;
+  document.getElementById("channel").value = dialog.channel;
   document.getElementById("old-name").value = dialog.name;
   document.getElementById("new-name").value = dialog.name;
   document.getElementById("category").value = dialog.category;
@@ -350,6 +353,7 @@ function doc_getDialog() {
   // Get global data
   dialog.scheduling = parseInt(document.getElementById("scheduling").value);
   dialog.name = document.getElementById("new-name").value;
+  dialog.channel = document.getElementById("channel").value;
   dialog.category = document.getElementById("category").value;
   dialog._id = document.getElementById("id").value;
 
@@ -394,7 +398,7 @@ function doc_getDialog() {
     }
 
     dialog[x] = {
-      channel: row.getElementsByClassName("channel")[0].value,
+      channel: dialog.channel,
       wait: parseInt(row.getElementsByClassName("wait")[0].value),
       text: row.getElementsByClassName("text")[0].value,
       attachments: attachments,
