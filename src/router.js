@@ -117,10 +117,18 @@ var routeApi = function (request, response) {
       body += chunk.toString();
     });
     request.on("end", () => {
-      var parsedBody = parse(body);
-      console.log(parsedBody);
-      response.write("{}");
-      response.end();
+      var fileInDb = {
+        name: request.headers.filename
+      };
+      db.insert("files", fileInDb, function(data) {
+        fs.writeFile("files/" + data.insertedId, body, function(err) {
+          if(err) {
+              return console.log(err);
+          }
+          response.write(JSON.stringify(fileInDb));
+          response.end();
+        });
+      });
     });
   }
 

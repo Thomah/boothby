@@ -5,7 +5,6 @@ function overload_xhr(method,
                       before_function = function(){}, 
                       error_function= function(){}, 
                       params_url=''){
-
     var xhr = new XMLHttpRequest();
     xhr.open(method, path);
     before_function(xhr);
@@ -20,7 +19,7 @@ function overload_xhr(method,
         } else if(xhr.status === 401){
           alert("Not authorized, you need to autenticate : Error " + xhr.status);
           window.location = '/admin/auth.html';
-        }else {
+        } else {
           error_function();
           console.log("Request failed.  Returned status of " + xhr.status);
         }

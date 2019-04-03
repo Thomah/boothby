@@ -1,3 +1,8 @@
+var dialog = {};
+var nbAttachments = [];
+var nbAttachmentsTotalWaited = 0;
+var jsonFileUploaded = null;
+
 function refresh() {
   var url = new URL(window.location.href);
   var id = url.searchParams.get("id");
@@ -65,6 +70,7 @@ var onChangeAttachment = function onChangeAttachment() {
     attachment.callback_id = 'survey_';
   } else if(button.value == "file") {
     attachment.callback_id = 'file_';
+    attachment.name = '';
   }
   doc_updateAttachment(div, attachment);
 };
@@ -171,15 +177,10 @@ function doc_appendAttachmentSurvey(div, attachment) {
 function doc_appendAttachmentFile(div, attachment) {
 
   // Add form for survey attachment
-  var inputName = document.createElement("input");
-  inputName.value = attachment.callback_id.replace("file_","");
-  inputName.className = "file-name";
-  inputName.placeholder = "Name (unique)";
-  div.appendChild(inputName);
-
   var inputFile = document.createElement("input");
   inputFile.type = "file";
   inputFile.className = "file-file";
+  inputFile.value = attachment.name;
   div.appendChild(inputFile);
   
   // Add button to delete attachment
@@ -344,8 +345,6 @@ function doc_refreshDialog(dialog) {
 }
 
 function doc_getDialog() {
-  var dialog = {};
-  var attachments = [];
   var actions = [];
 
   // Get global data
@@ -365,10 +364,20 @@ function doc_getDialog() {
   var inputFile;
   var callback_id;
   for (var x = 0; x < rowCount; x++) {
-    attachments = [];
+    nbAttachments[x] = 0;
     row = dialogsTable.childNodes[x];
     divsAttachment = row.getElementsByClassName("attachment");
     divsAttachmentCount = divsAttachment.length;
+    nbAttachmentsTotalWaited+= divsAttachmentCount;
+    
+    dialog[x] = {
+      channel: dialog.channel,
+      wait: parseInt(row.getElementsByClassName("wait")[0].value),
+      text: row.getElementsByClassName("text")[0].value,
+      attachments: [],
+      next: `${x + 1}`
+    };
+
     for(var y = 0 ; y < divsAttachmentCount ; y++) {
       actions = [];
       divAttachment = divsAttachment[y];
@@ -386,7 +395,7 @@ function doc_getDialog() {
             value: dialog._id + "-" + x + "-" + convertToHex(inputAnswer.value)
           }
         }
-        attachments[y] = {
+        dialog[x].attachments[y] = {
           text: "Choisissez une valeur",
           fallback: "Vous ne pouvez pas choisir d'action",
           attachment_type: "default",
@@ -395,28 +404,40 @@ function doc_getDialog() {
         };
       } else if(selectTypeAttachment.value === "file") {
         inputFile = divAttachment.querySelector(".file-file");
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/files/upload');
-        xhr.addEventListener('load', function() {
-            alert('Upload terminé !');
-        });
+
+        dialog[x].attachments[y] = {
+          channels: dialog.channel,
+          filename: inputFile.files[0].name,
+          filetype: "auto",
+          initial_comment: "",
+          title: inputFile.files[0].name
+        };
+
         var form = new FormData();
         form.append('file', inputFile.files[0]);
-        xhr.send(form);
+        overload_xhr(
+          'POST', 
+          '/api/files/upload',
+          function(xhr){
+            jsonFileUploaded = JSON.parse(xhr.responseText);
+          },
+          function(xhr){
+            xhr.setRequestHeader("Filename", inputFile.files[0].name);
+          },
+          function(xhr){
+            alert("Unable to send file. Returned status of " + xhr.status);
+          },
+          form
+        );
+        waitForFileUplaod(dialog[x].attachments[y]);
       }
     }
-
-    dialog[x] = {
-      channel: dialog.channel,
-      wait: parseInt(row.getElementsByClassName("wait")[0].value),
-      text: row.getElementsByClassName("text")[0].value,
-      attachments: attachments,
-      next: `${x + 1}`
-    };
   }
-  delete dialog[x - 1].next;
-
-  return dialog;
+  
+  waitForAttachmentsSaving(function() {
+    delete dialog[x - 1].next;
+    return dialog;
+  });
 }
 
 function convertToHex(str) {
@@ -425,4 +446,39 @@ function convertToHex(str) {
       hex += ''+str.charCodeAt(i).toString(16);
   }
   return hex;
+}
+
+async function waitForFileUplaod(attachment) {
+  if(jsonFileUploaded == null) {
+    sleep(100);
+    waitForFileUplaod(attachment);
+  } else {
+    attachment.file = jsonFileUploaded._id;
+    jsonFileUploaded = null;
+  }
+}
+
+async function waitForAttachmentsSaving(callback) {
+  var sum = 0;
+  for(var x in dialog) {
+    for(var y in dialog[x].attachments) {
+      if(dialog[x].attachments[y].callback_id != null || dialog[x].attachments[y].file != null) {
+        sum++;
+        console.log(sum);
+      }
+    }
+  }
+  if (sum !== nbAttachmentsTotalWaited) {
+    sleep(100);
+    waitForAttachmentsSaving(callback);
+  } else {
+    for(var id in nbAttachments) {
+      nbAttachments[id] = 0;
+    }
+    callback();
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

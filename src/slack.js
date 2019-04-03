@@ -35,9 +35,14 @@ var updateMessage = function (tokens, message) {
   return new WebClient(tokens.bot_access_token).chat.update(message);
 };
 
+var uploadFiles = function(tokens, files) {
+  return new WebClient(tokens.bot_access_token).files.upload(files);
+};
+
 exports.initRtm = initRtm;
 exports.join = join;
 exports.postMessage = postMessage;
 exports.revokeToken = revokeToken;
 exports.sendSimpleMessage = sendSimpleMessage;
 exports.updateMessage = updateMessage;
+exports.uploadFiles = uploadFiles;
