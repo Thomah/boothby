@@ -1,8 +1,3 @@
-var dialog = {};
-var nbAttachments = [];
-var nbAttachmentsTotalWaited = 0;
-var jsonFileUploaded = null;
-
 function refresh() {
   var url = new URL(window.location.href);
   var id = url.searchParams.get("id");
@@ -18,24 +13,62 @@ function refresh() {
   );
 }
 
+function checkAndUploadFile(dialog, messageId, attachmentId, callback) {
+  var message = dialog[messageId];
+  if(message != null) {
+    var attachment = dialog[messageId].attachments[attachmentId];
+    if(attachment != null) {
+      if(attachment.filename != null) {
+        var form = new FormData();
+        form.append('file', attachment.inputfile.files[0]);
+        overload_xhr(
+          'POST', 
+          '/api/files/upload',
+          function(xhr){
+            var jsonFileUploaded = JSON.parse(xhr.responseText);
+            dialog[messageId].attachments[attachmentId].file_id = jsonFileUploaded._id;
+            checkAndUploadFile(dialog, messageId, attachmentId + 1, callback);
+          },
+          function(xhr){
+            xhr.setRequestHeader("Filename", attachment.filename);
+          },
+          function(xhr){
+            alert("Unable to send file. Returned status of " + xhr.status);
+          },
+          form
+        );
+      }
+    } else if(attachmentId < dialog[messageId].attachments.length - 1) {
+      checkAndUploadFile(dialog, messageId, attachmentId + 1, callback);
+    } else {
+      checkAndUploadFile(dialog, messageId + 1, 0, callback);
+    }
+  } else {
+    callback();
+  }
+}
+
 function save() {
   var dialog = doc_getDialog();
-  var textButton = document.getElementById("save");
 
-  overload_xhr(
-    "PUT", 
-    `/api/dialogs/${dialog._id}`,    
-    function(){
-      textButton.style["backgroundColor"] = "greenyellow";
-    },
-    function(xhr){
-      xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
-    },
-    function(){
-      textButton.style["backgroundColor"] = "red";
-    },
-    JSON.stringify(dialog)
-  );
+  // Upload of file attachments
+  checkAndUploadFile(dialog, 0, 0, function() {
+    var textButton = document.getElementById("save");
+    overload_xhr(
+      "PUT", 
+      `/api/dialogs/${dialog._id}`,    
+      function(){
+        textButton.style["backgroundColor"] = "greenyellow";
+      },
+      function(xhr){
+        xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
+      },
+      function(){
+        textButton.style["backgroundColor"] = "red";
+      },
+      JSON.stringify(dialog)
+    );
+  });
 }
 
 function addMessage() {
@@ -345,30 +378,30 @@ function doc_refreshDialog(dialog) {
 }
 
 function doc_getDialog() {
+  var dialog = {};
   var actions = [];
+
+  // Get DOM table object
+  var dialogsTable = document
+    .getElementById("edit-dialog")
+    .getElementsByTagName("tbody")[0];
 
   // Get global data
   dialog.scheduling = parseInt(document.getElementById("scheduling").value);
   dialog.name = document.getElementById("new-name").value;
   dialog.channel = document.getElementById("channel").value;
   dialog.category = document.getElementById("category").value;
+  dialog.length = dialogsTable.childNodes.length;
   dialog._id = document.getElementById("id").value;
 
-  var dialogsTable = document
-    .getElementById("edit-dialog")
-    .getElementsByTagName("tbody")[0];
-
   // Get each entries
-  var rowCount = dialogsTable.childNodes.length;
   var row, divAttachment, divsAttachment, divsAttachmentCount, selectTypeAttachment, inputsAnswer, inputsAnswerCount, inputAnswer;
   var inputFile;
   var callback_id;
-  for (var x = 0; x < rowCount; x++) {
-    nbAttachments[x] = 0;
+  for (var x = 0; x < dialog.length; x++) {
     row = dialogsTable.childNodes[x];
     divsAttachment = row.getElementsByClassName("attachment");
     divsAttachmentCount = divsAttachment.length;
-    nbAttachmentsTotalWaited+= divsAttachmentCount;
     
     dialog[x] = {
       channel: dialog.channel,
@@ -404,40 +437,19 @@ function doc_getDialog() {
         };
       } else if(selectTypeAttachment.value === "file") {
         inputFile = divAttachment.querySelector(".file-file");
-
         dialog[x].attachments[y] = {
           channels: dialog.channel,
           filename: inputFile.files[0].name,
           filetype: "auto",
           initial_comment: "",
-          title: inputFile.files[0].name
+          title: inputFile.files[0].name,
+          inputfile: inputFile
         };
-
-        var form = new FormData();
-        form.append('file', inputFile.files[0]);
-        overload_xhr(
-          'POST', 
-          '/api/files/upload',
-          function(xhr){
-            jsonFileUploaded = JSON.parse(xhr.responseText);
-          },
-          function(xhr){
-            xhr.setRequestHeader("Filename", inputFile.files[0].name);
-          },
-          function(xhr){
-            alert("Unable to send file. Returned status of " + xhr.status);
-          },
-          form
-        );
-        waitForFileUplaod(dialog[x].attachments[y]);
       }
     }
   }
-  
-  waitForAttachmentsSaving(function() {
-    delete dialog[x - 1].next;
-    return dialog;
-  });
+  delete dialog[x - 1].next;
+  return dialog;
 }
 
 function convertToHex(str) {
@@ -446,39 +458,4 @@ function convertToHex(str) {
       hex += ''+str.charCodeAt(i).toString(16);
   }
   return hex;
-}
-
-async function waitForFileUplaod(attachment) {
-  if(jsonFileUploaded == null) {
-    sleep(100);
-    waitForFileUplaod(attachment);
-  } else {
-    attachment.file = jsonFileUploaded._id;
-    jsonFileUploaded = null;
-  }
-}
-
-async function waitForAttachmentsSaving(callback) {
-  var sum = 0;
-  for(var x in dialog) {
-    for(var y in dialog[x].attachments) {
-      if(dialog[x].attachments[y].callback_id != null || dialog[x].attachments[y].file != null) {
-        sum++;
-        console.log(sum);
-      }
-    }
-  }
-  if (sum !== nbAttachmentsTotalWaited) {
-    sleep(100);
-    waitForAttachmentsSaving(callback);
-  } else {
-    for(var id in nbAttachments) {
-      nbAttachments[id] = 0;
-    }
-    callback();
-  }
-}
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }
