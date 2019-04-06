@@ -1,3 +1,5 @@
+const fs = require("fs");
+
 const api = require("./api.js");
 const db = require("./db.js");
 const slack = require("./slack.js");
@@ -143,7 +145,9 @@ var speakRecurse = function (tokens, dialog, currentId) {
         slack
             .join(tokens, dialog[currentId].channel)
             .then(res => {
-                slack
+                if(dialog[currentId])
+                uploadFilesOfMessage(dialog[currentId], 0, function() {
+                    slack
                     .postMessage(tokens, res.channel.id, dialog[currentId])
                     .then(() => {
                         if (dialog[currentId].next !== undefined) {
@@ -151,9 +155,38 @@ var speakRecurse = function (tokens, dialog, currentId) {
                         }
                     })
                     .catch(console.error);
+                });
             })
             .catch(console.error);
     }, dialog[currentId].wait);
+};
+
+var uploadFilesOfMessage = function(message, attachmentId, callback) {
+    if(message.attachments[attachmentId] != null && message.attachments[attachmentId].file_id != null) {
+        var attachment = message.attachments[attachmentId];
+        api.forEachWorkspace(function (tokens) {
+            fs.readFile("files/" + attachment.file_id, function (error, content) {
+                if (!error) {
+                    var files = {
+                        file: content,
+                        filename: attachment.filename,
+                        filetype: attachment.filetype,
+                        initial_comment: attachment.initial_comment,
+                        title: attachment.title
+                    };
+                    slack.uploadFiles(tokens, files)
+                        .then(() => {
+                            uploadFilesOfMessage(message, attachmentId + 1, callback);
+                        })
+                        .catch(console.error);
+                }
+            });
+        });
+    } else if(message.attachments[attachmentId + 1] != null) {
+        uploadFilesOfMessage(message, attachmentId + 1);
+    } else {
+        callback();
+    }
 };
 
 exports.processDialog = processDialog;
