@@ -17,27 +17,25 @@ function checkAndUploadFile(dialog, messageId, attachmentId, callback) {
   var message = dialog[messageId];
   if(message != null) {
     var attachment = dialog[messageId].attachments[attachmentId];
-    if(attachment != null) {
-      if(attachment.filename != null) {
-        var form = new FormData();
-        form.append('file', attachment.inputfile.files[0]);
-        overload_xhr(
-          'POST', 
-          '/api/files/upload',
-          function(xhr){
-            var jsonFileUploaded = JSON.parse(xhr.responseText);
-            dialog[messageId].attachments[attachmentId].file_id = jsonFileUploaded._id;
-            checkAndUploadFile(dialog, messageId, attachmentId + 1, callback);
-          },
-          function(xhr){
-            xhr.setRequestHeader("Filename", attachment.filename);
-          },
-          function(xhr){
-            alert("Unable to send file. Returned status of " + xhr.status);
-          },
-          form
-        );
-      }
+    if(attachment != null && attachment.file_id == null && attachment.filename != null) {
+      var form = new FormData();
+      form.append('file', attachment.inputfile.files[0]);
+      overload_xhr(
+        'POST', 
+        '/api/files/upload',
+        function(xhr){
+          var jsonFileUploaded = JSON.parse(xhr.responseText);
+          dialog[messageId].attachments[attachmentId].file_id = jsonFileUploaded._id;
+          checkAndUploadFile(dialog, messageId, attachmentId + 1, callback);
+        },
+        function(xhr){
+          xhr.setRequestHeader("Filename", attachment.filename);
+        },
+        function(xhr){
+          alert("Unable to send file. Returned status of " + xhr.status);
+        },
+        form
+      );
     } else if(attachmentId < dialog[messageId].attachments.length - 1) {
       checkAndUploadFile(dialog, messageId, attachmentId + 1, callback);
     } else {
@@ -97,16 +95,20 @@ var onChangeAttachment = function onChangeAttachment() {
   var button = this.firstChild.parentElement;
   var div = button.parentElement;
   var attachment = {
-    callback_id: ''
   };
   if (button.value == "survey") {
     attachment.callback_id = 'survey_';
   } else if(button.value == "file") {
-    attachment.callback_id = 'file_';
-    attachment.name = '';
+    attachment.file_id = '';
+    attachment.filename = '';
   }
   doc_updateAttachment(div, attachment);
 };
+
+var onFileSelected = function onFileSelected(e) {
+  var doc_Attachment = e.target.parentElement;
+  doc_Attachment.getElementsByClassName("file-name")[0].value = e.target.files[0].name;
+}
 
 // One type of attachment for now : surveys
 var addAttachment = function addAttachment() {
@@ -209,11 +211,31 @@ function doc_appendAttachmentSurvey(div, attachment) {
 // Prepend each element to preserve add button
 function doc_appendAttachmentFile(div, attachment) {
 
-  // Add form for survey attachment
+  // Add file_id field
   var inputFile = document.createElement("input");
+  inputFile.type = "text";
+  inputFile.className = "file-id";
+  if(attachment.file_id !== undefined) {
+    inputFile.value = attachment.file_id;
+  }
+  inputFile.disabled = true;
+  div.appendChild(inputFile);
+
+  // Add file name field
+  inputFile = document.createElement("input");
+  inputFile.type = "text";
+  inputFile.className = "file-name";
+  if(attachment.file_id !== undefined) {
+    inputFile.value = attachment.filename;
+  }
+  inputFile.disabled = true;
+  div.appendChild(inputFile);
+  
+  // Add file field
+  inputFile = document.createElement("input");
   inputFile.type = "file";
   inputFile.className = "file-file";
-  inputFile.value = attachment.name;
+  inputFile.onchange = onFileSelected;
   div.appendChild(inputFile);
   
   // Add button to delete attachment
@@ -259,7 +281,7 @@ function doc_createAttachment(div, attachment) {
   if (attachment.callback_id != undefined && attachment.callback_id.startsWith("survey_")) {
     select.selectedIndex = 1;
     doc_appendAttachmentSurvey(div, attachment);
-  } else if(attachment.callback_id != undefined && attachment.callback_id.startsWith("file_")) {
+  } else if(attachment.file_id != undefined) {
     select.selectedIndex = 2;
     doc_appendAttachmentFile(div, attachment);
   }
@@ -396,7 +418,7 @@ function doc_getDialog() {
 
   // Get each entries
   var row, divAttachment, divsAttachment, divsAttachmentCount, selectTypeAttachment, inputsAnswer, inputsAnswerCount, inputAnswer;
-  var inputFile;
+  var inputFile, inputFilename, inputFileId;
   var callback_id;
   for (var x = 0; x < dialog.length; x++) {
     row = dialogsTable.childNodes[x];
@@ -437,14 +459,21 @@ function doc_getDialog() {
         };
       } else if(selectTypeAttachment.value === "file") {
         inputFile = divAttachment.querySelector(".file-file");
+        inputFilename = divAttachment.getElementsByClassName("file-name")[0].value;
+        inputFileId = divAttachment.getElementsByClassName("file-id")[0].value;
         dialog[x].attachments[y] = {
           channels: dialog.channel,
-          filename: inputFile.files[0].name,
+          filename: inputFilename,
           filetype: "auto",
           initial_comment: "",
-          title: inputFile.files[0].name,
+          title: inputFilename,
           inputfile: inputFile
         };
+        if(inputFile.files[0] !== undefined) {
+          dialog[x].attachments[y].inputfile = inputFile
+        } else if(inputFileId !== undefined) {
+          dialog[x].attachments[y].file_id = inputFileId
+        }
       }
     }
   }
