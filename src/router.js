@@ -121,13 +121,20 @@ var routeApi = function (request, response) {
       var fileInDb = {
         name: request.headers.filename
       };
+      var lines = body.split('\n');
+      lines.splice(0, 4);
+      lines.splice(lines.length - 2, 2);
+      body = lines.join('\n');
       db.insert("files", fileInDb, function(data) {
-        fs.writeFile("files/" + data.insertedId, body, function(err) {
-          if(err) {
-              return console.log(err);
-          }
-          response.write(JSON.stringify(fileInDb));
-          response.end();
+        fs.mkdir("files", { recursive: true }, (err) => {
+          if (err) throw err;
+          fs.writeFile("files/" + data.insertedId, body, function(err) {
+            if(err) {
+                return console.log(err);
+            }
+            response.write(JSON.stringify(fileInDb));
+            response.end();
+          });
         });
       });
     });

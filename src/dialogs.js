@@ -142,10 +142,12 @@ var speakRecurse = function (tokens, dialog, currentId) {
         dialog[currentId].wait = 0;
     }
     setTimeout(() => {
+        console.log(dialog);
         slack
             .join(tokens, dialog[currentId].channel)
             .then(res => {
-                if(dialog[currentId])
+                console.log(dialog[currentId]);
+                dialog[currentId].channelId = res.channel.id;
                 uploadFilesOfMessage(dialog[currentId], 0, function() {
                     slack
                     .postMessage(tokens, res.channel.id, dialog[currentId])
@@ -168,6 +170,7 @@ var uploadFilesOfMessage = function(message, attachmentId, callback) {
             fs.readFile("files/" + attachment.file_id, function (error, content) {
                 if (!error) {
                     var files = {
+                        channels: message.channelId,
                         file: content,
                         filename: attachment.filename,
                         filetype: attachment.filetype,
@@ -175,7 +178,9 @@ var uploadFilesOfMessage = function(message, attachmentId, callback) {
                         title: attachment.title
                     };
                     slack.uploadFiles(tokens, files)
-                        .then(() => {
+                        .then((retour) => {
+                            console.log(retour);
+                            delete message.attachments[attachmentId];
                             uploadFilesOfMessage(message, attachmentId + 1, callback);
                         })
                         .catch(console.error);
