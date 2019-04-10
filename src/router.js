@@ -32,7 +32,7 @@ var getFilePath = function (request) {
   var filePath = folder + request.url;
   if (filePath === resourceFolder[".html"] + "/") {
     filePath = resourceFolder[".html"] + "/index.html";
-  } else if(filePath === resourceFolder[".html"] + "/admin/") {
+  } else if (filePath === resourceFolder[".html"] + "/admin/") {
     filePath = resourceFolder[".html"] + "/admin/index.html";
   }
   return filePath;
@@ -125,12 +125,12 @@ var routeApi = function (request, response) {
       lines.splice(0, 4);
       lines.splice(lines.length - 2, 2);
       body = lines.join('\n');
-      db.insert("files", fileInDb, function(data) {
+      db.insert("files", fileInDb, function (data) {
         fs.mkdir("files", { recursive: true }, (err) => {
           if (err) throw err;
-          fs.writeFile("files/" + data.insertedId, body, function(err) {
-            if(err) {
-                return console.log(err);
+          fs.writeFile("files/" + data.insertedId, body, function (err) {
+            if (err) {
+              return console.log(err);
             }
             response.write(JSON.stringify(fileInDb));
             response.end();
@@ -179,8 +179,17 @@ var routeApi = function (request, response) {
           response_400(infos, response);
         } else {
           db.insert("workspaces", infos, function () {
+            api.getConfig(function (config) {
+              scheduler.schedule(config.cron, function (fireDate) {
+                console.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
+                dialogs.resumeDialogs();
+              });
+              db.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
+                dialogs.processDialog("dialogs", dialog._id);
+              });
+            });
             response.writeHead(302, {
-              'Location': `slack://channel?team=${infos.team_id}`
+              'Location': "/index.html?installed=1"
             });
             response.end();
           })

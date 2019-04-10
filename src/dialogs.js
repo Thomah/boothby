@@ -142,11 +142,9 @@ var speakRecurse = function (tokens, dialog, currentId) {
         dialog[currentId].wait = 0;
     }
     setTimeout(() => {
-        console.log(dialog);
         slack
             .join(tokens, dialog[currentId].channel)
             .then(res => {
-                console.log(dialog[currentId]);
                 dialog[currentId].channelId = res.channel.id;
                 uploadFilesOfMessage(dialog[currentId], 0, function() {
                     slack
@@ -164,7 +162,7 @@ var speakRecurse = function (tokens, dialog, currentId) {
 };
 
 var uploadFilesOfMessage = function(message, attachmentId, callback) {
-    if(message.attachments[attachmentId] != null && message.attachments[attachmentId].file_id != null) {
+  if (message.attachments !== undefined && message.attachments[attachmentId] !== null && message.attachments[attachmentId].file_id !== null) {
         var attachment = message.attachments[attachmentId];
         api.forEachWorkspace(function (tokens) {
             fs.readFile("files/" + attachment.file_id, function (error, content) {
@@ -179,7 +177,6 @@ var uploadFilesOfMessage = function(message, attachmentId, callback) {
                     };
                     slack.uploadFiles(tokens, files)
                         .then((retour) => {
-                            console.log(retour);
                             delete message.attachments[attachmentId];
                             uploadFilesOfMessage(message, attachmentId + 1, callback);
                         })
@@ -187,7 +184,7 @@ var uploadFilesOfMessage = function(message, attachmentId, callback) {
                 }
             });
         });
-    } else if(message.attachments[attachmentId + 1] != null) {
+  } else if (message.attachments !== undefined && message.attachments[attachmentId + 1] !== null) {
         uploadFilesOfMessage(message, attachmentId + 1);
     } else {
         callback();

@@ -1,3 +1,4 @@
+const fs = require("fs");
 const http = require("http");
 const api = require("./api.js");
 const scheduler = require("./scheduler.js");
@@ -14,6 +15,11 @@ var server = http.createServer(function (request, response) {
 });
 
 db.init(function() {
+  fs.readFile("./files/preset-dialogs/welcome.json", function (error, content) {
+    if (!error) {
+      db.upsert("dialogs", JSON.parse(content), function() {});
+    }
+  });
   api.getConfig(function(config) {
     scheduler.schedule(config.cron, function (fireDate) {
       console.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);

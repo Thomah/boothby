@@ -1,0 +1,27 @@
+{
+  "category": "intro",
+  "name": "Welcome Message",
+  "0": {
+    "channel": "general",
+    "wait": 0,
+    "text": "Bonjour tout le monde !",
+    "next": "1"
+  },
+  "1": {
+    "channel": "general",
+    "wait": 3000,
+    "text": "Vous connaissez le Green IT ?",
+    "next": "2"
+  },
+  "2": {
+    "channel": "general",
+    "wait": 3000,
+    "text": "Que vous soyez expert ou débutant, je vous donne plein d'infos pour progresser dans ce domaine et suivre l'actualité",
+    "next": "3"
+  },
+  "3": {
+    "channel": "general",
+    "wait": 5000,
+    "text": "Rendez-vous sur #greenit pour le début de notre aventure ! :rocket:"
+  }
+}

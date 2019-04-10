@@ -27,7 +27,7 @@ var forEachWorkspace = function(callback) {
 
 exports.getAccessToken = function(code, callback_end, callback_err) {
 
-  var b = new Buffer(SLACK_CLIENT_ID + ":" + SLACK_CLIENT_SECRET);
+  var b = new Buffer.from(SLACK_CLIENT_ID + ":" + SLACK_CLIENT_SECRET);
   var basicAuth = b.toString('base64');
 
   var postData = querystring.stringify({
@@ -92,10 +92,6 @@ exports.listObjectsInDb = function (collection, callback) {
 
 exports.updateObjectInDb = function (collection, condition, object, callback) {
   db.update(collection, condition, object, callback);
-};
-
-exports.upsertObjectInDb = function (collection, object, callback) {
-  db.upsert(collection, object, callback);
 };
 
 exports.upsertObjectsInDb = function (collection, objects, callback) {
