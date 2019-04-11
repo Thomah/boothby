@@ -1,0 +1,26 @@
+.row {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.row nav {
+    margin-top: 0;
+}
+
+.demo {
+    margin: 3em;
+}
+
+.demo-side{
+    margin-top: 10%;
+}
+
+.jumbotron p,
+.details p {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.footer {
+    text-align: center;
+}

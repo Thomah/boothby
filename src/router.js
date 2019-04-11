@@ -15,7 +15,8 @@ const resourceFolder = {
   ".css": "./public/css",
   ".js": "./public/js",
   ".ico": "./public/img",
-  ".png": "./public/img"
+  ".png": "./public/img",
+  ".jpg": "./public/img"
 };
 
 const mimeTypes = {
@@ -23,7 +24,8 @@ const mimeTypes = {
   ".js": "text/javascript",
   ".css": "text/css",
   ".ico": "image/x-icon",
-  ".png": "image/png"
+  ".png": "image/png",
+  ".jpg": "image/jpg"
 };
 
 var getFilePath = function (request) {
