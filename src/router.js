@@ -5,6 +5,7 @@ const { parse } = require("querystring");
 const api = require("./api.js");
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
+const files = require("./files.js");
 const messages = require("./messages.js");
 const scheduler = require("./scheduler.js");
 const users = require("./users.js");
@@ -112,34 +113,9 @@ var routeApi = function (request, response) {
     dialogs.route(request, response);
   }
 
-  // /api/files/upload
-  else if (request.url == "/api/files/upload") {
-    response.writeHead(200, { "Content-Type": "application/json" });
-    let body = "";
-    request.on("data", chunk => {
-      body += chunk.toString();
-    });
-    request.on("end", () => {
-      var fileInDb = {
-        name: request.headers.filename
-      };
-      var lines = body.split('\n');
-      lines.splice(0, 4);
-      lines.splice(lines.length - 2, 2);
-      body = lines.join('\n');
-      db.insert("files", fileInDb, function (data) {
-        fs.mkdir("files", { recursive: true }, (err) => {
-          if (err) throw err;
-          fs.writeFile("files/" + data.insertedId, body, function (err) {
-            if (err) {
-              return console.log(err);
-            }
-            response.write(JSON.stringify(fileInDb));
-            response.end();
-          });
-        });
-      });
-    });
+  // /api/files/*
+  else if(request.url.startsWith("/api/files/")) {
+    files.route(request, response);
   }
 
   // GET : endpoint to interactive components
