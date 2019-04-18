@@ -1,28 +1,30 @@
+// eslint-disable-next-line no-unused-vars
 function refresh() {
   overload_xhr(
-    "GET", 
+    "GET",
     "/api/config",
-    function(xhr){
+    function (xhr) {
       var json = JSON.parse(xhr.responseText);
       doc_refreshConfig(json);
     }
   );
 }
 
+// eslint-disable-next-line no-unused-vars
 function save() {
   var config = doc_getConfig();
   var textButton = document.getElementById("save");
 
   overload_xhr(
-    "PUT", 
-    "/api/config",    
-    function(){
+    "PUT",
+    "/api/config",
+    function () {
       textButton.style["backgroundColor"] = "greenyellow";
     },
-    function(xhr){
+    function (xhr) {
       xhr.setRequestHeader("Content-type", "application/json; charset=utf-8");
     },
-    function(){
+    function () {
       textButton.style["backgroundColor"] = "red";
     },
     JSON.stringify(config)

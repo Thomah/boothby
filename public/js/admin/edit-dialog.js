@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 function refresh() {
   var url = new URL(window.location.href);
   var id = url.searchParams.get("id");
@@ -46,6 +47,7 @@ function checkAndUploadFile(dialog, messageId, attachmentId, callback) {
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 function save() {
   var dialog = doc_getDialog();
 
@@ -69,6 +71,7 @@ function save() {
   });
 }
 
+// eslint-disable-next-line no-unused-vars
 function addMessage() {
   doc_addMessage();
 }

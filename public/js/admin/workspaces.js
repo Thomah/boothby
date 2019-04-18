@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 function refresh(){
   overload_xhr(
     "GET", 

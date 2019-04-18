@@ -1,5 +1,27 @@
+// eslint-disable-next-line no-unused-vars
 function refresh() {
   listMessages();
+}
+
+// eslint-disable-next-line no-unused-vars
+function sendMessage() {
+  var workspace = document.getElementById("message-workspace").value;
+  var channel = document.getElementById("message-channel").value;
+  var content = document.getElementById("message-text").value;
+
+  overload_xhr(
+    "POST", 
+    "/api/messages/send",
+    function(xhr){
+      var json = JSON.parse(xhr.responseText);
+      doc_refreshMessages(json);
+    },
+    function(xhr){
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    },
+    function(){},
+    `workspace=${workspace}&channel=${channel}&message=${content}`
+  );
 }
 
 var deleteMessage = function deleteMessage() {
@@ -27,26 +49,6 @@ function listMessages() {
       var json = JSON.parse(xhr.responseText);
       doc_refreshMessages(json);
     }
-  );
-}
-
-function sendMessage() {
-  var workspace = document.getElementById("message-workspace").value;
-  var channel = document.getElementById("message-channel").value;
-  var content = document.getElementById("message-text").value;
-
-  overload_xhr(
-    "POST", 
-    "/api/messages/send",
-    function(xhr){
-      var json = JSON.parse(xhr.responseText);
-      doc_refreshMessages(json);
-    },
-    function(xhr){
-      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    },
-    function(){},
-    `workspace=${workspace}&channel=${channel}&message=${content}`
   );
 }
 

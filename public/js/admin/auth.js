@@ -1,19 +1,85 @@
-//When we press the enter button on the auth page, we trigger the login button
-if (document.getElementById("password")){
-  document.getElementById("password")
-      .addEventListener("keyup", function(event) {
-      event.preventDefault();
-      if (event.keyCode === 13) {
-          login(); // or just login()
-      }
-  });
+function login() {
+  var user = document.getElementById("username").value;
+  var pwd = document.getElementById("password").value;
+
+  overload_xhr(
+    "POST",
+    "/api/user/login",
+    function (xhr) {
+      var token = JSON.parse(xhr.response)['token'];
+      setCookie('token', token, 10);
+      window.location = 'index.html';
+    },
+    function (xhr) {
+      xhr.setRequestHeader("user", user);
+      xhr.setRequestHeader("pwd", pwd);
+    },
+    function () {
+      var par = document.getElementById("alert-login");
+      par.style.display = "block";
+    },
+  );
 }
 
-function refresh(){
+// eslint-disable-next-line no-unused-vars
+function logout() {
+  overload_xhr(
+    "POST",
+    "/api/user/logout",
+    function () {
+      setCookie('token', '', 0);//Delete the cookie
+      window.location = 'admin/auth.html';
+    }
+  );
+}
+
+// eslint-disable-next-line no-unused-vars
+function add_user() {
+  var user = document.getElementById("username").value;
+  var pwd = document.getElementById("password").value;
+
+  var par_success = document.getElementById("user-created");
+  var par_not_success = document.getElementById("user-not-created");
+
+  var par_error = document.getElementById("cant-remove-user");
+
+  overload_xhr(
+    "POST",
+    "/api/user",
+    function () {
+      par_success.style.display = "block";
+      par_not_success.style.display = "none";
+      par_error.style.display = "none";
+      refresh();
+    },
+    function (xhr) {
+      xhr.setRequestHeader("user", user);
+      xhr.setRequestHeader("pwd", pwd);
+    },
+    function () {
+      par_success.style.display = "none";
+      par_not_success.style.display = "block";
+      par_error.style.display = "none";
+    },
+  );
+}
+
+//When we press the enter button on the auth page, we trigger the login button
+if (document.getElementById("password")) {
+  document.getElementById("password")
+    .addEventListener("keyup", function (event) {
+      event.preventDefault();
+      if (event.keyCode === 13) {
+        login(); // or just login()
+      }
+    });
+}
+
+function refresh() {
   overload_xhr(
     "GET",
     "/api/user",
-    function(xhr){
+    function (xhr) {
       var json = JSON.parse(xhr.responseText);
       fill_users_table(json);
     }
@@ -22,8 +88,8 @@ function refresh(){
 
 function fill_users_table(users) {
   var usersTable = document
-  .getElementById("users")
-  .getElementsByTagName("tbody")[0];
+    .getElementById("users")
+    .getElementsByTagName("tbody")[0];
 
   usersTable.style.display = "none";
 
@@ -35,7 +101,7 @@ function fill_users_table(users) {
 
   var userId, user, newEntry, button, cell, cellSpan;
 
-  for (userId in users){
+  for (userId in users) {
     user = users[userId];
     newEntry = document.createElement("tr");
     newEntry.id = user._id;
@@ -72,79 +138,13 @@ var remove_user = function remove_user() {
   overload_xhr(
     "DELETE",
     `/api/user/${row.id}`,
-    function(){
+    function () {
       table.removeChild(row);
       par_error.style.display = "none";
     },
-    function(){},
-    function(){
+    function () { },
+    function () {
       par_error.style.display = "block";
     }
   );
 };
-
-
-function login() {
-  var user = document.getElementById("username").value;
-  var pwd = document.getElementById("password").value;
-
-  overload_xhr(
-    "POST",
-    "/api/user/login",
-    function(xhr){
-      var token = JSON.parse(xhr.response)['token'];
-      setCookie('token',token,10);
-      window.location = 'index.html';
-    },
-    function(xhr){
-      xhr.setRequestHeader("user", user);
-      xhr.setRequestHeader("pwd", pwd);
-    },
-    function(){
-      var par = document.getElementById("alert-login");
-      par.style.display = "block";
-    },
-  );
-}
-
-function logout() {
-  overload_xhr(
-    "POST",
-    "/api/user/logout",
-    function(xhr){
-      setCookie('token','',0);//Delete the cookie
-      window.location = 'admin/auth.html';
-    }
-  );
-}
-
-function add_user() {
-  var user = document.getElementById("username").value;
-  var pwd = document.getElementById("password").value;
-
-  var par_success = document.getElementById("user-created");
-  var par_not_success = document.getElementById("user-not-created");
-
-  var par_error = document.getElementById("cant-remove-user");
-
-  overload_xhr(
-    "POST",
-    "/api/user",
-    function(){
-      par_success.style.display = "block";
-      par_not_success.style.display = "none";
-      par_error.style.display = "none";
-      refresh();
-    },
-    function(xhr){
-      xhr.setRequestHeader("user", user);
-      xhr.setRequestHeader("pwd", pwd);
-    },
-    function(){
-      par_success.style.display = "none";
-      par_not_success.style.display = "block";
-      par_error.style.display = "none";
-    },
-  );
-
-}
