@@ -27,10 +27,12 @@ var route = function (request, response) {
         // POST : create new dialog
         else if (request.method === "POST") {
             var dialog = {
-                "0": {
-                    channel: "greenit",
-                    wait: 0,
-                    text: "first message"
+                messages: {
+                    "0": {
+                        channel: "greenit",
+                        wait: 0,
+                        text: "first message"
+                    }
                 },
                 name: "new-dialog",
                 category: "daily",

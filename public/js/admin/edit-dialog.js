@@ -113,7 +113,6 @@ var onFileSelected = function onFileSelected(e) {
   doc_Attachment.getElementsByClassName("file-name")[0].value = e.target.files[0].name;
 }
 
-// One type of attachment for now : surveys
 var addAttachment = function addAttachment() {
   var button = this.firstChild.parentElement;
   var cell = button.parentElement;
@@ -122,19 +121,17 @@ var addAttachment = function addAttachment() {
   };
   var div = document.createElement("div");
   div.className = "attachment"
-  doc_createAttachment(div, attachment);
+  doc_appendAttachment(div, attachment);
   cell.insertBefore(document.createElement("hr"), cell.firstChild);    
   cell.insertBefore(div, cell.firstChild);
 };
 
-// One type of attachment for now : surveys
 var deleteAttachment = function deleteAttachment() {
   var button = this.firstChild.parentElement;
   var div = button.parentElement;
   div.remove();
 };
 
-// One type of attachment for now : surveys
 var addAttachmentSurveyAnswer = function addAttachmentSurveyAnswer() {
   var button = this.firstChild.parentElement;
   var tbody = button.parentElement.parentElement.parentElement.parentElement.getElementsByTagName("tbody")[0];
@@ -147,6 +144,23 @@ var addAttachmentSurveyAnswer = function addAttachmentSurveyAnswer() {
   };
   doc_appendAttachmentSurveyAnswer(tbody, attachment);
 };
+
+var addOutput = function() {
+  var button = this.firstChild.parentElement;
+  var cell = button.parentElement;
+  var output = {
+    id: cell.parentElement.getElementsByClassName("id")[0].value,
+    text: "Default"
+  }
+  var div = document.createElement("div");
+  div.className = "output"
+  doc_appendOutput(div, output);
+  cell.insertBefore(div, cell.firstChild);
+}
+
+var deleteOutput = deleteAttachment;
+
+/* ATTACHMENTS DOM UPDATES */
 
 function doc_appendAttachmentSurveyAnswer(tbody, attachment) {
 
@@ -171,7 +185,6 @@ function doc_appendAttachmentSurveyAnswer(tbody, attachment) {
   }
 }
 
-// Prepend each element to preserve add button
 function doc_appendAttachmentSurvey(div, attachment) {
 
   // Add form for survey attachment
@@ -211,7 +224,6 @@ function doc_appendAttachmentSurvey(div, attachment) {
   div.appendChild(buttonDelete);
 }
 
-// Prepend each element to preserve add button
 function doc_appendAttachmentFile(div, attachment) {
 
   // Add file_id field
@@ -253,11 +265,11 @@ function doc_updateAttachment(div, attachment) {
   while (div.firstChild) {
     div.removeChild(div.firstChild);
   }
-  doc_createAttachment(div, attachment);
+  doc_appendAttachment(div, attachment);
   div.style.display = "block";
 }
 
-function doc_createAttachment(div, attachment) {
+function doc_appendAttachment(div, attachment) {
 
   // Add select to adapt div according to attachment type
   var select = document.createElement("select");
@@ -295,7 +307,7 @@ function doc_appendAttachments(cell, attachments) {
     for (var numAttachment in attachments) {
       var div = document.createElement("div");
       div.className = "attachment"
-      doc_createAttachment(div, attachments[numAttachment]);
+      doc_appendAttachment(div, attachments[numAttachment]);
       cell.insertBefore(document.createElement("hr"), cell.firstChild);    
       cell.insertBefore(div, cell.firstChild);
     }
@@ -306,15 +318,54 @@ function doc_appendAttachments(cell, attachments) {
   cell.appendChild(cellContent);
 }
 
+
+/* OUTPUTS DOM UPDATES */
+
+function doc_appendOutput(div, output) {
+  var element = document.createElement("input");
+  element.placeholder = "Message ID";
+  element.value = output.id;
+  div.appendChild(element);
+  
+  element = document.createElement("input");
+  element.placeholder = "Button Text";
+  element.value = output.text;
+  div.appendChild(element);
+  
+  element = document.createElement("button");
+  element.appendChild(document.createTextNode("-"));
+  element.onclick = deleteOutput;
+  div.appendChild(element);
+
+  div.appendChild(document.createElement("hr"));
+}
+
+function doc_appendOutputs(cell, outputs) {
+  if(outputs !== undefined) {
+    for (var numOutput in outputs) {
+      var div = document.createElement("div");
+      div.className = "output"
+      doc_appendOutput(div, outputs[numOutput]);
+      cell.insertBefore(div, cell.firstChild);
+    }
+  }
+  var cellContent = document.createElement("button");
+  cellContent.appendChild(document.createTextNode("+"));
+  cellContent.onclick = addOutput;
+  cell.appendChild(cellContent);
+}
+
+/* GENERAL DOM UPDATES */
+
 function doc_addRow(table, message) {
   var row = document.createElement("tr");
 
-  // Wait
+  // ID
   var cell = document.createElement("td");
   var cellContent = document.createElement("input");
-  cellContent.value = message.wait;
-  cellContent.type = "number";
-  cellContent.className = "wait";
+  cellContent.value = message.id;
+  cellContent.disabled = true;
+  cellContent.className = "id";
   cell.appendChild(cellContent);
   row.appendChild(cell);
 
@@ -333,6 +384,11 @@ function doc_addRow(table, message) {
   doc_appendAttachments(cell, message.attachments);
   row.appendChild(cell);
 
+  // Outputs
+  cell = document.createElement("td");
+  doc_appendOutputs(cell, message.outputs);
+  row.appendChild(cell);
+
   // Actions
   cell = document.createElement("td");
   cellContent = document.createElement("span");
@@ -347,7 +403,7 @@ function doc_addRow(table, message) {
 }
 
 function doc_refreshDialogRecurse(table, dialog, currentId) {
-  var message = dialog[currentId];
+  var message = dialog.messages[currentId];
   message.id = currentId;
   doc_addRow(table, message);
   if (message.next !== undefined) {
