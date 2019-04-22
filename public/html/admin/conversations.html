@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Workspaces</title>
+  <title>Dialogs</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" type="text/css" href="/admin/boothby.css" />
 </head>
@@ -19,14 +19,15 @@
     <a onclick="logout()" href="#">Logout</a>
   </p>
   <hr />
+  <button onclick="add()">Add</button>
   <button onclick="refresh()">Refresh</button>
   <hr />
-  <table id="workspaces">
+  <table id="conversations">
     <thead>
       <tr>
-        <th>ID</th>
+        <th>Scheduling</th>
+        <th>Category</th>
         <th>Name</th>
-        <th>Inviter</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -34,7 +35,7 @@
   </table>
   <script src="auth.js"></script>
   <script src="request.js"></script>
-  <script src="workspaces.js"></script>
+  <script src="conversations.js"></script>
 </body>
 
 </html>
