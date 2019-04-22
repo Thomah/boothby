@@ -4,7 +4,6 @@ const { parse } = require("querystring");
 
 const api = require("./api.js");
 const db = require("./db.js");
-const conversations = require("./conversations.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
 const messages = require("./messages.js");
@@ -107,11 +106,6 @@ var routeApi = function (request, response) {
       response.writeHead(404, { "Content-Type": "application/octet-stream" });
       response.end();
     }
-  }
-
-  // /api/conversations*
-  else if (request.url.startsWith("/api/conversations")) {
-    conversations.route(request, response);
   }
 
   // /api/dialogs*
