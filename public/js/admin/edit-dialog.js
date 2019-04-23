@@ -369,6 +369,14 @@ function doc_addRow(table, message) {
   cell.appendChild(cellContent);
   row.appendChild(cell);
 
+  // Wait
+  cell = document.createElement("td");
+  cellContent = document.createElement("input");
+  cellContent.value = message.wait;
+  cellContent.className = "wait";
+  cell.appendChild(cellContent);
+  row.appendChild(cell);
+
   // Message
   cell = document.createElement("td");
   cellContent = document.createElement("textarea");
@@ -419,9 +427,14 @@ function doc_addMessage() {
   // Hide table when updating it (Green IT Best Practice)
   dialogsTable.style.display = "none";
 
+  var lastRow = dialogsTable.childNodes[dialogsTable.childNodes.length - 1];
+  var textInLastRow = lastRow.getElementsByClassName("text")[0];
+  var wordsCountInLastRow = (textInLastRow.value.match(/\s/g) || []).length + 1;
+
   var message = {
-    wait: 0,
-    message: ""
+    id: parseInt(lastRow.getElementsByClassName("id")[0].value) + 1,
+    wait: wordsCountInLastRow * 1000 * 60 / 150,
+    text: ""
   };
   doc_addRow(dialogsTable, message);
 
@@ -461,6 +474,7 @@ function doc_refreshDialog(dialog) {
 function doc_getDialog() {
   var dialog = {};
   var actions = [];
+  dialog.messages = {};
 
   // Get DOM table object
   var dialogsTable = document
@@ -477,14 +491,17 @@ function doc_getDialog() {
 
   // Get each entries
   var row, divAttachment, divsAttachment, divsAttachmentCount, selectTypeAttachment, inputsAnswer, inputsAnswerCount, inputAnswer;
+  var divOutput, divsOutput, divsOutputCount;
   var inputFile, inputFilename, inputFileId;
   var callback_id;
   for (var x = 0; x < dialog.length; x++) {
     row = dialogsTable.childNodes[x];
     divsAttachment = row.getElementsByClassName("attachment");
     divsAttachmentCount = divsAttachment.length;
+    divsOutput = row.getElementsByClassName("output");
+    divsOutputCount = divsOutput.length;
     
-    dialog[x] = {
+    dialog.messages[x] = {
       channel: dialog.channel,
       wait: parseInt(row.getElementsByClassName("wait")[0].value),
       text: row.getElementsByClassName("text")[0].value,
@@ -509,7 +526,7 @@ function doc_getDialog() {
             value: dialog._id + "-" + x + "-" + convertToHex(inputAnswer.value)
           }
         }
-        dialog[x].attachments[y] = {
+        dialog.messages[x].attachments[y] = {
           text: "Choisissez une valeur",
           fallback: "Vous ne pouvez pas choisir d'action",
           attachment_type: "default",
@@ -520,7 +537,7 @@ function doc_getDialog() {
         inputFile = divAttachment.querySelector(".file-file");
         inputFilename = divAttachment.getElementsByClassName("file-name")[0].value;
         inputFileId = divAttachment.getElementsByClassName("file-id")[0].value;
-        dialog[x].attachments[y] = {
+        dialog.messages[x].attachments[y] = {
           channels: dialog.channel,
           filename: inputFilename,
           filetype: "auto",
@@ -529,14 +546,18 @@ function doc_getDialog() {
           inputfile: inputFile
         };
         if(inputFile.files[0] !== undefined) {
-          dialog[x].attachments[y].inputfile = inputFile
+          dialog.messages[x].attachments[y].inputfile = inputFile
         } else if(inputFileId !== undefined) {
-          dialog[x].attachments[y].file_id = inputFileId
+          dialog.messages[x].attachments[y].file_id = inputFileId
         }
       }
     }
+
+    for(y = 0 ; y < divsOutputCount; y++) {
+      divOutput = divsOutput[y];
+    }
   }
-  delete dialog[x - 1].next;
+  delete dialog.messages[x - 1].next;
   return dialog;
 }
 
