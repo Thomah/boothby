@@ -128,9 +128,7 @@ var resumeDialogs = function () {
             db.insert("global", data);
         }
         db.read("dialogs", { scheduling: parseInt(data.daily) }, function (dialog) {
-            if (dialog === null) {
-                console.log('PROBLEM Captain\' : There is no dialog related to the global.daily :' + data.daily);
-            } else {
+            if (dialog !== null) {
                 processDialog("dialogs", dialog._id);
                 data.daily++;
                 db.updateByName("global", "state", data);
