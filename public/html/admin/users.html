@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Users</title>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="stylesheet" type="text/css" href="/admin/boothby.css" />
+</head>
+
+<body onload="refresh()">
+  <p>
+    <a href="/admin/index.html">Home</a>
+    <a href="/admin/dialogs.html">Dialogs</a>
+    <a href="/admin/workspaces.html">Workspaces</a>
+    <a href="/admin/config.html">Config</a>
+    <a href="/admin/admins.html">Admins</a>
+    <a onclick="logout()" href="#">Logout</a>
+  </p>
+  <hr />
+  <label for="workspace">Workspace</label><input id="workspace" type="text" name="workspace" disabled="true" size="24" />
+  <button id="refresh" onclick="refresh()">Refresh IHM</button>
+  <button id="reload" onclick="reload()">Reload DB</button>
+  <hr />
+  <table id="users">
+    <thead>
+      <tr>
+        <th>ID</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script src="auth.js"></script>
+  <script src="request.js"></script>
+  <script src="users.js"></script>
+</body>
+
+</html>
