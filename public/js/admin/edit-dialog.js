@@ -323,11 +323,13 @@ function doc_appendAttachments(cell, attachments) {
 
 function doc_appendOutput(div, output) {
   var element = document.createElement("input");
+  element.className = "output-id"
   element.placeholder = "Message ID";
   element.value = output.id;
   div.appendChild(element);
   
   element = document.createElement("input");
+  element.className = "output-text"
   element.placeholder = "Button Text";
   element.value = output.text;
   div.appendChild(element);
@@ -506,6 +508,7 @@ function doc_getDialog() {
       wait: parseInt(row.getElementsByClassName("wait")[0].value),
       text: row.getElementsByClassName("text")[0].value,
       attachments: [],
+      outputs: [],
       next: `${x + 1}`
     };
 
@@ -555,6 +558,10 @@ function doc_getDialog() {
 
     for(y = 0 ; y < divsOutputCount; y++) {
       divOutput = divsOutput[y];
+      dialog.messages[x].outputs[y] = {
+        id: divOutput.getElementsByClassName("output-id")[0].value,
+        text: divOutput.getElementsByClassName("output-text")[0].value
+      };
     }
   }
   delete dialog.messages[x - 1].next;
