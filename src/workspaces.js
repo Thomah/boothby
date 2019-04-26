@@ -10,10 +10,10 @@ var route = function (request, response) {
 
     var regex_workspaceId = /^\/api\/workspaces\/([^/]+)\/?$/;
     var regex_workspaceIdReload = /^\/api\/workspaces\/([^/]+)\/reload\/?$/;
+    var objectId;
 
     if (request.url.match(regex_workspaceId) !== null) {
-
-        var objectId = request.url.match(regex_workspaceId)[1];
+        objectId = request.url.match(regex_workspaceId)[1];
 
         // GET : Detail of workspace
         if(request.method === "GET") {
@@ -44,7 +44,24 @@ var route = function (request, response) {
     }
 
     else if (request.url.match(regex_workspaceIdReload) !== null) {
-        console.log("Est-ce que tu m'entends hého ?");
+        objectId = request.url.match(regex_workspaceIdReload)[1];
+        var id = new db.mongodb().ObjectId(objectId);
+        db.read("workspaces", { _id: id }, function (data) {
+            slack.listUsers({bot_access_token: data.bot.bot_access_token})
+                .then(res => {
+                    data.users = [];
+                    for(var memberId in res.members) {
+                        var member = res.members[memberId];
+                        data.users[memberId] = {
+                            id: member.id,
+                            is_bot: member.is_bot,
+                            deleted: member.deleted
+                        };
+                    }
+                    db.update("workspaces", {_id: id}, data, function() {});
+                })
+                .catch(console.error);
+        });
         response.writeHead(200, { "Content-Type": "application/json" });
         response.write("{}");
         response.end();

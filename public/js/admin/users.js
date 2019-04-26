@@ -6,8 +6,10 @@ function refresh() {
   overload_xhr(
     "GET", 
     `/api/workspaces/${id}`,
-    function(){
+    function(xhr){
       textButton.style["backgroundColor"] = "greenyellow";
+      var json = JSON.parse(xhr.responseText);
+      doc_refresh(json.users);
     },
     function(){},
     function(){
