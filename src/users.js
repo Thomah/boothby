@@ -160,7 +160,6 @@ var route = function (request, response) {
 
 var createDefaultUser = function(){
     bcrypt.hash(ADMIN_PASSWORD, null, null, function (err, hash) {
-        console.log(err);
         var credentials = {
             'username':ADMIN_USERNAME,
             'password':hash

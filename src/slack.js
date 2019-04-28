@@ -17,6 +17,10 @@ var listUsers = function (tokens) {
   return new WebClient(tokens.bot_access_token).users.list();
 };
 
+var openIM = function (tokens, params) {
+  return new WebClient(tokens.bot_access_token).im.open(params);
+}
+
 var postMessage = function (tokens, channelId, content) {
   return new WebClient(tokens.bot_access_token).chat.postMessage({
     channel: channelId,
@@ -46,6 +50,7 @@ var uploadFiles = function(tokens, files) {
 exports.initRtm = initRtm;
 exports.join = join;
 exports.listUsers = listUsers;
+exports.openIM = openIM;
 exports.postMessage = postMessage;
 exports.revokeToken = revokeToken;
 exports.sendSimpleMessage = sendSimpleMessage;
