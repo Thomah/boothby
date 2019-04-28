@@ -62,6 +62,11 @@ function doc_refresh(elements) {
     cell.textContent = element.id;
     newEntry.appendChild(cell);
 
+    // IM ID
+    cell = document.createElement("td");
+    cell.textContent = element.im_id;
+    newEntry.appendChild(cell);
+
     table.appendChild(newEntry);
   }
 

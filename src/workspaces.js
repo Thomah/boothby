@@ -6,6 +6,28 @@ var response404 = function (response) {
     response.end();
 };
 
+var openIM = function(tokens, data, members, memberId, callback) {
+    var member = members[memberId];
+    if(member === undefined) {
+        callback(data);
+    } else if(!member.is_bot) {
+        setTimeout(function () {
+            slack.openIM(tokens, {
+                user: member.id
+                }).then(slackIMs => {
+                    data.users.push({
+                        id: member.id,
+                        im_id: slackIMs.channel.id
+                    });
+                    openIM(tokens, data, members, memberId + 1, callback);
+                })
+                .catch(console.error);
+          }, 600);
+    } else {
+        openIM(tokens, data, members, memberId + 1, callback);
+    }
+}
+
 var route = function (request, response) {
 
     var regex_workspaceId = /^\/api\/workspaces\/([^/]+)\/?$/;
@@ -47,18 +69,13 @@ var route = function (request, response) {
         objectId = request.url.match(regex_workspaceIdReload)[1];
         var id = new db.mongodb().ObjectId(objectId);
         db.read("workspaces", { _id: id }, function (data) {
-            slack.listUsers({bot_access_token: data.bot.bot_access_token})
-                .then(res => {
+            var tokens = {bot_access_token: data.bot.bot_access_token};
+            slack.listUsers(tokens)
+                .then(slackUsers => {
                     data.users = [];
-                    for(var memberId in res.members) {
-                        var member = res.members[memberId];
-                        data.users[memberId] = {
-                            id: member.id,
-                            is_bot: member.is_bot,
-                            deleted: member.deleted
-                        };
-                    }
-                    db.update("workspaces", {_id: id}, data, function() {});
+                    openIM(tokens, data, slackUsers.members, 0, function() {
+                        db.update("workspaces", {_id: id}, data, function() {});
+                    });
                 })
                 .catch(console.error);
         });
