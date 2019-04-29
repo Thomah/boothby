@@ -1,7 +1,9 @@
 const bcrypt = require('bcrypt-nodejs');
 const NodeCache = require("node-cache");
+
 const api = require("./api.js");
 const db = require("./db.js");
+const logger = require("./logger.js");
 
 var myCache;
 var ttlCache = 36000;
@@ -166,9 +168,9 @@ var createDefaultUser = function(){
         }
         api.createDefaultUser(credentials, function (data) {
             if (data === false) {//Already users in the database
-                console.log('No need to create default admin : already users in database ');
+                logger.log('No need to create default admin : already users in database ');
             } else {
-                console.log('Default admin user created');
+                logger.log('Default admin user created');
             }
         });
     });

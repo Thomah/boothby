@@ -1,5 +1,10 @@
-var error = function(message) {
-    throw new Error(message);
+const fs = require("fs");
+
+var log = function(message) {
+    fs.appendFile('console.log', message + '\n', function (err) {
+        if (err) throw err;
+    });
 }
 
-exports.error = error;
+exports.error = log;
+exports.log = log;

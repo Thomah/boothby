@@ -3,27 +3,12 @@ var querystring = require("querystring");
 const db = require("./db.js");
 const scheduler = require("./scheduler.js");
 const slack = require("./slack.js");
+const workspaces = require("./workspaces.js");
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
 
 var nbObjects = 0;
-
-var forEachWorkspace = function(callback) {
-  db.list("workspaces", function(workspaces) {
-    var previous_bot_access_token = [];
-    for(var workspaceId in workspaces) {
-      var tokens = {
-        user_access_token: workspaces[workspaceId].access_token,
-        bot_access_token: workspaces[workspaceId].bot.bot_access_token
-      }
-      if(previous_bot_access_token.indexOf(tokens.bot_access_token) < 0) {
-        callback(tokens);
-        previous_bot_access_token.push(tokens.bot_access_token);
-      }
-    }
-  });
-};
 
 exports.getAccessToken = function(code, callback_end, callback_err) {
 
@@ -101,7 +86,7 @@ exports.upsertObjectsInDb = function (collection, objects, callback) {
   waitForUpsertObjectsInDb(objects.length, callback);
 };
 
-var incObjects = function (result) {
+var incObjects = function () {
   nbObjects++;
 };
 
@@ -172,8 +157,8 @@ exports.interactive = function (rawPayload, callback) {
         data.texts[id] + " (" + data.values[id] + ")";
     }
 
-    forEachWorkspace(function(tokens) {
-      slack.updateMessage(tokens, {
+    workspaces.forEach(function(workspace) {
+      slack.updateMessage(workspace, {
         channel: payload.channel.id,
         text: newMessage.text,
         link_names: true,
@@ -223,5 +208,4 @@ var createDefaultUser = function(credentials,callback) {
 
 exports.addUser = addUser;
 exports.checkCredentialsUser = checkCredentialsUser;
-exports.forEachWorkspace = forEachWorkspace;
 exports.createDefaultUser = createDefaultUser;

@@ -6,6 +6,7 @@ const api = require("./api.js");
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
+const logger = require("./logger.js");
 const messages = require("./messages.js");
 const scheduler = require("./scheduler.js");
 const users = require("./users.js");
@@ -159,7 +160,7 @@ var routeApi = function (request, response) {
           db.insert("workspaces", infos, function () {
             api.getConfig(function (config) {
               scheduler.schedule(config.cron, function (fireDate) {
-                console.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
+                logger.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
                 dialogs.resumeDialogs();
               });
               db.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
