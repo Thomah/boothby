@@ -4,9 +4,11 @@ const api = require("./api.js");
 const scheduler = require("./scheduler.js");
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
+const logger = require("./logger.js");
 const router = require("./router.js");
 const slack = require("./slack.js");
 const users = require("./users.js");
+const workspaces = require("./workspaces.js");
 
 const ROOT_URL = process.env.ROOT_URL;
 
@@ -22,19 +24,16 @@ db.init(function() {
   });
   api.getConfig(function(config) {
     scheduler.schedule(config.cron, function (fireDate) {
-      console.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
+      logger.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
       dialogs.resumeDialogs();
     });
   });
-  api.forEachWorkspace(function (tokens) {
-    slack.initRtm(tokens);
-  });
+  workspaces.forEach(slack.initRtm);
   users.createDefaultUser();
-  
 });
 
 server.on("close", function () {
-  console.log(" Stopping ...");
+  logger.log(" Stopping ...");
   db.close();
 });
 
@@ -45,4 +44,4 @@ process.on("SIGINT", function () {
 users.initCache();
 
 server.listen(8080);
-console.log("Server running at " + ROOT_URL);
+logger.log("Server running at " + ROOT_URL);

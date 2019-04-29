@@ -54,7 +54,7 @@ exports.updateByName = function (collection, name, content) {
     {
       $set: content
     },
-    function (error, results) {
+    function (error) {
       if (error) throw error;
     }
   );

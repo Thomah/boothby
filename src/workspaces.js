@@ -1,4 +1,5 @@
 const db = require("./db.js");
+const logger = require("./logger.js");
 const slack = require("./slack.js");
 
 var response404 = function (response) {
@@ -21,12 +22,28 @@ var openIM = function(tokens, data, members, memberId, callback) {
                     });
                     openIM(tokens, data, members, memberId + 1, callback);
                 })
-                .catch(console.error);
+                .catch(logger.error);
           }, 600);
     } else {
         openIM(tokens, data, members, memberId + 1, callback);
     }
 }
+
+var forEach = function(callback) {
+    db.list("workspaces", function(workspaces) {
+        var previous_bot_access_token = [];
+        for(var workspaceId in workspaces) {
+            var tokens = {
+                user_access_token: workspaces[workspaceId].access_token,
+                bot_access_token: workspaces[workspaceId].bot.bot_access_token
+            }
+            if(previous_bot_access_token.indexOf(tokens.bot_access_token) < 0) {
+                callback(workspaces[workspaceId]);
+                previous_bot_access_token.push(workspaces[workspaceId].bot.bot_access_token);
+            }
+        }
+    });
+};
 
 var route = function (request, response) {
 
@@ -77,7 +94,7 @@ var route = function (request, response) {
                         db.update("workspaces", {_id: id}, data, function() {});
                     });
                 })
-                .catch(console.error);
+                .catch(logger.error);
         });
         response.writeHead(200, { "Content-Type": "application/json" });
         response.write("{}");
@@ -99,4 +116,5 @@ var route = function (request, response) {
     }
 };
 
+exports.forEach = forEach;
 exports.route = route;

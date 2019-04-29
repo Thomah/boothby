@@ -1,3 +1,4 @@
 node_modules
 bin/setenv.sh
 package-lock.json
+*.log

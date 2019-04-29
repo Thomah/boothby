@@ -42,7 +42,7 @@ var route = function (request, response) {
             request.on("end", () => {
                 var parsedBody = parse(body);
                 db.read("workspaces", {team_id: parsedBody.workspace}, function(workspace) {
-                    slack.sendSimpleMessage(workspace.bot.bot_access_token, parsedBody.channel, parsedBody.message);
+                    slack.sendSimpleMessage(workspace, parsedBody.channel, parsedBody.message);
                 });
             });
             response.writeHead(200, { "Content-Type": "application/octet-stream" });
