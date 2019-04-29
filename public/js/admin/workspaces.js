@@ -28,6 +28,12 @@ var remove = function remove() {
   );
 };
 
+var users = function() {
+  var textButton = this.firstChild.parentElement;
+  var row = textButton.parentElement.parentElement.parentElement;
+  window.location.href = `/admin/users.html?id=${row.id}`;
+};
+
 function doc_refreshWorkspaces(workspaces) {
   var table = document
     .getElementById("workspaces")
@@ -67,6 +73,12 @@ function doc_refreshWorkspaces(workspaces) {
     // Actions
     cell = document.createElement("td");
     cellSpan = document.createElement("span");
+
+    // -- Users Button
+    button = document.createElement("button");
+    button.appendChild(document.createTextNode("Users"));
+    button.onclick = users;
+    cellSpan.appendChild(button);
 
     // -- Delete Button
     button = document.createElement("button");

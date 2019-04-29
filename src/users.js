@@ -1,12 +1,10 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt-nodejs');
 const NodeCache = require("node-cache");
 const api = require("./api.js");
 const db = require("./db.js");
 
 var myCache;
 var ttlCache = 36000;
-
-var saltRounds = 10;
 
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = 'admin';
@@ -114,7 +112,7 @@ var route = function (request, response) {
         if (request.method === "POST") {
             //FIXME : The password can be seen in the request header, should be crypted in the client side
             //See usage of bcrypt library : https://www.npmjs.com/package/bcrypt
-            bcrypt.hash(credentials['password'], saltRounds, function (err, hash) {
+            bcrypt.hash(credentials['password'], null, null, function (err, hash) {
                 credentials['password'] = hash;
                 api.addUser(credentials, function (data) {
                     if (data === false) {//User already existing
@@ -161,7 +159,7 @@ var route = function (request, response) {
 };
 
 var createDefaultUser = function(){
-    bcrypt.hash(ADMIN_PASSWORD, saltRounds, function (err, hash) {
+    bcrypt.hash(ADMIN_PASSWORD, null, null, function (err, hash) {
         var credentials = {
             'username':ADMIN_USERNAME,
             'password':hash
