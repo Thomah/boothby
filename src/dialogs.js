@@ -3,7 +3,7 @@ const fs = require("fs");
 const db = require("./db.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
-const workspaces = require('./workspaces.js');
+const workspaces = require("./workspaces.js");
 
 var response404 = function (response) {
     response.writeHead(404, { "Content-Type": "application/octet-stream" });
@@ -144,8 +144,8 @@ var uploadFilesAndSendMessage = function(workspace, dialog, message, channelId) 
         slack
         .postMessage(workspace, channelId, message)
         .then(() => {
-            if (message.next !== undefined) {
-                speakRecurse(workspace, dialog, message);
+            if (message.outputs.length === 1) {
+                speakRecurse(workspace, dialog, dialog.messages[message.outputs[0].id]);
             }
         })
         .catch(logger.error);
@@ -153,23 +153,23 @@ var uploadFilesAndSendMessage = function(workspace, dialog, message, channelId) 
 }
 
 var speakRecurse = function (workspace, dialog, currentId) {
-    if (dialog[currentId].wait === undefined) {
-        dialog[currentId].wait = 0;
+    if (dialog.messages[currentId].wait === undefined) {
+        dialog.messages[currentId].wait = 0;
     }
     setTimeout(() => {
-        if(dialog[currentId].channel == "pm_everybody") {
+        if(dialog.messages[currentId].channel == "pm_everybody") {
             for(var userId in workspace.users) {
-                uploadFilesAndSendMessage(workspace, dialog, dialog[currentId], workspace.users[userId].im_id);
+                uploadFilesAndSendMessage(workspace, dialog, dialog.messages[currentId], workspace.users[userId].im_id);
             }
         } else {
             slack
-            .join(workspace, dialog[currentId].channel)
+            .join(workspace, dialog.messages[currentId].channel)
             .then(res => {
-                uploadFilesAndSendMessage(workspace, dialog, dialog[currentId], res.channel.id)
+                uploadFilesAndSendMessage(workspace, dialog, dialog.messages[currentId], res.channel.id)
             })
             .catch(logger.error);
         }
-    }, dialog[currentId].wait);
+    }, dialog.messages[currentId].wait);
 };
 
 var uploadFilesOfMessage = function (workspace, message, attachmentId, callback) {
