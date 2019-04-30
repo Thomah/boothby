@@ -139,38 +139,86 @@ var resumeDialogs = function () {
     });
 };
 
-var uploadFilesAndSendMessage = function(workspace, dialog, message, channelId) {
+var speakRecurse = function (workspace, dialog, messageId) {
+    var message = dialog.messages[messageId];
+    if (message.wait === undefined) {
+        message.wait = 0;
+    }
+    setTimeout(() => {
+        if(message.channel === "pm_everybody") {
+            var channelsId = [];
+            for(var userId in workspace.users) {
+                channelsId.push(workspace.users[userId].im_id);
+            }
+            uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, () => {
+                if (message.outputs.length === 1) {
+                    speakRecurse(workspace, dialog, message.outputs[0].id);
+                }
+            });
+        } else {
+            slack
+            .join(workspace, message.channel)
+            .then(res => {
+                uploadFilesAndSendMessage(workspace, message, res.channel.id, () => {
+                    if (message.outputs.length === 1) {
+                        speakRecurse(workspace, dialog, message.outputs[0].id);
+                    }
+                });
+            })
+            .catch(logger.error);
+        }
+    }, message.wait);
+};
+
+var uploadFilesAndSendMessageInChannels = function(workspace, dialog, messageId, channelsId, callback) {
+    var message = dialog.messages[messageId];
+    if(channelsId.length > 0) {
+        var channelId = channelsId[0];
+        setTimeout(() => {
+            uploadFilesAndSendMessage(workspace, message, channelId, () => {
+                if(message.outputs.length > 1) {
+                    var actionsId = workspace._id + '-' + channelId + '-' + dialog._id + '-'  + messageId
+                    var actions = {
+                        type: "actions",
+                        block_id: actionsId,
+                        elements: []
+                    }
+                    for(var outputId in message.outputs) {
+                        var output = message.outputs[outputId];
+                        var buttonId = actionsId + '-' + output.id;
+                        actions.elements[outputId] = {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: output.text
+                            },
+                            value: buttonId,
+                            action_id: buttonId
+                        }
+                    }
+                    slack.post(workspace, channelId, [actions])
+                        .then(() => {})
+                        .catch(logger.error);
+                }
+                channelsId.splice(0, 1);
+                uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, callback);
+            });
+        }, 600);
+    } else if (message.outputs.length === 1) {
+        callback();
+    }
+}
+
+var uploadFilesAndSendMessage = function(workspace, message, channelId, callback) {
     uploadFilesOfMessage(workspace, message, 0, function () {
         slack
         .postMessage(workspace, channelId, message)
         .then(() => {
-            if (message.outputs.length === 1) {
-                speakRecurse(workspace, dialog, dialog.messages[message.outputs[0].id]);
-            }
+            callback();
         })
         .catch(logger.error);
     });
 }
-
-var speakRecurse = function (workspace, dialog, currentId) {
-    if (dialog.messages[currentId].wait === undefined) {
-        dialog.messages[currentId].wait = 0;
-    }
-    setTimeout(() => {
-        if(dialog.messages[currentId].channel == "pm_everybody") {
-            for(var userId in workspace.users) {
-                uploadFilesAndSendMessage(workspace, dialog, dialog.messages[currentId], workspace.users[userId].im_id);
-            }
-        } else {
-            slack
-            .join(workspace, dialog.messages[currentId].channel)
-            .then(res => {
-                uploadFilesAndSendMessage(workspace, dialog, dialog.messages[currentId], res.channel.id)
-            })
-            .catch(logger.error);
-        }
-    }, dialog.messages[currentId].wait);
-};
 
 var uploadFilesOfMessage = function (workspace, message, attachmentId, callback) {
     if (message.attachments !== undefined && message.attachments[attachmentId] !== undefined && message.attachments[attachmentId].file_id !== null) {
