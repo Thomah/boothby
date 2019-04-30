@@ -22,6 +22,16 @@ var openIM = function (workspace, params) {
   return new WebClient(workspace.bot.bot_access_token).im.open(params);
 }
 
+var post = function(workspace, channelId, blocks) {
+  return new WebClient(workspace.bot.bot_access_token).chat.postMessage({
+    channel: channelId,
+    type: "message",
+    text: "Impossible d'afficher ce contenu",
+    blocks: JSON.stringify(blocks),
+    link_names: true
+  });
+};
+
 var postMessage = function (workspace, channelId, content) {
   return new WebClient(workspace.bot.bot_access_token).chat.postMessage({
     channel: channelId,
@@ -52,6 +62,7 @@ exports.initRtm = initRtm;
 exports.join = join;
 exports.listUsers = listUsers;
 exports.openIM = openIM;
+exports.post = post;
 exports.postMessage = postMessage;
 exports.revokeToken = revokeToken;
 exports.sendSimpleMessage = sendSimpleMessage;
