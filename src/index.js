@@ -19,7 +19,8 @@ var server = http.createServer(function (request, response) {
 db.init(function() {
   fs.readFile("./files/preset-dialogs/welcome.json", function (error, content) {
     if (!error) {
-      db.upsert("dialogs", JSON.parse(content), function() {});
+      var contentToSave = JSON.parse(content);
+      db.upsert("dialogs", { id: contentToSave.id }, contentToSave, function() {});
     }
   });
   api.getConfig(function(config) {

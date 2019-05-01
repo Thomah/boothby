@@ -1,11 +1,11 @@
 const fs = require("fs");
 const path = require("path");
-const { parse } = require("querystring");
 
 const api = require("./api.js");
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
+const interactive = require("./interactive.js");
 const logger = require("./logger.js");
 const messages = require("./messages.js");
 const scheduler = require("./scheduler.js");
@@ -94,7 +94,7 @@ var routeApi = function (request, response) {
       });
       request.on("end", () => {
         var config = JSON.parse(body);
-        api.updateObjectInDb("global", { name: "state" }, config, function (data) {
+        db.update("global", { name: "state" }, config, function (data) {
           scheduler.reschedule(config.cron);
           response.write(JSON.stringify(data));
           response.end();
@@ -121,18 +121,7 @@ var routeApi = function (request, response) {
 
   // GET : endpoint to interactive components
   else if (request.url === "/api/interactive") {
-    response.writeHead(200, { "Content-Type": "application/json" });
-    let body = "";
-    request.on("data", chunk => {
-      body += chunk.toString();
-    });
-    request.on("end", () => {
-      var parsedBody = parse(body);
-      api.interactive(parsedBody.payload, function (data) {
-        response.write(JSON.stringify(data));
-        response.end();
-      });
-    });
+    interactive.route(request, response);
   }
 
   // /api/dialogs*

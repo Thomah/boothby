@@ -60,9 +60,9 @@ exports.updateByName = function (collection, name, content) {
   );
 };
 
-exports.upsert = function (collection, content, callback) {
+exports.upsert = function (collection, condition, content, callback) {
   dbo.collection(collection).updateOne(
-    { id: content.id },
+    condition,
     {
       $set: content
     },
