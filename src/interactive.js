@@ -1,6 +1,7 @@
 const { parse } = require("querystring");
 
 const db = require("./db.js");
+const dialogs = require("./dialogs.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
 
@@ -69,6 +70,46 @@ var answerSurvey = function (payload, callback) {
     });
 };
 
+var resumeConversation = function(payload) {
+    if(payload.actions !== undefined && payload.actions.length === 1 && payload.channel !== undefined) {
+      var actionId = payload.actions[0].action_id;
+      if(actionId !== undefined) {
+        var actionIdSplit = actionId.split('-');
+        var workspaceId = actionIdSplit[0];
+        var channelId = actionIdSplit[1];
+        var dialogId = actionIdSplit[2];
+        var messageId = actionIdSplit[3];
+        var outputSelectedId = actionIdSplit[4];
+        db.read("conversations", {
+            workspaceId: new db.mongodb().ObjectId(workspaceId),
+            channelId: channelId,
+            dialogId: new db.mongodb().ObjectId(dialogId)
+        }, function (conversation) {
+            if(conversation.lastMessageId === messageId) {
+                var isValidOutput = false;
+                for(var outputNum in conversation.outputs) {
+                    isValidOutput |= outputSelectedId === conversation.outputs[outputNum].id;
+                }
+                if(isValidOutput) {
+                    db.read("workspaces", { _id: new db.mongodb().ObjectId(workspaceId) }, function(workspace) {
+                        db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function(dialog) {
+                            if(payload.channel.name === "directmessage") {
+                                workspace.users = [
+                                    {
+                                        im_id: channelId
+                                    }
+                                ];
+                            }
+                            dialogs.speakRecurse(workspace, dialog, outputSelectedId);
+                        });
+                    });
+                }
+            }
+        });
+      }
+    }
+};
+
 var route = function (request, response) {
     response.writeHead(200, { "Content-Type": "application/json" });
     let body = "";
@@ -82,7 +123,11 @@ var route = function (request, response) {
                 response.write(JSON.stringify(data));
                 response.end();
             });
-        }
+        } else if (payload.type === "block_actions") {
+            resumeConversation(payload);
+            response.write("{}");
+            response.end();
+          }
     });
 
 };

@@ -215,8 +215,32 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
 
 var uploadFilesAndSendMessage = function (workspace, message, channelId, callback) {
     uploadFilesOfMessage(workspace, message, 0, function () {
+        var conversation = {
+            workspaceId: workspace._id,
+            channelId: channelId,
+            dialogId: message.dialogId,
+            lastMessageId: message.messageId,
+            outputs: message.outputs,
+            status: "processing"
+        };
+        if (message.outputs !== undefined) {
+            if (message.outputs.length > 1) {
+                conversation.status = "waiting";
+            } else if (message.outputs.length === 0) {
+                conversation.status = "ended";
+            }
+        }
+        db.upsert("conversations", {
+            workspaceId: workspace._id,
+            channelId: channelId,
+            dialogId: message.dialogId
+        }, conversation, function () { });
         slack
-            .postMessage(workspace, channelId, message, callback);
+            .postMessage(workspace, channelId, message)
+            .then(() => {
+                callback();
+            })
+            .catch(logger.error);
     });
 }
 
@@ -248,6 +272,7 @@ var uploadFilesOfMessage = function (workspace, message, attachmentId, callback)
     }
 };
 
+exports.speakRecurse = speakRecurse;
 exports.processDialog = processDialog;
 exports.resumeDialogs = resumeDialogs;
 exports.route = route;

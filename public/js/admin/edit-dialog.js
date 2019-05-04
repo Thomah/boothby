@@ -89,7 +89,7 @@ var onChangeMessage = function onChangeMessage() {
   var row = this.parentElement.parentElement;
   var nextRow = row.nextElementSibling;
   if(nextRow != null) {
-    nextRow.childNodes[0].childNodes[0].value = wait;
+    nextRow.childNodes[1].childNodes[0].value = wait;
   }
 };
 
