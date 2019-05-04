@@ -32,36 +32,12 @@ var post = function (workspace, channelId, blocks) {
   });
 };
 
-var postMessage = function (workspace, channelId, content, callback) {
-  var conversation = {
-    workspaceId: workspace._id,
-    channelId: channelId,
-    dialogId: content.dialogId,
-    lastMessageId: content.messageId,
-    outputs: content.outputs,
-    status: "processing"
-  };
-  if (content.outputs !== undefined) {
-    if (content.outputs.length > 1) {
-      conversation.status = "waiting";
-    } else if (content.outputs.length === 0) {
-      conversation.status = "ended";
-    }
-  }
-  db.upsert("conversations", {
-    workspaceId: workspace._id,
-    channelId: channelId,
-    dialogId: content.dialogId
-  }, conversation, function () {
-    new WebClient(workspace.bot.bot_access_token).chat.postMessage({
-      channel: channelId,
-      text: content.text,
-      link_names: true,
-      attachments: content.attachments
-    }).then(() => {
-      callback();
-    })
-      .catch(logger.error);
+var postMessage = function (workspace, channelId, content) {
+  return new WebClient(workspace.bot.bot_access_token).chat.postMessage({
+    channel: channelId,
+    text: content.text,
+    link_names: true,
+    attachments: content.attachments
   });
 };
 
