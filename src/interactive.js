@@ -2,6 +2,7 @@ const { parse } = require("querystring");
 
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
+const logger = require("./logger.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
 
@@ -65,48 +66,71 @@ var answerSurvey = function (payload, callback) {
                 link_names: true,
                 ts: payload.message_ts,
                 attachments: newMessage.attachments
-            });
+            })
+                .then(() => { })
+                .catch(logger.error);
         });
     });
 };
 
-var resumeConversation = function(payload) {
-    if(payload.actions !== undefined && payload.actions.length === 1 && payload.channel !== undefined) {
-      var actionId = payload.actions[0].action_id;
-      if(actionId !== undefined) {
-        var actionIdSplit = actionId.split('-');
-        var workspaceId = actionIdSplit[0];
-        var channelId = actionIdSplit[1];
-        var dialogId = actionIdSplit[2];
-        var messageId = actionIdSplit[3];
-        var outputSelectedId = actionIdSplit[4];
-        db.read("conversations", {
-            workspaceId: new db.mongodb().ObjectId(workspaceId),
-            channelId: channelId,
-            dialogId: new db.mongodb().ObjectId(dialogId)
-        }, function (conversation) {
-            if(conversation.lastMessageId === messageId) {
-                var isValidOutput = false;
-                for(var outputNum in conversation.outputs) {
-                    isValidOutput |= outputSelectedId === conversation.outputs[outputNum].id;
-                }
-                if(isValidOutput) {
-                    db.read("workspaces", { _id: new db.mongodb().ObjectId(workspaceId) }, function(workspace) {
-                        db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function(dialog) {
-                            if(payload.channel.name === "directmessage") {
-                                workspace.users = [
-                                    {
-                                        im_id: channelId
-                                    }
-                                ];
-                            }
-                            dialogs.speakRecurse(workspace, dialog, outputSelectedId);
+var resumeConversation = function (payload) {
+    if (payload.actions !== undefined && payload.actions.length === 1 && payload.channel !== undefined) {
+        var actionId = payload.actions[0].action_id;
+        if (actionId !== undefined) {
+            var actionIdSplit = actionId.split('-');
+            var workspaceId = actionIdSplit[0];
+            var channelId = actionIdSplit[1];
+            var dialogId = actionIdSplit[2];
+            var messageId = actionIdSplit[3];
+            var outputSelectedId = actionIdSplit[4];
+            db.read("conversations", {
+                workspaceId: new db.mongodb().ObjectId(workspaceId),
+                channelId: channelId,
+                dialogId: new db.mongodb().ObjectId(dialogId)
+            }, function (conversation) {
+                if (conversation.lastMessageId === messageId) {
+                    var isValidOutput = false;
+                    for (var outputNum in conversation.outputs) {
+                        isValidOutput |= outputSelectedId === conversation.outputs[outputNum].id;
+                    }
+                    if (isValidOutput) {
+                        db.read("workspaces", { _id: new db.mongodb().ObjectId(workspaceId) }, function (workspace) {
+                            db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function (dialog) {
+                                if (payload.channel.name === "directmessage") {
+                                    workspace.users = [
+                                        {
+                                            im_id: channelId
+                                        }
+                                    ];
+                                }
+                                dialogs.speakRecurse(workspace, dialog, outputSelectedId);
+
+                                var newMessage = payload.message
+                                var buttonsElements = newMessage.blocks[0].elements;
+                                var numButtonFound = false;
+                                var buttonNum = 0;
+                                while (!numButtonFound && buttonNum < buttonsElements.length) {
+                                    numButtonFound |= buttonsElements[buttonNum].action_id === actionId;
+                                    buttonNum++;
+                                }
+                                if (numButtonFound) {
+                                    newMessage.blocks[0].elements[buttonNum - 1].text.text = ':heavy_check_mark: ' + newMessage.blocks[0].elements[buttonNum - 1].text.text;
+                                    newMessage.channel = channelId;
+                                    newMessage.blocks = JSON.stringify(newMessage.blocks);
+                                    delete newMessage.subtype;
+                                    delete newMessage.username;
+                                    delete newMessage.bot_id;
+                                    slack.updateMessage(workspace, newMessage)
+                                        .then(() => {
+                                        })
+                                        .catch(logger.error);
+                                }
+                            });
                         });
-                    });
+                    }
                 }
-            }
-        });
-      }
+            });
+        }
     }
 };
 
@@ -127,7 +151,7 @@ var route = function (request, response) {
             resumeConversation(payload);
             response.write("{}");
             response.end();
-          }
+        }
     });
 
 };
