@@ -7,25 +7,25 @@ var response404 = function (response) {
     response.end();
 };
 
-var openIM = function(tokens, data, members, memberId, callback) {
+var openIM = function(workspace, members, memberId, callback) {
     var member = members[memberId];
     if(member === undefined) {
-        callback(data);
+        callback(workspace);
     } else if(!member.is_bot) {
         setTimeout(function () {
-            slack.openIM(tokens, {
+            slack.openIM(workspace, {
                 user: member.id
                 }).then(slackIMs => {
-                    data.users.push({
+                    workspace.users.push({
                         id: member.id,
                         im_id: slackIMs.channel.id
                     });
-                    openIM(tokens, data, members, memberId + 1, callback);
+                    openIM(workspace, members, memberId + 1, callback);
                 })
                 .catch(logger.error);
           }, 600);
     } else {
-        openIM(tokens, data, members, memberId + 1, callback);
+        openIM(workspace, members, memberId + 1, callback);
     }
 }
 
@@ -86,11 +86,10 @@ var route = function (request, response) {
         objectId = request.url.match(regex_workspaceIdReload)[1];
         var id = new db.mongodb().ObjectId(objectId);
         db.read("workspaces", { _id: id }, function (data) {
-            var tokens = {bot_access_token: data.bot.bot_access_token};
-            slack.listUsers(tokens)
+            slack.listUsers(data)
                 .then(slackUsers => {
                     data.users = [];
-                    openIM(tokens, data, slackUsers.members, 0, function() {
+                    openIM(data, slackUsers.members, 0, function() {
                         db.update("workspaces", {_id: id}, data, function() {});
                     });
                 })
