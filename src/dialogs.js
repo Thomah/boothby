@@ -181,15 +181,15 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
         setTimeout(() => {
             uploadFilesAndSendMessage(workspace, message, channelId, () => {
                 if (message.outputs.length > 1) {
-                    var actionsId = workspace._id + '-' + channelId + '-' + dialog._id + '-' + messageId
+                    var ids = workspace._id + '-' + channelId + '-' + dialog._id + '-' + messageId
                     var actions = {
                         type: "actions",
-                        block_id: actionsId,
+                        block_id: ids + '-' + dialog.name,
                         elements: []
                     }
                     for (var outputId in message.outputs) {
                         var output = message.outputs[outputId];
-                        var buttonId = actionsId + '-' + output.id;
+                        var buttonId = ids + '-' + output.id;
                         actions.elements[outputId] = {
                             type: "button",
                             text: {

@@ -1,6 +1,7 @@
 {
   "category": "intro",
   "name": "Welcome Message",
+  "channel" : "general",
   "0": {
     "channel": "general",
     "wait": 0,
