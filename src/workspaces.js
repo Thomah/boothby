@@ -30,7 +30,7 @@ var openIM = function(workspace, members, memberId, callback) {
 }
 
 var forEach = function(callback) {
-    db.list("workspaces", function(workspaces) {
+    db.list("workspaces", {}, function(workspaces) {
         var previous_bot_access_token = [];
         for(var workspaceId in workspaces) {
             var tokens = {
@@ -103,7 +103,7 @@ var route = function (request, response) {
     // GET : retrieve workspaces
     else if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        db.list("workspaces", function (data) {
+        db.list("workspaces", {}, function (data) {
             response.write(JSON.stringify(data));
             response.end();
         });
