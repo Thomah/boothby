@@ -12,7 +12,7 @@ var route = function (request, response) {
     // GET : retrieve messages
     if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        db.list("messages", function (data) {
+        db.list("messages", { ts: 1 }, function (data) {
             response.write(JSON.stringify(data));
             response.end();
         });

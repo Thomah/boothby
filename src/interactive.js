@@ -127,28 +127,28 @@ var resumeConversation = function (payload) {
                     db.read("workspaces", marchWorkspaceId, function (workspace) {
                         var workspaceBackup = JSON.parse(JSON.stringify(workspace));
                         db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function (dialog) {
+                            var numUserFound = false;
+                            var consentPM = false;
                             if (payload.channel.name === "directmessage") {
                                 workspace.users = [
                                     {
                                         im_id: channelId
                                     }
                                 ];
-                            }
-                            if(dialog.name === "Consent PM") {
-                                var numUserFound = false;
                                 var userNum = 0;
                                 var users = workspaceBackup.users;
                                 while (!numUserFound && userNum < users.length) {
                                     numUserFound |= users[userNum].im_id === channelId;
                                     userNum++;
                                 }
-                                if(numUserFound) {
-                                    workspaceBackup.users[userNum - 1].consent = outputSelectedId === '3';
-                                    db.update("workspaces", marchWorkspaceId, workspaceBackup, () => {
-                                        updateButtonAndSpeak(payload, workspace, dialog);
-                                    });
-                                }
-                            } else {
+                                consentPM = workspaceBackup.users[userNum - 1].consent;
+                            }
+                            if(dialog.name === "Consent PM" && numUserFound) {
+                                workspaceBackup.users[userNum - 1].consent = outputSelectedId === '3';
+                                db.update("workspaces", marchWorkspaceId, workspaceBackup, () => {
+                                    updateButtonAndSpeak(payload, workspace, dialog);
+                                });
+                            } else if((payload.channel.name === "directmessage" && consentPM) || payload.channel.name !== "directmessage") {
                                 updateButtonAndSpeak(payload, workspace, dialog);
                             }
                         });

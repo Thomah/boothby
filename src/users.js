@@ -129,7 +129,7 @@ var route = function (request, response) {
             });
         }else if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.list("user", function (data) {
+            db.list("user", {}, function (data) {
                 response.write(JSON.stringify(data));
                 response.end();
             });
@@ -138,7 +138,7 @@ var route = function (request, response) {
         var userId = request.url.match(regex_user)[1];
         // DELETE : delete a dialog
         if (request.method === "DELETE") {
-            db.list("user", function (data) {
+            db.list("user", {}, function (data) {
                 if(data.length <= 1){ //Last user in DB
                     response.writeHead(403, { "Content-Type": "application/json" });
                     response.end();

@@ -10,16 +10,16 @@ function sendMessage() {
   var content = document.getElementById("message-text").value;
 
   overload_xhr(
-    "POST", 
+    "POST",
     "/api/messages/send",
-    function(xhr){
+    function (xhr) {
       var json = JSON.parse(xhr.responseText);
       doc_refreshMessages(json);
     },
-    function(xhr){
+    function (xhr) {
       xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     },
-    function(){},
+    function () { },
     `workspace=${workspace}&channel=${channel}&message=${content}`
   );
 }
@@ -27,15 +27,15 @@ function sendMessage() {
 var deleteMessage = function deleteMessage() {
   var textButton = this.firstChild.parentElement;
   overload_xhr(
-    "DELETE", 
+    "DELETE",
     `/api/messages/${textButton.id}`,
-    function(){
+    function () {
       var row = textButton.parentElement.parentElement.parentElement;
       var table = row.parentElement;
       table.removeChild(row);
     },
-    function(){},
-    function(){
+    function () { },
+    function () {
       textButton.style["backgroundColor"] = "red";
     }
   );
@@ -45,7 +45,7 @@ function listMessages() {
   overload_xhr(
     "GET",
     "/api/messages",
-    function(xhr){
+    function (xhr) {
       var json = JSON.parse(xhr.responseText);
       doc_refreshMessages(json);
     }
@@ -66,13 +66,13 @@ function doc_refreshMessages(messages) {
   // Append new entries
   var messageKey, message, row, cell, cellSpan, button;
 
-  for (messageKey = messages.length; messageKey--; ) {
+  for (messageKey = messages.length; messageKey--;) {
     message = messages[messageKey];
     row = document.createElement("tr");
 
     // Timestamp
     cell = document.createElement("td");
-    cell.textContent = message.ts;
+    cell.textContent = Unix_timestamp(message.ts);
     row.appendChild(cell);
 
     // Workspace
@@ -113,6 +113,11 @@ function doc_refreshMessages(messages) {
   table.style.display = "table-row-group";
 }
 
+function Unix_timestamp(t) {
+  var dt = new Date(t * 1000);
+  return dt.toLocaleDateString() + ' ' + dt.toLocaleTimeString();
+}
+
 function util_dropTable(table) {
   var rowCount = table.childNodes.length;
   for (var x = rowCount - 1; x >= 0; x--) {
@@ -122,7 +127,7 @@ function util_dropTable(table) {
 
 // ADD TRIGGER ON ENTER KEY FOR MESSAGE SENDING
 var input = document.getElementById("message-text");
-input.addEventListener("keyup", function(event) {
+input.addEventListener("keyup", function (event) {
   event.preventDefault();
   if (event.keyCode === 13) {
     document.getElementById("message-send").click();

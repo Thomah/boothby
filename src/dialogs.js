@@ -20,7 +20,7 @@ var route = function (request, response) {
         // GET : list dialogs
         if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.list("dialogs", function (data) {
+            db.list("dialogs", { scheduling: -1 }, function (data) {
                 response.write(JSON.stringify(data));
                 response.end();
             });
