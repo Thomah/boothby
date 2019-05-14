@@ -179,34 +179,40 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
     if (channelsId.length > 0) {
         var channelId = channelsId[0];
         setTimeout(() => {
-            uploadFilesAndSendMessage(workspace, message, channelId, () => {
-                if (message.outputs.length > 1) {
-                    var ids = workspace._id + '-' + channelId + '-' + dialog._id + '-' + messageId
-                    var actions = {
-                        type: "actions",
-                        block_id: ids + '-' + dialog.name,
-                        elements: []
-                    }
-                    for (var outputId in message.outputs) {
-                        var output = message.outputs[outputId];
-                        var buttonId = ids + '-' + output.id;
-                        actions.elements[outputId] = {
-                            type: "button",
-                            text: {
-                                type: "plain_text",
-                                text: output.text
-                            },
-                            value: buttonId,
-                            action_id: buttonId
+            var user = workspaces.getUsersByChannelId(workspace, channelId);
+            if(user.consent) {
+                uploadFilesAndSendMessage(workspace, message, channelId, () => {
+                    if (message.outputs.length > 1) {
+                        var ids = workspace._id + '-' + channelId + '-' + dialog._id + '-' + messageId
+                        var actions = {
+                            type: "actions",
+                            block_id: ids + '-' + dialog.name,
+                            elements: []
                         }
+                        for (var outputId in message.outputs) {
+                            var output = message.outputs[outputId];
+                            var buttonId = ids + '-' + output.id;
+                            actions.elements[outputId] = {
+                                type: "button",
+                                text: {
+                                    type: "plain_text",
+                                    text: output.text
+                                },
+                                value: buttonId,
+                                action_id: buttonId
+                            }
+                        }
+                        slack.post(workspace, channelId, [actions])
+                            .then(() => { })
+                            .catch(logger.error);
                     }
-                    slack.post(workspace, channelId, [actions])
-                        .then(() => { })
-                        .catch(logger.error);
-                }
+                    channelsId.splice(0, 1);
+                    uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, callback);
+                });
+            } else {
                 channelsId.splice(0, 1);
                 uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, callback);
-            });
+            }
         }, 600);
     } else if (message.outputs.length === 1) {
         callback();

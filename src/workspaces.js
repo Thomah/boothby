@@ -29,6 +29,20 @@ var openIM = function(workspace, members, memberId, callback) {
     }
 }
 
+var getUsersByChannelId = function(workspace, channelId) {
+    var numUserFound = false;
+    var userNum = 0;
+    var users = workspace.users;
+    while (!numUserFound && userNum < users.length) {
+        numUserFound |= users[userNum].im_id === channelId;
+        userNum++;
+    }
+    if(numUserFound) {
+        return users[userNum - 1];
+    }
+    return null;
+};
+
 var forEach = function(callback) {
     db.list("workspaces", {}, function(workspaces) {
         var previous_bot_access_token = [];
@@ -115,5 +129,6 @@ var route = function (request, response) {
     }
 };
 
+exports.getUsersByChannelId = getUsersByChannelId;
 exports.forEach = forEach;
 exports.route = route;
