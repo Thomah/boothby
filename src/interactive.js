@@ -74,6 +74,7 @@ var answerSurvey = function (payload, callback) {
 };
 
 var updateButtonAndSpeak = function(payload, workspace, dialog) {
+    var actionId = payload.actions[0].action_id;
     var actionValue = payload.actions[0].value;
     var actionValueSplit = actionValue.split('-');
     var channelId = actionValueSplit[1];
@@ -82,25 +83,16 @@ var updateButtonAndSpeak = function(payload, workspace, dialog) {
     dialogs.speakRecurse(workspace, dialog, outputSelectedId);
 
     var newMessage = payload.message
-    var buttonsElements = newMessage.blocks[0].elements;
-    var numButtonFound = false;
-    var buttonNum = 0;
-    while (!numButtonFound && buttonNum < buttonsElements.length) {
-        numButtonFound |= buttonsElements[buttonNum].value === actionValue;
-        buttonNum++;
-    }
-    if (numButtonFound) {
-        newMessage.blocks[0].elements[buttonNum - 1].text.text += ' (:heavy_check_mark:)';
-        newMessage.channel = channelId;
-        newMessage.blocks = JSON.stringify(newMessage.blocks);
-        delete newMessage.subtype;
-        delete newMessage.username;
-        delete newMessage.bot_id;
-        slack.updateMessage(workspace, newMessage)
-            .then(() => {
-            })
-            .catch(logger.error);
-    }
+    newMessage.blocks[0].elements[actionId].text.text += ' (:heavy_check_mark:)';
+    newMessage.channel = channelId;
+    newMessage.blocks = JSON.stringify(newMessage.blocks);
+    delete newMessage.subtype;
+    delete newMessage.username;
+    delete newMessage.bot_id;
+    slack.updateMessage(workspace, newMessage)
+        .then(() => {
+        })
+        .catch(logger.error);
 }
 
 var resumeConversation = function (payload) {
