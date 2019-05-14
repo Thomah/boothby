@@ -1,6 +1,11 @@
 const { RTMClient, WebClient } = require("@slack/client");
+const schedule = require("node-schedule");
 const db = require("./db.js");
 const logger = require("./logger.js");
+
+var initJobs = function() {
+  schedule.scheduleJob("* * * * * *", postShift);
+};
 
 var initRtm = function (workspace) {
   const rtm = new RTMClient(workspace.bot.bot_access_token);
@@ -22,23 +27,38 @@ var openIM = function (workspace, params) {
   return new WebClient(workspace.bot.bot_access_token).im.open(params);
 }
 
-var post = function (workspace, channelId, blocks) {
-  return new WebClient(workspace.bot.bot_access_token).chat.postMessage({
-    channel: channelId,
-    type: "message",
-    text: "Impossible d'afficher ce contenu",
-    blocks: JSON.stringify(blocks),
-    link_names: true
-  });
-};
-
+var postQueue = [];
 var postMessage = function (workspace, channelId, content) {
-  return new WebClient(workspace.bot.bot_access_token).chat.postMessage({
-    channel: channelId,
-    text: content.text,
-    link_names: true,
-    attachments: content.attachments
-  });
+  if(content.text !== undefined) {
+    postQueue.push({
+      token: workspace.bot.bot_access_token,
+      message: {
+        channel: channelId,
+        text: content.text,
+        link_names: true,
+        attachments: content.attachments
+      }
+    })
+  } else {
+    postQueue.push({
+      token: workspace.bot.bot_access_token,
+      message: {
+        channel: channelId,
+        type: "message",
+        text: "Impossible d'afficher ce contenu",
+        blocks: JSON.stringify(content),
+        link_names: true
+      }
+    })
+  }
+};
+var postShift = function() {
+  var shift = postQueue.shift();
+  if(shift !== undefined) {
+    new WebClient(shift.token).chat.postMessage(shift.message)
+      .then(() => { })
+      .catch(logger.error);
+  }
 };
 
 var revokeToken = function (workspace) {
@@ -47,7 +67,7 @@ var revokeToken = function (workspace) {
 
 var sendSimpleMessage = function (workspace, channelId, message) {
   var content = { text: message };
-  postMessage(workspace, channelId, content).catch(logger.error);
+  postMessage(workspace, channelId, content);
 };
 
 var updateMessage = function (workspace, message) {
@@ -58,11 +78,11 @@ var uploadFiles = function (workspace, files) {
   return new WebClient(workspace.bot.bot_access_token).files.upload(files);
 };
 
+exports.initJobs = initJobs;
 exports.initRtm = initRtm;
 exports.join = join;
 exports.listUsers = listUsers;
 exports.openIM = openIM;
-exports.post = post;
 exports.postMessage = postMessage;
 exports.revokeToken = revokeToken;
 exports.sendSimpleMessage = sendSimpleMessage;

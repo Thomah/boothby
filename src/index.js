@@ -47,6 +47,7 @@ db.init(function () {
   });
   workspaces.forEach(slack.initRtm);
   users.createDefaultUser();
+  slack.initJobs();
 });
 
 server.on("close", function () {
