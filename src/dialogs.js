@@ -198,7 +198,7 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
                                 text: output.text
                             },
                             value: buttonId,
-                            action_id: buttonId
+                            action_id: outputId
                         }
                     }
                     slack.postMessage(workspace, channelId, [actions]);
