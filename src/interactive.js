@@ -80,6 +80,7 @@ var updateButtonAndSpeak = function(payload, workspace, dialog) {
     var channelId = actionValueSplit[1];
     var outputSelectedId = actionValueSplit[4];
 
+    dialog.channelId = channelId;
     dialogs.speakRecurse(workspace, dialog, outputSelectedId);
 
     var newMessage = payload.message
