@@ -15,9 +15,9 @@ function refresh() {
 }
 
 function checkAndUploadFile(dialog, messageId, attachmentId, callback) {
-  var message = dialog[messageId];
+  var message = dialog.messages[messageId];
   if(message != null) {
-    var attachment = dialog[messageId].attachments[attachmentId];
+    var attachment = dialog.messages[messageId].attachments[attachmentId];
     if(attachment != null && attachment.file_id == null && attachment.filename != null) {
       var form = new FormData();
       form.append('file', attachment.inputfile.files[0]);
@@ -26,7 +26,7 @@ function checkAndUploadFile(dialog, messageId, attachmentId, callback) {
         '/api/files/upload',
         function(xhr){
           var jsonFileUploaded = JSON.parse(xhr.responseText);
-          dialog[messageId].attachments[attachmentId].file_id = jsonFileUploaded._id;
+          dialog.messages[messageId].attachments[attachmentId].file_id = jsonFileUploaded._id;
           checkAndUploadFile(dialog, messageId, attachmentId + 1, callback);
         },
         function(xhr){
@@ -37,7 +37,7 @@ function checkAndUploadFile(dialog, messageId, attachmentId, callback) {
         },
         form
       );
-    } else if(attachmentId < dialog[messageId].attachments.length - 1) {
+    } else if(attachmentId < dialog.messages[messageId].attachments.length - 1) {
       checkAndUploadFile(dialog, messageId, attachmentId + 1, callback);
     } else {
       checkAndUploadFile(dialog, messageId + 1, 0, callback);
