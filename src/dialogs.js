@@ -143,18 +143,19 @@ var speakRecurse = function (workspace, dialog, messageId) {
     var message = dialog.messages[messageId];
     message.dialogId = dialog._id;
     message.messageId = messageId;
+    var channelsId = [];
     if (message.wait === undefined) {
         message.wait = 0;
     }
     setTimeout(() => {
         if (dialog.channelId !== undefined) {
-            uploadFilesAndSendMessage(workspace, message, dialog.channelId, () => {
+            channelsId.push(dialog.channelId);
+            uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, () => {
                 if (message.outputs.length === 1) {
                     speakRecurse(workspace, dialog, message.outputs[0].id);
                 }
             });
         } else if(message.channel === "pm_everybody") {
-            var channelsId = [];
             for (var userId in workspace.users) {
                 channelsId.push(workspace.users[userId].im_id);
             }

@@ -135,9 +135,11 @@ var resumeConversation = function (payload) {
                                     userNum++;
                                 }
                                 consentPM = workspaceBackup.users[userNum - 1].consent;
+                                workspace.users[0].consent = workspaceBackup.users[userNum - 1].consent;
                             }
                             if(dialog.name === "Consent PM" && numUserFound) {
                                 workspaceBackup.users[userNum - 1].consent = outputSelectedId === '3';
+                                workspace.users[0].consent = outputSelectedId === '3';
                                 db.update("workspaces", marchWorkspaceId, workspaceBackup, () => {
                                     updateButtonAndSpeak(payload, workspace, dialog);
                                 });
