@@ -223,6 +223,7 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
 }
 
 var uploadFilesAndSendMessage = function (workspace, message, channelId, callback) {
+    message.channelId = channelId;
     uploadFilesOfMessage(workspace, message, 0, function () {
         var conversation = {
             workspaceId: workspace._id,
