@@ -1,9 +1,11 @@
 const { RTMClient, WebClient } = require("@slack/client");
 const schedule = require("node-schedule");
 const db = require("./db.js");
+const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
+const workspaces = require("./workspaces.js");
 
-var initJobs = function() {
+var initJobs = function () {
   schedule.scheduleJob("* * * * * *", postShift);
 };
 
@@ -13,10 +15,34 @@ var initRtm = function (workspace) {
   rtm.on("message", message => {
     db.insert("messages", message);
   });
+  rtm.on("team_join", event => {
+    db.read("workspaces", { team_id: event.user.team_id }, function (workspacesOfNewUser) {
+      if(!Array.isArray(workspacesOfNewUser)) {
+        workspacesOfNewUser = [workspacesOfNewUser];
+      }
+      var previous_bot_access_token = [];
+      for (var workspaceNum in workspacesOfNewUser) {
+        var workspaceOfNewUser = workspacesOfNewUser[workspaceNum];
+        if(previous_bot_access_token.indexOf(workspaceOfNewUser.bot.bot_access_token) < 0) {
+          workspaces.openIM(workspaceOfNewUser, [event.user], 0, function () {
+            var workspaceId = workspaceOfNewUser._id;
+            db.update("workspaces", { _id: new db.mongodb().ObjectId(workspaceId) }, workspaceOfNewUser, function () {
+              db.read("dialogs", {name: "Consent PM"}, function(dialog) {
+                dialog.channelId = workspaces.getUsersById(workspaceOfNewUser, event.user.id).im_id;
+                workspaceOfNewUser._id = workspaceId;
+                dialogs.speakRecurse(workspaceOfNewUser, dialog, 0);
+              });
+            });
+          });
+          previous_bot_access_token.push(workspaceOfNewUser.bot.bot_access_token);
+        }
+      }
+    });
+  });
 };
 
-var join = function (tokens, channelName) {
-  return new WebClient(tokens.user_access_token).channels.join({ name: channelName });
+var join = function (workspace, channelName) {
+  return new WebClient(workspace.access_token).channels.join({ name: channelName });
 };
 
 var listUsers = function (workspace) {
@@ -29,7 +55,7 @@ var openIM = function (workspace, params) {
 
 var postQueue = [];
 var postMessage = function (workspace, channelId, content) {
-  if(content.text !== undefined) {
+  if (content.text !== undefined) {
     postQueue.push({
       token: workspace.bot.bot_access_token,
       message: {
@@ -52,9 +78,9 @@ var postMessage = function (workspace, channelId, content) {
     })
   }
 };
-var postShift = function() {
+var postShift = function () {
   var shift = postQueue.shift();
-  if(shift !== undefined) {
+  if (shift !== undefined) {
     new WebClient(shift.token).chat.postMessage(shift.message)
       .then(() => { })
       .catch(logger.error);

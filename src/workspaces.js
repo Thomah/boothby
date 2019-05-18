@@ -29,6 +29,20 @@ var openIM = function(workspace, members, memberId, callback) {
     }
 }
 
+var getUsersById = function(workspace, userId) {
+    var numUserFound = false;
+    var userNum = 0;
+    var users = workspace.users;
+    while (!numUserFound && userNum < users.length) {
+        numUserFound |= users[userNum].id === userId;
+        userNum++;
+    }
+    if(numUserFound) {
+        return users[userNum - 1];
+    }
+    return null;
+};
+
 var getUsersByChannelId = function(workspace, channelId) {
     var numUserFound = false;
     var userNum = 0;
@@ -129,6 +143,8 @@ var route = function (request, response) {
     }
 };
 
-exports.getUsersByChannelId = getUsersByChannelId;
 exports.forEach = forEach;
+exports.getUsersByChannelId = getUsersByChannelId;
+exports.getUsersById = getUsersById;
+exports.openIM = openIM;
 exports.route = route;
