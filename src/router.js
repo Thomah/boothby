@@ -126,7 +126,7 @@ var routeApi = function (request, response) {
 
   // /api/dialogs*
   else if (request.url == "/api/links") {
-    var slackLink = "https://slack.com/oauth/authorize?client_id=" + process.env.SLACK_CLIENT_ID + "&scope=channels:read,channels:write,emoji:read,bot,chat:write:bot"
+    var slackLink = "https://slack.com/oauth/authorize?client_id=" + process.env.SLACK_CLIENT_ID + "&scope=bot,channels:read,channels:write,chat:write:bot,users:read"
     response.writeHead(200, { "Content-Type": "application/json" });
     response.write(JSON.stringify({
       "slack": slackLink
