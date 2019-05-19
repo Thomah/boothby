@@ -1,6 +1,8 @@
 language: node_js
 node_js:
-  - "node" #latest stable version
-
+- node
 script:
-  - npm install
+- npm install
+before_install:
+- openssl aes-256-cbc -K $encrypted_341d75a1b70c_key -iv $encrypted_341d75a1b70c_iv
+  -in .travis/id_rsa.enc -out ~/.ssh/id_rsa -d
