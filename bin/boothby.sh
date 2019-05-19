@@ -28,7 +28,7 @@ case "$1" in
 		;;
 	reload)
 		d_stop
-		sleep 1
+		sleep 2
 		d_start
 		;;
 	status)
