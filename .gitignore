@@ -1,3 +1,4 @@
+.travis/id_rsa
 node_modules
 bin/setenv.sh
 package-lock.json
