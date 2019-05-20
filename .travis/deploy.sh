@@ -1,17 +1,19 @@
 #!/bin/bash
 
-if [ "$TRAVIS_BRANCH" == "master" ]; then
-    eval "$(ssh-agent -s)"
-    chmod 600 $TRAVIS_BUILD_DIR/.travis/id_rsa
-    ssh-add $TRAVIS_BUILD_DIR/.travis/id_rsa
+if ! [[ "$TRAVIS_BRANCH" == "master" ]]; then exit 0; fi
 
-    git config --global push.default matching
-    git remote add deploy ssh://git@$IP:$PORT$DEPLOY_DIR
-    git push deploy master
+eval "$(ssh-agent -s)"
+chmod 600 $TRAVIS_BUILD_DIR/.travis/id_rsa
+ssh-add $TRAVIS_BUILD_DIR/.travis/id_rsa
 
-    ssh apps@$IP -p $PORT <<EOF
+git config --global push.default matching
+git remote add deploy ssh://git@$IP:$PORT$DEPLOY_DIR
+git push deploy master
+
+ssh -p $PORT apps@$IP -o StrictHostKeyChecking=no "$( cat <<EOT
+    echo "$(date -u) Deploy 'Boothby'"  >> ./deploy.log
     cd $DEPLOY_DIR
     sudo service boothby reload
-fi
-
-EOF
+    exit
+EOT
+)"
