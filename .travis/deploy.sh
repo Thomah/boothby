@@ -18,3 +18,5 @@ ssh -p $PORT apps@$IP -o StrictHostKeyChecking=no "$( cat <<EOT
     exit
 EOT
 )"
+
+rm $TRAVIS_BUILD_DIR/.travis/id_rsa
