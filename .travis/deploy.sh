@@ -14,7 +14,9 @@ ssh-keyscan -t rsa -H $IP >> ~/.ssh/known_hosts
 ssh -p $PORT apps@$IP -o StrictHostKeyChecking=no "$( cat <<EOT
     cd $DEPLOY_DIR
     echo "$(date -u) Travis Deploy"  >> ./console.log
-    sudo service boothby reload
+    sudo service boothby stop
+    sleep 1
+    sudo service boothby start
     exit
 EOT
 )"
