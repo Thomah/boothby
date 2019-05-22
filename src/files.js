@@ -22,7 +22,7 @@ var route = function (request, response) {
       };
       db.insert('files', fileInDb, function (data) {
         fs.mkdir('files', { recursive: true }, (err) => {
-          if (err) throw err;
+          if (err && err.code !== 'EEXIST') throw err;
           fs.copyFile(files.file.path, 'files/' + data.insertedId, function (err) {
             if (err) throw err;
             response.write(JSON.stringify(fileInDb));
