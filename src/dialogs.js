@@ -112,10 +112,18 @@ var route = function (request, response) {
 };
 
 var processDialog = function (collection, id) {
-    db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (data) {
-        if (data !== null) {
+    db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (dialog) {
+        if (dialog !== null) {
             workspaces.forEach(function (workspace) {
-                speakRecurse(workspace, data, "0");
+                if(dialog.channel !== "pm_everybody") {
+                    speakRecurse(workspace, dialog, "0");
+                } else {
+                    var channelsId = [];
+                    for (var userId in workspace.users) {
+                        channelsId.push(workspace.users[userId].im_id);
+                    }
+                    speakRecuseInChannels(workspace, dialog, channelsId);
+                }
             });
         }
     });
@@ -139,29 +147,30 @@ var resumeDialogs = function () {
     });
 };
 
-var speakRecurse = function (workspace, dialog, messageId) {
+var speakRecuseInChannels = function(workspace, dialog, channelsId) {
+    if(channelsId.length > 0) {
+        dialog.channelId = channelsId[0];
+        speakRecurse(workspace, dialog, "0", () => {
+            channelsId.splice(0, 1);
+            speakRecuseInChannels(workspace, dialog, channelsId);
+        });
+    }
+};
+
+var speakRecurse = function (workspace, dialog, messageId, callback) {
     var message = dialog.messages[messageId];
     message.dialogId = dialog._id;
     message.messageId = messageId;
-    var channelsId = [];
     if (message.wait === undefined) {
         message.wait = 0;
     }
     setTimeout(() => {
         if (dialog.channelId !== undefined) {
-            channelsId.push(dialog.channelId);
-            uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, () => {
+            uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, () => {
                 if (message.outputs.length === 1) {
-                    speakRecurse(workspace, dialog, message.outputs[0].id);
-                }
-            });
-        } else if(message.channel === "pm_everybody") {
-            for (var userId in workspace.users) {
-                channelsId.push(workspace.users[userId].im_id);
-            }
-            uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, () => {
-                if (message.outputs.length === 1) {
-                    speakRecurse(workspace, dialog, message.outputs[0].id);
+                    speakRecurse(workspace, dialog, message.outputs[0].id, callback);
+                } else if(callback !== undefined) {
+                    callback();
                 }
             });
         } else {
@@ -179,45 +188,38 @@ var speakRecurse = function (workspace, dialog, messageId) {
     }, message.wait);
 };
 
-var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId, channelsId, callback) {
+var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId, callback) {
     var message = dialog.messages[messageId];
     message.dialogId = dialog._id;
     message.messageId = messageId;
-    if (channelsId.length > 0) {
-        var channelId = channelsId[0];
-        var user = workspaces.getUsersByChannelId(workspace, channelId);
-        if (dialog.name === "Consent PM" || user.consent) {
-            uploadFilesAndSendMessage(workspace, message, channelId, () => {
-                if (message.outputs.length > 1) {
-                    var ids = workspace._id + '-' + channelId + '-' + dialog._id + '-' + messageId
-                    var actions = {
-                        type: "actions",
-                        block_id: ids + '-' + dialog.name,
-                        elements: []
-                    }
-                    for (var outputId in message.outputs) {
-                        var output = message.outputs[outputId];
-                        var buttonId = ids + '-' + output.id;
-                        actions.elements[outputId] = {
-                            type: "button",
-                            text: {
-                                type: "plain_text",
-                                text: output.text
-                            },
-                            value: buttonId,
-                            action_id: outputId
-                        }
-                    }
-                    slack.postMessage(workspace, channelId, [actions]);
+    var user = workspaces.getUsersByChannelId(workspace, dialog.channelId);
+    if (dialog.name === "Consent PM" || user.consent) {
+        uploadFilesAndSendMessage(workspace, message, dialog.channelId, () => {
+            if (message.outputs.length > 1) {
+                var ids = workspace._id + '-' + dialog.channelId + '-' + dialog._id + '-' + messageId
+                var actions = {
+                    type: "actions",
+                    block_id: ids + '-' + dialog.name,
+                    elements: []
                 }
-                channelsId.splice(0, 1);
-                uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, callback);
-            });
-        } else {
-            channelsId.splice(0, 1);
-            uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, channelsId, callback);
-        }
-    } else if (message.outputs.length === 1) {
+                for (var outputId in message.outputs) {
+                    var output = message.outputs[outputId];
+                    var buttonId = ids + '-' + output.id;
+                    actions.elements[outputId] = {
+                        type: "button",
+                        text: {
+                            type: "plain_text",
+                            text: output.text
+                        },
+                        value: buttonId,
+                        action_id: outputId
+                    }
+                }
+                slack.postMessage(workspace, dialog.channelId, [actions]);
+            }
+            callback();
+        });
+    } else {
         callback();
     }
 }
