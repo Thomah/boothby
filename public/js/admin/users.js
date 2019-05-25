@@ -67,6 +67,11 @@ function doc_refresh(elements) {
     cell.textContent = element.im_id;
     newEntry.appendChild(cell);
 
+    // Consent
+    cell = document.createElement("td");
+    cell.textContent = element.consent;
+    newEntry.appendChild(cell);
+
     table.appendChild(newEntry);
   }
 
