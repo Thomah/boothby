@@ -13,7 +13,9 @@ var initRtm = function (workspace) {
   const rtm = new RTMClient(workspace.bot.bot_access_token);
   rtm.start();
   rtm.on("message", message => {
-    db.insert("messages", message);
+    if(message.text !== undefined) {
+      db.insert("messages", message);
+    }
   });
   rtm.on("team_join", event => {
     db.read("workspaces", { team_id: event.user.team_id }, function (workspacesOfNewUser) {

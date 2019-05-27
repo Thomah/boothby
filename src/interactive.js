@@ -80,6 +80,14 @@ var updateButtonAndSpeak = function(payload, workspace, dialog) {
     var channelId = actionValueSplit[1];
     var outputSelectedId = actionValueSplit[4];
 
+    db.insert("messages", {
+        ts: payload.actions[0].action_ts,
+        user: payload.user.id,
+        channel: channelId,
+        team: workspace.team_id,
+        text: payload.message.blocks[0].elements[actionId].text.text + ' (' + outputSelectedId + ')'
+    });
+
     dialog.channelId = channelId;
     dialogs.speakRecurse(workspace, dialog, outputSelectedId);
 
