@@ -149,7 +149,7 @@ var addOutput = function() {
   var button = this.firstChild.parentElement;
   var cell = button.parentElement;
   var output = {
-    id: cell.parentElement.getElementsByClassName("id")[0].value,
+    id: parseInt(cell.parentElement.getElementsByClassName("id")[0].value) + 1,
     text: "Default"
   }
   var div = document.createElement("div");
