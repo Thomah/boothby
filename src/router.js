@@ -142,19 +142,21 @@ var routeApi = function (request, response) {
       response.end();
     };
     if (request.params.code != undefined) {
-      api.getAccessToken(request.params.code, function (infos) {
-        if (!infos.ok) {
-          response_400(infos, response);
+      api.getAccessToken(request.params.code, function (workspace) {
+        if (!workspace.ok) {
+          response_400(workspace, response);
         } else {
-          db.insert("workspaces", infos, function () {
+          workspace.progression = 1;
+          db.insert("workspaces", workspace, function () {
             api.getConfig(function (config) {
               scheduler.schedule(config.cron, function (fireDate) {
                 logger.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
                 dialogs.resumeDialogs();
               });
               db.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
-                dialogs.processDialog("dialogs", dialog._id);
+                dialogs.playInWorkspace(dialog, workspace);
               });
+              workspaces.reloadUsers(workspace);
             });
             response.writeHead(302, {
               'Location': "/index.html?installed=1"

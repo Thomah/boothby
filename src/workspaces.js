@@ -1,4 +1,5 @@
 const db = require("./db.js");
+const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
 
@@ -7,29 +8,29 @@ var response404 = function (response) {
     response.end();
 };
 
-var openIM = function(workspace, members, memberId, callback) {
+var openIM = function (workspace, members, memberId, callback) {
     var member = members[memberId];
-    if(member === undefined) {
+    if (member === undefined) {
         callback(workspace);
-    } else if(!member.is_bot) {
+    } else if (!member.is_bot) {
         setTimeout(function () {
             slack.openIM(workspace, {
                 user: member.id
-                }).then(slackIMs => {
-                    workspace.users.push({
-                        id: member.id,
-                        im_id: slackIMs.channel.id
-                    });
-                    openIM(workspace, members, memberId + 1, callback);
-                })
+            }).then(slackIMs => {
+                workspace.users.push({
+                    id: member.id,
+                    im_id: slackIMs.channel.id
+                });
+                openIM(workspace, members, memberId + 1, callback);
+            })
                 .catch(logger.error);
-          }, 600);
+        }, 600);
     } else {
         openIM(workspace, members, memberId + 1, callback);
     }
 }
 
-var getUsersById = function(workspace, userId) {
+var getUsersById = function (workspace, userId) {
     var numUserFound = false;
     var userNum = 0;
     var users = workspace.users;
@@ -37,13 +38,13 @@ var getUsersById = function(workspace, userId) {
         numUserFound |= users[userNum].id === userId;
         userNum++;
     }
-    if(numUserFound) {
+    if (numUserFound) {
         return users[userNum - 1];
     }
     return null;
 };
 
-var getUsersByChannelId = function(workspace, channelId) {
+var getUsersByChannelId = function (workspace, channelId) {
     var numUserFound = false;
     var userNum = 0;
     var users = workspace.users;
@@ -51,27 +52,38 @@ var getUsersByChannelId = function(workspace, channelId) {
         numUserFound |= users[userNum].im_id === channelId;
         userNum++;
     }
-    if(numUserFound) {
+    if (numUserFound) {
         return users[userNum - 1];
     }
     return null;
 };
 
-var forEach = function(callback) {
-    db.list("workspaces", {}, function(workspaces) {
+var forEach = function (callback) {
+    db.list("workspaces", {}, function (workspaces) {
         var previous_bot_access_token = [];
-        for(var workspaceId in workspaces) {
-            var tokens = {
-                user_access_token: workspaces[workspaceId].access_token,
-                bot_access_token: workspaces[workspaceId].bot.bot_access_token
-            }
-            if(previous_bot_access_token.indexOf(tokens.bot_access_token) < 0) {
+        for (var workspaceId in workspaces) {
+            var bot_access_token = workspaces[workspaceId].bot.bot_access_token;
+            if (previous_bot_access_token.indexOf(bot_access_token) < 0) {
                 callback(workspaces[workspaceId]);
-                previous_bot_access_token.push(workspaces[workspaceId].bot.bot_access_token);
+                previous_bot_access_token.push(bot_access_token);
             }
         }
     });
 };
+
+var reloadUsers = function (workspace) {
+    slack.listUsers(workspace)
+        .then(slackUsers => {
+            workspace.users = [];
+            openIM(workspace, slackUsers.members, 0, function () {
+                db.update("workspaces", { _id: new db.mongodb().ObjectId(workspace._id) }, workspace, function () { });
+                db.read("dialogs", { name: "Consent PM" }, function (dialog) {
+                    dialogs.playInWorkspace(dialog, workspace);
+                })
+            });
+        })
+        .catch(logger.error);
+}
 
 var route = function (request, response) {
 
@@ -83,7 +95,7 @@ var route = function (request, response) {
         objectId = request.url.match(regex_workspaceId)[1];
 
         // GET : Detail of workspace
-        if(request.method === "GET") {
+        if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
             db.read("workspaces", { _id: new db.mongodb().ObjectId(objectId) }, function (data) {
                 response.write(JSON.stringify(data));
@@ -93,11 +105,10 @@ var route = function (request, response) {
 
         // DELETE : revoke a workspace token
         else if (request.method === "DELETE") {
-            db.read("workspaces", { _id: new db.mongodb().ObjectId(objectId) }, function(workspace) {
-                slack.revokeToken({
-                    user_access_token: workspace.access_token,
-                    bot_access_token: workspace.bot.bot_access_token
-                    });
+            db.read("workspaces", { _id: new db.mongodb().ObjectId(objectId) }, function (workspace) {
+                slack.revokeToken(workspace)
+                    .then(() => { })
+                    .catch(logger.error);
             });
             db.delete("workspaces", objectId, function () {
                 response.writeHead(200, { "Content-Type": "application/json" });
@@ -114,14 +125,7 @@ var route = function (request, response) {
         objectId = request.url.match(regex_workspaceIdReload)[1];
         var id = new db.mongodb().ObjectId(objectId);
         db.read("workspaces", { _id: id }, function (data) {
-            slack.listUsers(data)
-                .then(slackUsers => {
-                    data.users = [];
-                    openIM(data, slackUsers.members, 0, function() {
-                        db.update("workspaces", {_id: id}, data, function() {});
-                    });
-                })
-                .catch(logger.error);
+            reloadUsers(data);
         });
         response.writeHead(200, { "Content-Type": "application/json" });
         response.write("{}");
@@ -147,4 +151,5 @@ exports.forEach = forEach;
 exports.getUsersByChannelId = getUsersByChannelId;
 exports.getUsersById = getUsersById;
 exports.openIM = openIM;
+exports.reloadUsers = reloadUsers;
 exports.route = route;

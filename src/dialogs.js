@@ -56,7 +56,7 @@ var route = function (request, response) {
     // api/dialogs/<id>/play
     else if (request.url.match(regex_play) !== null) {
         dialogId = request.url.match(regex_play)[1];
-        processDialog("dialogs", dialogId);
+        playInAllWorkspaces(dialogId);
         response.writeHead(200, { "Content-Type": "application/json" });
         response.end();
     }
@@ -111,8 +111,32 @@ var route = function (request, response) {
     }
 };
 
-var processDialog = function (collection, id) {
-    db.read(collection, { _id: new db.mongodb().ObjectId(id) }, function (dialog) {
+var resumeDialogs = function () {
+    workspaces.forEach(function (workspace) {
+        db.read("dialogs", { scheduling: parseInt(workspace.progression) }, function (dialog) {
+            if (dialog !== null) {
+                playInWorkspace(dialog, workspace);
+                workspace.progression++;
+                db.update("workspaces", {_id: new db.mongodb().ObjectId(workspace._id)}, workspace, () => {});
+            }
+        });
+    });
+};
+
+var playInWorkspace = function(dialog, workspace) {
+    if(dialog.channel !== "pm_everybody") {
+        speakRecurse(workspace, dialog, "0");
+    } else {
+        var channelsId = [];
+        for (var userId in workspace.users) {
+            channelsId.push(workspace.users[userId].im_id);
+        }
+        speakRecuseInChannels(workspace, dialog, channelsId);
+    }
+}
+
+var playInAllWorkspaces = function (id) {
+    db.read("dialogs", { _id: new db.mongodb().ObjectId(id) }, function (dialog) {
         if (dialog !== null) {
             workspaces.forEach(function (workspace) {
                 if(dialog.channel !== "pm_everybody") {
@@ -126,24 +150,6 @@ var processDialog = function (collection, id) {
                 }
             });
         }
-    });
-};
-
-var resumeDialogs = function () {
-    db.read("global", { name: "state" }, function (data) {
-        if (data === null) {
-            data = {};
-            data.daily = 1;
-            data.name = "state";
-            db.insert("global", data);
-        }
-        db.read("dialogs", { scheduling: parseInt(data.daily) }, function (dialog) {
-            if (dialog !== null) {
-                processDialog("dialogs", dialog._id);
-                data.daily++;
-                db.updateByName("global", "state", data);
-            }
-        });
     });
 };
 
@@ -281,6 +287,6 @@ var uploadFilesOfMessage = function (workspace, message, attachmentId, callback)
 };
 
 exports.speakRecurse = speakRecurse;
-exports.processDialog = processDialog;
+exports.playInWorkspace = playInWorkspace;
 exports.resumeDialogs = resumeDialogs;
 exports.route = route;
