@@ -48,7 +48,6 @@ exports.getConfig = function(callback) {
   db.read("global", { name: "state" }, function (data) {
     if (data === null) {
       data = {};
-      data.daily = 1;
       data.name = "state";
       data.cron = "42 9 * * 1,3,5";
       db.insert("global", data);
