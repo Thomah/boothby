@@ -147,7 +147,8 @@ var routeApi = function (request, response) {
           response_400(workspace, response);
         } else {
           workspace.progression = 1;
-          db.insert("workspaces", workspace, function () {
+          db.insert("workspaces", workspace, function (data) {
+            workspace = data.ops[0];
             api.getConfig(function (config) {
               scheduler.schedule(config.cron, function (fireDate) {
                 logger.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
