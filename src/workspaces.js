@@ -76,10 +76,13 @@ var reloadUsers = function (workspace) {
         .then(slackUsers => {
             workspace.users = [];
             openIM(workspace, slackUsers.members, 0, function () {
-                db.update("workspaces", { _id: new db.mongodb().ObjectId(workspace._id) }, workspace, function () { });
-                db.read("dialogs", { name: "Consent PM" }, function (dialog) {
-                    dialogs.playInWorkspace(dialog, workspace);
-                })
+                var workspaceId = workspace._id;
+                db.update("workspaces", { _id: new db.mongodb().ObjectId(workspace._id) }, workspace, function () {
+                    workspace._id = workspaceId;
+                    db.read("dialogs", { name: "Consent PM" }, function (dialog) {
+                        dialogs.playInWorkspace(dialog, workspace);
+                    })
+                });
             });
         })
         .catch(logger.error);
