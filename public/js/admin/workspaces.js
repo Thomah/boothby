@@ -70,6 +70,11 @@ function doc_refreshWorkspaces(workspaces) {
     cell.textContent = workspace.user_id;
     newEntry.appendChild(cell);
 
+    // Progression
+    cell = document.createElement("td");
+    cell.textContent = workspace.progression;
+    newEntry.appendChild(cell);
+
     // Actions
     cell = document.createElement("td");
     cellSpan = document.createElement("span");
