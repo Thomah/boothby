@@ -129,9 +129,12 @@ var playInWorkspace = function(dialog, workspace) {
     } else {
         var channelsId = [];
         for (var userId in workspace.users) {
-            channelsId.push(workspace.users[userId].im_id);
+            var user = workspace.users[userId];
+            if (dialog.name === "Consent PM" || user.consent) {
+                channelsId.push(user.im_id);
+            }
         }
-        speakRecuseInChannels(workspace, dialog, channelsId);
+        speakRecurseInChannels(workspace, dialog, channelsId);
     }
 }
 
@@ -146,19 +149,19 @@ var playInAllWorkspaces = function (id) {
                     for (var userId in workspace.users) {
                         channelsId.push(workspace.users[userId].im_id);
                     }
-                    speakRecuseInChannels(workspace, dialog, channelsId);
+                    speakRecurseInChannels(workspace, dialog, channelsId);
                 }
             });
         }
     });
 };
 
-var speakRecuseInChannels = function(workspace, dialog, channelsId) {
+var speakRecurseInChannels = function(workspace, dialog, channelsId) {
     if(channelsId.length > 0) {
         dialog.channelId = channelsId[0];
         speakRecurse(workspace, dialog, "0", () => {
             channelsId.splice(0, 1);
-            speakRecuseInChannels(workspace, dialog, channelsId);
+            speakRecurseInChannels(workspace, dialog, channelsId);
         });
     }
 };
