@@ -16,6 +16,21 @@ var initRtm = function (workspace) {
     if(message.text !== undefined) {
       db.insert("messages", message);
     }
+    if(message.text === ":house:") {
+      db.read("workspaces", { team_id: message.team }, function(workspacesInDb) {
+        var workspace = workspacesInDb;
+        if(workspacesInDb.access_token === undefined) {
+          workspace = workspacesInDb[0];
+        }
+        var user = workspaces.getUsersByChannelId(workspace, message.channel);
+        if(user !== null) {
+          db.read("dialogs", { name: "Consent PM"}, function(dialog) {
+            dialog.channelId = message.channel;
+            dialogs.speakRecurse(workspace, dialog, "0", () => {});
+          })
+        }
+      });
+    }
   });
   rtm.on("team_join", event => {
     db.read("workspaces", { team_id: event.user.team_id }, function (workspacesOfNewUser) {
