@@ -10,6 +10,7 @@ const interactive = require("./interactive.js");
 const logger = require("./logger.js");
 const messages = require("./messages.js");
 const scheduler = require("./scheduler.js");
+const slack = require("./slack.js");
 const users = require("./users.js");
 const workspaces = require("./workspaces.js");
 
@@ -164,6 +165,7 @@ var routeApi = function (request, response) {
                 dialogs.playInWorkspace(dialog, workspace);
               });
               workspaces.reloadUsers(workspace);
+              slack.initRtm(workspace);
             });
             response.writeHead(302, {
               'Location': "/index.html?installed=1"
