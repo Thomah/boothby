@@ -17,11 +17,13 @@ var route = function (request, response) {
         // GET : list backups
         if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            
-            fs.readdir('files/backups/', (err, files) => {
-                if(err) logger.error(err);
-                response.write(JSON.stringify(files));
-                response.end();
+            fs.mkdir('files/backups', { recursive: true }, (err) => {
+                if (err && err.code !== 'EEXIST') throw err;
+                fs.readdir('files/backups/', (err, files) => {
+                    if(err) logger.error(err);
+                    response.write(JSON.stringify(files));
+                    response.end();
+                });
             });
         }
 
@@ -39,7 +41,6 @@ var route = function (request, response) {
                             if(err) logger.error(err);
                         }); 
                     });
-                    
                 });
               }
             response.writeHead(200, { "Content-Type": "application/json" });
