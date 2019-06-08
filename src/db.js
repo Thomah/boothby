@@ -90,7 +90,7 @@ exports.list = function (collection, sort, callback) {
     .sort(sort)
     .toArray(function (err, result) {
       if (err) throw err;
-      callback(result);
+      callback(result, collection);
     });
 };
 

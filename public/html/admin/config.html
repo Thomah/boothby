@@ -15,19 +15,16 @@
     <a href="/admin/workspaces.html">Workspaces</a>
     <a href="/admin/config.html">Config</a>
     <a href="/admin/admins.html">Admins</a>
+    <a href="/admin/backups.html">Backups</a>
     <a onclick="logout()" href="#">Logout</a>
   </p>
   <hr />
-  <button onclick="refresh()">Refresh</button>
+  <button id="refresh" onclick="refresh()">Refresh</button>
   <button id="save" onclick="save()">Save</button>
   <p id="next-execution-p">Next execution on <span id="next-invocation"></span></p>
   <hr />
   <div>
     <label for="cron">CRON Planning</label><input id="cron" type="text" name="cron" />
-  </div>
-  <div>
-    <label for="next-daily-dialog">Next dialog to play</label><input id="next-daily-dialog" type="number"
-      name="next-daily-dialog" />
   </div>
   <script src="auth.js"></script>
   <script src="request.js"></script>

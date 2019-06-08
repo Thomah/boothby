@@ -9,13 +9,19 @@ function add() {
   );
 }
 
-function refresh(){
+function refresh() {
+  var textButton = document.getElementById("refresh");
   overload_xhr(
     "GET", 
     "/api/dialogs",
     function(xhr){
+      textButton.style["backgroundColor"] = "greenyellow";
       var json = JSON.parse(xhr.responseText);
       doc_refreshDialogs(json);
+    },
+    function(){},
+    function(){
+      textButton.style["backgroundColor"] = "red";
     }
   );
 }

@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const api = require("./api.js");
+const backups = require("./backups.js");
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
@@ -71,6 +72,11 @@ var routeApi = function (request, response) {
 
   if (request.url.startsWith("/api/user")) {
     users.route(request, response);
+  }
+
+  // /api/dialogs*
+  else if (request.url.startsWith("/api/backups")) {
+    backups.route(request, response);
   }
 
   // /api/config

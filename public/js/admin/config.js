@@ -1,11 +1,17 @@
 // eslint-disable-next-line no-unused-vars
 function refresh() {
+  var textButton = document.getElementById("refresh");
   overload_xhr(
     "GET",
     "/api/config",
     function (xhr) {
+      textButton.style["backgroundColor"] = "greenyellow";
       var json = JSON.parse(xhr.responseText);
       doc_refreshConfig(json);
+    },
+    function(){},
+    function(){
+      textButton.style["backgroundColor"] = "red";
     }
   );
 }
@@ -33,14 +39,12 @@ function save() {
 
 function doc_refreshConfig(config) {
   document.getElementById("cron").value = config.cron;
-  document.getElementById("next-daily-dialog").value = config.daily;
   document.getElementById("next-invocation").innerText = new Date(config.nextInvocation).toLocaleString();
 }
 
 function doc_getConfig() {
   var config = {
-    cron: document.getElementById("cron").value,
-    daily: document.getElementById("next-daily-dialog").value
+    cron: document.getElementById("cron").value
   };
   return config;
 }

@@ -1,11 +1,17 @@
 // eslint-disable-next-line no-unused-vars
 function refresh(){
+  var textButton = document.getElementById("refresh");
   overload_xhr(
     "GET", 
     "/api/workspaces",
     function(xhr){
+      textButton.style["backgroundColor"] = "greenyellow";
       var json = JSON.parse(xhr.responseText);
       doc_refreshWorkspaces(json);
+    },
+    function(){},
+    function(){
+      textButton.style["backgroundColor"] = "red";
     }
   );
 }
