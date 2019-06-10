@@ -1,7 +1,6 @@
 const https = require("https");
 var querystring = require("querystring");
 const db = require("./db.js");
-const scheduler = require("./scheduler.js");
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
@@ -43,20 +42,6 @@ exports.getAccessToken = function(code, callback_end, callback_err) {
   req.write(postData);
   req.end();
 }
-
-exports.getConfig = function(callback) {
-  db.read("global", { name: "state" }, function (data) {
-    if (data === null) {
-      data = {};
-      data.name = "state";
-      data.cron = "42 9 * * 1,3,5";
-      db.insert("global", data);
-    }
-    db.updateByName("global", "state", data);
-    data.nextInvocation = scheduler.nextInvocation();
-    callback(data);
-  });
-};
 
 var checkCredentialsUser = function (credentials, callback) {
   db.read("user", {username:credentials['username']},function (data) {

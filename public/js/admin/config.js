@@ -3,7 +3,7 @@ function refresh() {
   var textButton = document.getElementById("refresh");
   overload_xhr(
     "GET",
-    "/api/config",
+    "/api/configs",
     function (xhr) {
       textButton.style["backgroundColor"] = "greenyellow";
       var json = JSON.parse(xhr.responseText);
@@ -23,7 +23,7 @@ function save() {
 
   overload_xhr(
     "PUT",
-    "/api/config",
+    "/api/configs",
     function () {
       textButton.style["backgroundColor"] = "greenyellow";
     },
@@ -37,14 +37,25 @@ function save() {
   );
 }
 
-function doc_refreshConfig(config) {
-  document.getElementById("cron").value = config.cron;
-  document.getElementById("next-invocation").innerText = new Date(config.nextInvocation).toLocaleString();
+function doc_refreshConfig(configs) {
+  for(var configNum in configs) {
+    var config = configs[configNum];
+    document.getElementById("cron-" + configNum).value = config.cron;
+    document.getElementById("next-invocation-" + configNum).innerText = new Date(config.nextInvocation).toLocaleString();
+  }
 }
 
 function doc_getConfig() {
-  var config = {
-    cron: document.getElementById("cron").value
+  var configs = {};
+  configs["dialog-publish"] = {
+    name: "dialog-publish",
+    cron: document.getElementById("cron-0").value,
+    active: true
   };
-  return config;
+  configs["backup"] = {
+    name: "backup",
+    cron: document.getElementById("cron-1").value,
+    active: true
+  };
+  return configs;
 }

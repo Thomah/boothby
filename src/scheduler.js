@@ -1,18 +1,18 @@
 const schedule = require("node-schedule");
 
-var job
+var jobs = [];
 
-exports.schedule = function (cron, callback) {
-    job = schedule.scheduleJob(cron, callback);
+exports.schedule = function (config, callback) {
+    jobs[config.name] = schedule.scheduleJob(config.cron, callback);
 };
 
-exports.reschedule = function (cron) {
-    job = schedule.rescheduleJob(job, cron);
+exports.reschedule = function (config) {
+    jobs[config.name] = schedule.rescheduleJob(jobs[config.name], config.cron);
 };
 
-exports.nextInvocation = function () {
-    if(job !== undefined && job !== null) {
-        return job.nextInvocation();
+exports.nextInvocation = function (config) {
+    if(jobs[config.name] !== undefined && jobs[config.name] !== null) {
+        return jobs[config.name].nextInvocation();
     } else {
         return "";
     }

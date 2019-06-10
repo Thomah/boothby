@@ -2,12 +2,29 @@ const fs = require("fs");
 const db = require("./db.js");
 const logger = require("./logger.js");
 
-const collections = ['conversations', 'dialogs', 'files', 'global', 'messages', 'surveys', 'user', 'workspaces'];
+const collections = ['conversations', 'configs', 'dialogs', 'files', 'messages', 'surveys', 'user', 'workspaces'];
 
 var response404 = function (response) {
     response.writeHead(404, { "Content-Type": "application/octet-stream" });
     response.end();
 };
+
+var backup = function() {
+    const now = new Date();
+    const path = 'files/backups/' + now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate() + '-' + now.getHours() + now.getMinutes() + now.getSeconds();
+    for(var collectionNum in collections) {
+        var collection = collections[collectionNum];
+        db.list(collection, {_id: 1}, function(result, collection) {
+            const file = path + '/' + collection + '.json'
+            fs.mkdir(path, { recursive: true }, (err) => {
+                if (err && err.code !== 'EEXIST') throw err;
+                fs.writeFile(file, JSON.stringify(result), function(err) {
+                    if(err) logger.error(err);
+                }); 
+            });
+        });
+      }
+}
 
 var route = function (request, response) {
     var regex_backupId = /^\/api\/backups\/([^/]+)$/;
@@ -29,20 +46,7 @@ var route = function (request, response) {
 
         // POST : create new backup
         else if (request.method === "POST") {
-            const now = new Date();
-            const path = 'files/backups/' + now.getFullYear() + '-' + now.getMonth() + '-' + now.getDay() + '-' + now.getHours() + now.getMinutes() + now.getSeconds();
-            for(var collectionNum in collections) {
-                var collection = collections[collectionNum];
-                db.list(collection, {_id: 1}, function(result, collection) {
-                    const file = path + '/' + collection + '.json'
-                    fs.mkdir(path, { recursive: true }, (err) => {
-                        if (err && err.code !== 'EEXIST') throw err;
-                        fs.writeFile(file, JSON.stringify(result), function(err) {
-                            if(err) logger.error(err);
-                        }); 
-                    });
-                });
-              }
+            backup();
             response.writeHead(200, { "Content-Type": "application/json" });
             response.end();
         }
@@ -90,5 +94,5 @@ var route = function (request, response) {
     }
 };
 
-
+exports.backup = backup;
 exports.route = route;

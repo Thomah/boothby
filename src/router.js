@@ -3,13 +3,12 @@ const path = require("path");
 
 const api = require("./api.js");
 const backups = require("./backups.js");
+const configs = require("./configs.js");
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
 const interactive = require("./interactive.js");
-const logger = require("./logger.js");
 const messages = require("./messages.js");
-const scheduler = require("./scheduler.js");
 const slack = require("./slack.js");
 const users = require("./users.js");
 const workspaces = require("./workspaces.js");
@@ -81,39 +80,8 @@ var routeApi = function (request, response) {
   }
 
   // /api/config
-  else if (request.url === "/api/config") {
-
-    // GET : retrieve config
-    if (request.method === "GET") {
-      response.writeHead(200, { "Content-Type": "application/json" });
-      api.getConfig(function (data) {
-        response.write(JSON.stringify(data));
-        response.end();
-      });
-    }
-
-    // POST : update config
-    else if (request.method === "PUT") {
-      response.writeHead(200, { "Content-Type": "application/json" });
-      let body = "";
-      request.on("data", chunk => {
-        body += chunk.toString();
-      });
-      request.on("end", () => {
-        var config = JSON.parse(body);
-        db.update("global", { name: "state" }, config, function (data) {
-          scheduler.reschedule(config.cron);
-          response.write(JSON.stringify(data));
-          response.end();
-        });
-      });
-    }
-
-    // Otherwise 404
-    else {
-      response.writeHead(404, { "Content-Type": "application/octet-stream" });
-      response.end();
-    }
+  else if (request.url.startsWith("/api/configs")) {
+    configs.route(request, response);
   }
 
   // /api/dialogs*
@@ -156,17 +124,11 @@ var routeApi = function (request, response) {
           workspace.progression = 1;
           db.insert("workspaces", workspace, function (data) {
             workspace = data.ops[0];
-            api.getConfig(function (config) {
-              scheduler.schedule(config.cron, function (fireDate) {
-                logger.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
-                dialogs.resumeDialogs();
-              });
-              db.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
-                dialogs.playInWorkspace(dialog, workspace);
-              });
-              workspaces.reloadUsers(workspace);
-              slack.initRtm(workspace);
+            db.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
+              dialogs.playInWorkspace(dialog, workspace);
             });
+            workspaces.reloadUsers(workspace);
+            slack.initRtm(workspace);
             response.writeHead(302, {
               'Location': "/index.html?installed=1"
             });

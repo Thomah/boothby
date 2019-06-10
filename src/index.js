@@ -1,11 +1,12 @@
 const fs = require("fs");
 const http = require("http");
-const api = require("./api.js");
-const scheduler = require("./scheduler.js");
+const backups = require("./backups.js");
+const configs = require("./configs.js");
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
 const router = require("./router.js");
+const scheduler = require("./scheduler.js");
 const slack = require("./slack.js");
 const users = require("./users.js");
 const workspaces = require("./workspaces.js");
@@ -35,15 +36,26 @@ var server = http.createServer(function (request, response) {
 });
 
 db.init(function () {
+  configs.init();
   readFiles('./files/preset-dialogs/', function (content) {
     var contentToSave = JSON.parse(content);
     db.upsert("dialogs", { name: contentToSave.name }, contentToSave, function () { });
   }, logger.error);
-  api.getConfig(function (config) {
-    scheduler.schedule(config.cron, function (fireDate) {
-      logger.log(`This job was supposed to run at ${fireDate}, but actually ran at ${new Date()}`);
-      dialogs.resumeDialogs();
-    });
+  configs.get(function(data) {
+    for(var dataNum in data) {
+      var config = data[dataNum];
+      if(config.name === "dialog-publish") {
+        scheduler.schedule(config, function (fireDate) {
+          logger.log('CRON Execution : dialog-publish (scheduled at ' + fireDate + ')');
+          dialogs.resumeDialogs();
+        });
+      } else if(config.name === "backup") {
+        scheduler.schedule(config, function (fireDate) {
+          logger.log('CRON Execution : backup (scheduled at ' + fireDate + ')');
+          backups.backup();
+        });
+      }
+    }
   });
   workspaces.forEach(slack.initRtm);
   users.createDefaultUser();

@@ -21,11 +21,31 @@
   <hr />
   <button id="refresh" onclick="refresh()">Refresh</button>
   <button id="save" onclick="save()">Save</button>
-  <p id="next-execution-p">Next execution on <span id="next-invocation"></span></p>
   <hr />
-  <div>
-    <label for="cron">CRON Planning</label><input id="cron" type="text" name="cron" />
-  </div>
+  <table id="config">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Planning</th>
+        <th>Next Execution</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Dialog Publish</td>
+        <td><input id="cron-0" type="text" name="cron-0" /></td>
+        <td><span id="next-invocation-0"></span></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Db Backup</td>
+        <td><input id="cron-1" type="text" name="cron-1" /></td>
+        <td><span id="next-invocation-1"></span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
   <script src="auth.js"></script>
   <script src="request.js"></script>
   <script src="config.js"></script>
