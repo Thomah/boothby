@@ -116,14 +116,14 @@ var resumeDialogs = function () {
             if (dialog !== null) {
                 playInWorkspace(dialog, workspace);
                 workspace.progression++;
-                db.update("workspaces", {_id: new db.mongodb().ObjectId(workspace._id)}, workspace, () => {});
+                db.update("workspaces", { _id: new db.mongodb().ObjectId(workspace._id) }, workspace, () => { });
             }
         });
     });
 };
 
-var playInWorkspace = function(dialog, workspace) {
-    if(dialog.channel !== "pm_everybody") {
+var playInWorkspace = function (dialog, workspace) {
+    if (dialog.channel !== "pm_everybody") {
         speakRecurse(workspace, dialog, "0");
     } else {
         var channelsId = [];
@@ -141,7 +141,7 @@ var playInAllWorkspaces = function (id) {
     db.read("dialogs", { _id: new db.mongodb().ObjectId(id) }, function (dialog) {
         if (dialog !== null) {
             workspaces.forEach(function (workspace) {
-                if(dialog.channel !== "pm_everybody") {
+                if (dialog.channel !== "pm_everybody") {
                     speakRecurse(workspace, dialog, "0");
                 } else {
                     var channelsId = [];
@@ -155,8 +155,8 @@ var playInAllWorkspaces = function (id) {
     });
 };
 
-var speakRecurseInChannels = function(workspace, dialog, channelsId) {
-    if(channelsId.length > 0) {
+var speakRecurseInChannels = function (workspace, dialog, channelsId) {
+    if (channelsId.length > 0) {
         dialog.channelId = channelsId[0];
         speakRecurse(workspace, dialog, "0", () => {
             channelsId.splice(0, 1);
@@ -177,21 +177,23 @@ var speakRecurse = function (workspace, dialog, messageId, callback) {
             uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, () => {
                 if (message.outputs.length === 1) {
                     speakRecurse(workspace, dialog, message.outputs[0].id, callback);
-                } else if(callback !== undefined) {
+                } else if (callback !== undefined) {
                     callback();
                 }
             });
         } else {
-            slack
-                .join(workspace, message.channel)
-                .then(res => {
-                    uploadFilesAndSendMessage(workspace, message, res.channel.id, () => {
+            (async () => {
+                try {
+                    const result = await slack.join(workspace, message.channel);
+                    uploadFilesAndSendMessage(workspace, message, result.channel.id, () => {
                         if (message.outputs.length === 1) {
                             speakRecurse(workspace, dialog, message.outputs[0].id);
                         }
                     });
-                })
-                .catch(logger.error);
+                } catch (error) {
+                    logger.error(error);
+                }
+            })();
         }
     }, message.wait);
 };
@@ -273,12 +275,15 @@ var uploadFilesOfMessage = function (workspace, message, attachmentId, callback)
                     initial_comment: attachment.initial_comment,
                     title: attachment.title
                 };
-                slack.uploadFiles(workspace, files)
-                    .then(() => {
+                (async () => {
+                    try {
+                        await slack.uploadFiles(workspace, files);
                         delete message.attachments[attachmentId];
                         uploadFilesOfMessage(workspace, message, attachmentId + 1, callback);
-                    })
-                    .catch(logger.error);
+                    } catch (error) {
+                        logger.error(error);
+                    }
+                })();
             }
         });
     } else if (message.attachments !== undefined && message.attachments[attachmentId + 1] !== undefined) {

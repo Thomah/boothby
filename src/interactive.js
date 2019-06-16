@@ -2,7 +2,6 @@ const { parse } = require("querystring");
 
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
-const logger = require("./logger.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
 
@@ -66,9 +65,7 @@ var answerSurvey = function (payload, callback) {
                 link_names: true,
                 ts: payload.message_ts,
                 attachments: newMessage.attachments
-            })
-                .then(() => { })
-                .catch(logger.error);
+            });
         });
     });
 };
@@ -98,10 +95,7 @@ var updateButtonAndSpeak = function(payload, workspace, dialog) {
     delete newMessage.subtype;
     delete newMessage.username;
     delete newMessage.bot_id;
-    slack.updateMessage(workspace, newMessage)
-        .then(() => {
-        })
-        .catch(logger.error);
+    slack.updateMessage(workspace, newMessage);
 }
 
 var resumeConversation = function (payload) {
