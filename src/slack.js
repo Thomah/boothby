@@ -1,4 +1,5 @@
-const { RTMClient, WebClient } = require("@slack/client");
+const { WebClient } = require('@slack/web-api');
+const { RTMClient } = require('@slack/rtm-api');
 const schedule = require("node-schedule");
 const db = require("./db.js");
 const dialogs = require("./dialogs.js");
@@ -7,6 +8,7 @@ const workspaces = require("./workspaces.js");
 
 var initJobs = function () {
   schedule.scheduleJob("* * * * * *", postShift);
+  schedule.scheduleJob("*/2 * * * * *", updateShift);
 };
 
 var initRtm = function (workspace) {
@@ -98,9 +100,13 @@ var postMessage = function (workspace, channelId, content) {
 var postShift = function () {
   var shift = postQueue.shift();
   if (shift !== undefined) {
-    new WebClient(shift.token).chat.postMessage(shift.message)
-      .then(() => { })
-      .catch(logger.error);
+    (async () => {
+      try {
+        await new WebClient(shift.token).chat.postMessage(shift.message);
+      } catch (error) {
+        logger.error(error);
+      }
+    })();
   }
 };
 
@@ -113,8 +119,24 @@ var sendSimpleMessage = function (workspace, channelId, message) {
   postMessage(workspace, channelId, content);
 };
 
+var updateQueue = [];
 var updateMessage = function (workspace, message) {
-  return new WebClient(workspace.bot.bot_access_token).chat.update(message);
+  updateQueue.push({
+    token: workspace.bot.bot_access_token,
+    message: message
+  })
+};
+var updateShift = function () {
+  var shift = postQueue.shift();
+  if (shift !== undefined) {
+    (async () => {
+      try {
+        await new WebClient(shift.token).chat.update(shift.message);
+      } catch (error) {
+        logger.error(error);
+      }
+    })();
+  }
 };
 
 var uploadFiles = function (workspace, files) {
