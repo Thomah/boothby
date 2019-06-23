@@ -22,8 +22,9 @@ cp bin/setenv.sh.template bin/setenv.sh
 ```bash
 export SLACK_CLIENT_ID=<ask-someone-of-the-team>
 export SLACK_CLIENT_SECRET=<ask-someone-of-the-team>
-export ROOT_URL=http://localhost:8080
 export MONGODB_URI=mongodb://localhost:27017/heroku_lqkdtf3k
+export BOOTHBY_SSL_KEY_FILE=<path-of-key.pem>
+export BOOTHBY_SSL_CERT_FILE=<path-of-server.crt>
 ```
 
 - Run the app using `node src/index.js`

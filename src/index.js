@@ -1,5 +1,6 @@
 const fs = require("fs");
 const http = require("http");
+const https = require('https');
 const backups = require("./backups.js");
 const configs = require("./configs.js");
 const db = require("./db.js");
@@ -11,7 +12,8 @@ const slack = require("./slack.js");
 const users = require("./users.js");
 const workspaces = require("./workspaces.js");
 
-const ROOT_URL = process.env.ROOT_URL;
+const SSL_KEY_FILE = process.env.BOOTHBY_SSL_KEY_FILE;
+const SSL_CERT_FILE = process.env.BOOTHBY_SSL_CERT_FILE;
 
 function readFiles(dirname, onFileContent, onError) {
   fs.readdir(dirname, function (err, filenames) {
@@ -31,9 +33,7 @@ function readFiles(dirname, onFileContent, onError) {
   });
 }
 
-var server = http.createServer(function (request, response) {
-  router.serve(request, response);
-});
+var server = http.createServer(router.serve);
 
 db.init(function () {
   configs.init();
@@ -73,5 +73,14 @@ process.on("SIGINT", function () {
 
 users.initCache();
 
-server.listen(8080);
-logger.log("Server running at " + ROOT_URL);
+server.listen(80);
+
+if(SSL_KEY_FILE !== undefined && SSL_CERT_FILE !== undefined) {
+  var options = {
+    key: fs.readFileSync(SSL_KEY_FILE, 'utf8'),
+    cert: fs.readFileSync(SSL_CERT_FILE, 'utf8')
+  };
+  var serverSecured = https.createServer(options, router.serve);
+  
+  serverSecured.listen(443);
+}
