@@ -6,13 +6,13 @@ const logger = require("./logger.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
 
-var answerSurvey = function (payload, callback) {
+var answerSurvey = function(payload, callback) {
     var splitActionValue = payload.actions[0].value.split("-");
-    db.read("dialogs", { _id: new db.mongodb().ObjectId(splitActionValue[0]) }, function (data) {
-        callback(data[splitActionValue[1]]);
+    db.read("dialogs", { _id: new db.mongodb().ObjectId(splitActionValue[0]) }, function(data) {
+        callback(data.messages[splitActionValue[1]]);
     });
 
-    db.read("surveys", { name: payload.actions[0].name }, function (data) {
+    db.read("surveys", { name: payload.actions[0].name }, function(data) {
         var newMessage = payload.original_message;
         if (data === null) {
             data = {};
@@ -25,9 +25,7 @@ var answerSurvey = function (payload, callback) {
             data.values = {};
             data.users = {};
             for (
-                var noAction = 0;
-                noAction < newMessage.attachments[0].actions.length;
-                noAction++
+                var noAction = 0; noAction < newMessage.attachments[0].actions.length; noAction++
             ) {
                 var value = newMessage.attachments[0].actions[noAction].value;
                 data.actions[value] = noAction;
@@ -59,15 +57,15 @@ var answerSurvey = function (payload, callback) {
                 data.texts[id] + " (" + data.values[id] + ")";
         }
 
-        workspaces.forEach(function (workspace) {
+        workspaces.forEach(function(workspace) {
             slack.updateMessage(workspace, {
-                channel: payload.channel.id,
-                text: newMessage.text,
-                link_names: true,
-                ts: payload.message_ts,
-                attachments: newMessage.attachments
-            })
-                .then(() => { })
+                    channel: payload.channel.id,
+                    text: newMessage.text,
+                    link_names: true,
+                    ts: payload.message_ts,
+                    attachments: newMessage.attachments
+                })
+                .then(() => {})
                 .catch(logger.error);
         });
     });
@@ -99,12 +97,11 @@ var updateButtonAndSpeak = function(payload, workspace, dialog) {
     delete newMessage.username;
     delete newMessage.bot_id;
     slack.updateMessage(workspace, newMessage)
-        .then(() => {
-        })
+        .then(() => {})
         .catch(logger.error);
 }
 
-var resumeConversation = function (payload) {
+var resumeConversation = function(payload) {
     if (payload.actions !== undefined && payload.actions.length === 1 && payload.channel !== undefined) {
         var actionValue = payload.actions[0].value;
         var actionValueSplit = actionValue.split('-');
@@ -117,7 +114,7 @@ var resumeConversation = function (payload) {
             workspaceId: new db.mongodb().ObjectId(workspaceId),
             channelId: channelId,
             dialogId: new db.mongodb().ObjectId(dialogId)
-        }, function (conversation) {
+        }, function(conversation) {
             if (conversation.lastMessageId === messageId) {
                 var isValidOutput = false;
                 for (var outputNum in conversation.outputs) {
@@ -125,17 +122,15 @@ var resumeConversation = function (payload) {
                 }
                 if (isValidOutput) {
                     var marchWorkspaceId = { _id: new db.mongodb().ObjectId(workspaceId) };
-                    db.read("workspaces", marchWorkspaceId, function (workspace) {
+                    db.read("workspaces", marchWorkspaceId, function(workspace) {
                         var workspaceBackup = JSON.parse(JSON.stringify(workspace));
-                        db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function (dialog) {
+                        db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function(dialog) {
                             var numUserFound = false;
                             var consentPM = false;
                             if (payload.channel.name === "directmessage") {
-                                workspace.users = [
-                                    {
-                                        im_id: channelId
-                                    }
-                                ];
+                                workspace.users = [{
+                                    im_id: channelId
+                                }];
                                 var userNum = 0;
                                 var users = workspaceBackup.users;
                                 while (!numUserFound && userNum < users.length) {
@@ -145,13 +140,13 @@ var resumeConversation = function (payload) {
                                 consentPM = workspaceBackup.users[userNum - 1].consent;
                                 workspace.users[0].consent = workspaceBackup.users[userNum - 1].consent;
                             }
-                            if(dialog.name === "Consent PM" && numUserFound) {
+                            if (dialog.name === "Consent PM" && numUserFound) {
                                 workspaceBackup.users[userNum - 1].consent = outputSelectedId === '3';
                                 workspace.users[0].consent = outputSelectedId === '3';
                                 db.update("workspaces", marchWorkspaceId, workspaceBackup, () => {
                                     updateButtonAndSpeak(payload, workspace, dialog);
                                 });
-                            } else if((payload.channel.name === "directmessage" && consentPM) || payload.channel.name !== "directmessage") {
+                            } else if ((payload.channel.name === "directmessage" && consentPM) || payload.channel.name !== "directmessage") {
                                 updateButtonAndSpeak(payload, workspace, dialog);
                             }
                         });
@@ -162,7 +157,7 @@ var resumeConversation = function (payload) {
     }
 };
 
-var route = function (request, response) {
+var route = function(request, response) {
     response.writeHead(200, { "Content-Type": "application/json" });
     let body = "";
     request.on("data", chunk => {
@@ -171,7 +166,7 @@ var route = function (request, response) {
     request.on("end", () => {
         var payload = JSON.parse(parse(body).payload);
         if (payload.type === "interactive_message") {
-            answerSurvey(payload, function (data) {
+            answerSurvey(payload, function(data) {
                 response.write(JSON.stringify(data));
                 response.end();
             });

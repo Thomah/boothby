@@ -5,12 +5,12 @@ const logger = require("./logger.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
 
-var response404 = function (response) {
+var response404 = function(response) {
     response.writeHead(404, { "Content-Type": "application/octet-stream" });
     response.end();
 };
 
-var route = function (request, response) {
+var route = function(request, response) {
     var dialogId;
     var regex_play = /^\/api\/dialogs\/([^/]+)\/play$/;
     var regex_dialogName = /^\/api\/dialogs\/([^/]+)$/;
@@ -20,7 +20,7 @@ var route = function (request, response) {
         // GET : list dialogs
         if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.list("dialogs", { scheduling: -1 }, function (data) {
+            db.list("dialogs", { scheduling: -1 }, function(data) {
                 response.write(JSON.stringify(data));
                 response.end();
             });
@@ -40,7 +40,7 @@ var route = function (request, response) {
                 category: "daily",
                 scheduling: 99999
             };
-            db.insert("dialogs", dialog, function (data) {
+            db.insert("dialogs", dialog, function(data) {
                 response.writeHead(200, { "Content-Type": "application/json" });
                 response.write(JSON.stringify(data));
                 response.end();
@@ -68,7 +68,7 @@ var route = function (request, response) {
         // GET : get a dialog
         if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function (data) {
+            db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function(data) {
                 response.write(JSON.stringify(data));
                 response.end();
             })
@@ -83,7 +83,7 @@ var route = function (request, response) {
             });
             request.on("end", () => {
                 var dialog = JSON.parse(body);
-                db.update("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, dialog, function (data) {
+                db.update("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, dialog, function(data) {
                     response.write(JSON.stringify(data));
                     response.end();
                 });
@@ -93,7 +93,7 @@ var route = function (request, response) {
         // DELETE : delete a dialog
         else if (request.method === "DELETE") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.delete("dialogs", dialogId, function (data) {
+            db.delete("dialogs", dialogId, function(data) {
                 response.write(JSON.stringify(data));
                 response.end();
             })
@@ -111,20 +111,20 @@ var route = function (request, response) {
     }
 };
 
-var resumeDialogs = function () {
-    workspaces.forEach(function (workspace) {
-        db.read("dialogs", { scheduling: parseInt(workspace.progression) }, function (dialog) {
+var resumeDialogs = function() {
+    workspaces.forEach(function(workspace) {
+        db.read("dialogs", { scheduling: parseInt(workspace.progression) }, function(dialog) {
             if (dialog !== null) {
                 playInWorkspace(dialog, workspace);
                 workspace.progression++;
-                db.update("workspaces", {_id: new db.mongodb().ObjectId(workspace._id)}, workspace, () => {});
+                db.update("workspaces", { _id: new db.mongodb().ObjectId(workspace._id) }, workspace, () => {});
             }
         });
     });
 };
 
 var playInWorkspace = function(dialog, workspace) {
-    if(dialog.channel !== "pm_everybody") {
+    if (dialog.channel !== "pm_everybody") {
         speakRecurse(workspace, dialog, "0");
     } else {
         var channelsId = [];
@@ -138,11 +138,11 @@ var playInWorkspace = function(dialog, workspace) {
     }
 }
 
-var playInAllWorkspaces = function (id) {
-    db.read("dialogs", { _id: new db.mongodb().ObjectId(id) }, function (dialog) {
+var playInAllWorkspaces = function(id) {
+    db.read("dialogs", { _id: new db.mongodb().ObjectId(id) }, function(dialog) {
         if (dialog !== null) {
-            workspaces.forEach(function (workspace) {
-                if(dialog.channel !== "pm_everybody") {
+            workspaces.forEach(function(workspace) {
+                if (dialog.channel !== "pm_everybody") {
                     speakRecurse(workspace, dialog, "0");
                 } else {
                     var channelsId = [];
@@ -157,7 +157,7 @@ var playInAllWorkspaces = function (id) {
 };
 
 var speakRecurseInChannels = function(workspace, dialog, channelsId) {
-    if(channelsId.length > 0) {
+    if (channelsId.length > 0) {
         dialog.channelId = channelsId[0];
         speakRecurse(workspace, dialog, "0", () => {
             channelsId.splice(0, 1);
@@ -166,7 +166,7 @@ var speakRecurseInChannels = function(workspace, dialog, channelsId) {
     }
 };
 
-var speakRecurse = function (workspace, dialog, messageId, callback) {
+var speakRecurse = function(workspace, dialog, messageId, callback) {
     var message = dialog.messages[messageId];
     message.dialogId = dialog._id;
     message.messageId = messageId;
@@ -178,7 +178,7 @@ var speakRecurse = function (workspace, dialog, messageId, callback) {
             uploadFilesAndSendMessageInChannels(workspace, dialog, messageId, () => {
                 if (message.outputs.length === 1) {
                     speakRecurse(workspace, dialog, message.outputs[0].id, callback);
-                } else if(callback !== undefined) {
+                } else if (callback !== undefined) {
                     callback();
                 }
             });
@@ -197,7 +197,7 @@ var speakRecurse = function (workspace, dialog, messageId, callback) {
     }, message.wait);
 };
 
-var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId, callback) {
+var uploadFilesAndSendMessageInChannels = function(workspace, dialog, messageId, callback) {
     var message = dialog.messages[messageId];
     message.dialogId = dialog._id;
     message.messageId = messageId;
@@ -233,9 +233,9 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
     }
 }
 
-var uploadFilesAndSendMessage = function (workspace, message, channelId, callback) {
+var uploadFilesAndSendMessage = function(workspace, message, channelId, callback) {
     message.channelId = channelId;
-    uploadFilesOfMessage(workspace, message, 0, function () {
+    uploadFilesOfMessage(workspace, message, 0, function() {
         var conversation = {
             workspaceId: workspace._id,
             channelId: channelId,
@@ -255,16 +255,16 @@ var uploadFilesAndSendMessage = function (workspace, message, channelId, callbac
             workspaceId: workspace._id,
             channelId: channelId,
             dialogId: message.dialogId
-        }, conversation, function () { });
+        }, conversation, function() {});
         slack.postMessage(workspace, channelId, message);
         callback();
     });
 }
 
-var uploadFilesOfMessage = function (workspace, message, attachmentId, callback) {
-    if (message.attachments !== undefined && message.attachments[attachmentId] !== undefined && message.attachments[attachmentId].file_id !== null) {
+var uploadFilesOfMessage = function(workspace, message, attachmentId, callback) {
+    if (message.attachments !== undefined && message.attachments[attachmentId] !== undefined && message.attachments[attachmentId].file_id !== undefined) {
         var attachment = message.attachments[attachmentId];
-        fs.readFile("files/" + attachment.file_id, function (error, content) {
+        fs.readFile("files/" + attachment.file_id, function(error, content) {
             if (!error) {
                 var files = {
                     channels: message.channelId,
