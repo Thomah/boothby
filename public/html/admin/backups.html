@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Accueil</title>
+  <title>Backups</title>
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   <link rel="stylesheet" type="text/css" href="/admin/boothby.css" />
 </head>
@@ -20,22 +20,12 @@
   </p>
   <hr />
   <button id="refresh" onclick="refresh()">Refresh</button>
+  <button onclick="create()">Create</button>
   <hr />
-  <div>
-    <input id="message-workspace" type="text" />
-    <input id="message-channel" type="text" />
-    <input id="message-text" type="text" />
-    <input id="message-send" type="button" value="Send" onclick="sendMessage()" />
-  </div>
-  <hr />
-  <table id="incomming-messages">
+  <table id="backups">
     <thead>
       <tr>
-        <th>Time</th>
-        <th>Team</th>
-        <th>Channel</th>
-        <th>Sender</th>
-        <th>Message</th>
+        <th>Date</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -43,7 +33,7 @@
   </table>
   <script src="auth.js"></script>
   <script src="request.js"></script>
-  <script src="index.js"></script>
+  <script src="backups.js"></script>
 </body>
 
 </html>

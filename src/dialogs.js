@@ -1,5 +1,4 @@
 const fs = require("fs");
-
 const db = require("./db.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
@@ -183,16 +182,18 @@ var speakRecurse = function(workspace, dialog, messageId, callback) {
                 }
             });
         } else {
-            slack
-                .join(workspace, message.channel)
-                .then(res => {
-                    uploadFilesAndSendMessage(workspace, message, res.channel.id, () => {
+            (async() => {
+                try {
+                    const result = await slack.join(workspace, message.channel);
+                    uploadFilesAndSendMessage(workspace, message, result.channel.id, () => {
                         if (message.outputs.length === 1) {
                             speakRecurse(workspace, dialog, message.outputs[0].id);
                         }
                     });
-                })
-                .catch(logger.error);
+                } catch (error) {
+                    logger.error(error);
+                }
+            })();
         }
     }, message.wait);
 };
@@ -274,12 +275,15 @@ var uploadFilesOfMessage = function(workspace, message, attachmentId, callback) 
                     initial_comment: attachment.initial_comment,
                     title: attachment.title
                 };
-                slack.uploadFiles(workspace, files)
-                    .then(() => {
+                (async() => {
+                    try {
+                        await slack.uploadFiles(workspace, files);
                         delete message.attachments[attachmentId];
                         uploadFilesOfMessage(workspace, message, attachmentId + 1, callback);
-                    })
-                    .catch(logger.error);
+                    } catch (error) {
+                        logger.error(error);
+                    }
+                })();
             }
         });
     } else if (message.attachments !== undefined && message.attachments[attachmentId + 1] !== undefined) {

@@ -83,6 +83,15 @@ exports.insert = function (collection, content, callback) {
   });
 };
 
+exports.insertMany = function (collection, content, callback) {
+  dbo.collection(collection).insertMany(content, function (error, result) {
+    if (error) throw error;
+    if(callback !== undefined) {
+      callback(result);
+    }
+  });
+};
+
 exports.list = function (collection, sort, callback) {
   dbo
     .collection(collection)
@@ -90,7 +99,7 @@ exports.list = function (collection, sort, callback) {
     .sort(sort)
     .toArray(function (err, result) {
       if (err) throw err;
-      callback(result);
+      callback(result, collection);
     });
 };
 

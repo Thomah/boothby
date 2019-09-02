@@ -1,5 +1,6 @@
 .travis/id_rsa
 node_modules
 bin/setenv.sh
+files/backups
 package-lock.json
 *.log

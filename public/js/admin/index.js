@@ -1,6 +1,19 @@
 // eslint-disable-next-line no-unused-vars
 function refresh() {
-  listMessages();
+  var textButton = document.getElementById("refresh");
+  overload_xhr(
+    "GET",
+    "/api/messages",
+    function (xhr) {
+      textButton.style["backgroundColor"] = "greenyellow";
+      var json = JSON.parse(xhr.responseText);
+      doc_refreshMessages(json);
+    },
+    function(){},
+    function(){
+      textButton.style["backgroundColor"] = "red";
+    }
+  );
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -40,17 +53,6 @@ var deleteMessage = function deleteMessage() {
     }
   );
 };
-
-function listMessages() {
-  overload_xhr(
-    "GET",
-    "/api/messages",
-    function (xhr) {
-      var json = JSON.parse(xhr.responseText);
-      doc_refreshMessages(json);
-    }
-  );
-}
 
 function doc_refreshMessages(messages) {
   var table = document

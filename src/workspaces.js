@@ -14,16 +14,20 @@ var openIM = function (workspace, members, memberId, callback) {
         callback(workspace);
     } else if (!member.is_bot) {
         setTimeout(function () {
-            slack.openIM(workspace, {
-                user: member.id
-            }).then(slackIMs => {
-                workspace.users.push({
-                    id: member.id,
-                    im_id: slackIMs.channel.id
-                });
-                openIM(workspace, members, memberId + 1, callback);
-            })
-                .catch(logger.error);
+            (async () => {
+                try {
+                    const slackIMs = await slack.openIM(workspace, {
+                        user: member.id
+                    });
+                    workspace.users.push({
+                        id: member.id,
+                        im_id: slackIMs.channel.id
+                    });
+                    openIM(workspace, members, memberId + 1, callback);
+                } catch (error) {
+                    logger.error(error);
+                }
+            })();
         }, 600);
     } else {
         openIM(workspace, members, memberId + 1, callback);
@@ -72,8 +76,10 @@ var forEach = function (callback) {
 };
 
 var reloadUsers = function (workspace) {
-    slack.listUsers(workspace)
-        .then(slackUsers => {
+    (async () => {
+        try {
+            // First API call
+            const slackUsers = await slack.listUsers(workspace);
             workspace.users = [];
             openIM(workspace, slackUsers.members, 0, function () {
                 var workspaceId = workspace._id;
@@ -84,8 +90,10 @@ var reloadUsers = function (workspace) {
                     })
                 });
             });
-        })
-        .catch(logger.error);
+        } catch (error) {
+            logger.error(error);
+        }
+    })();
 }
 
 var route = function (request, response) {
@@ -109,9 +117,13 @@ var route = function (request, response) {
         // DELETE : revoke a workspace token
         else if (request.method === "DELETE") {
             db.read("workspaces", { _id: new db.mongodb().ObjectId(objectId) }, function (workspace) {
-                slack.revokeToken(workspace)
-                    .then(() => { })
-                    .catch(logger.error);
+                (async () => {
+                    try {
+                        await slack.revokeToken(workspace);
+                    } catch (error) {
+                        logger.error(error);
+                    }
+                })();
             });
             db.delete("workspaces", objectId, function () {
                 response.writeHead(200, { "Content-Type": "application/json" });
