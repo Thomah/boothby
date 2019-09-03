@@ -57,13 +57,15 @@ var answerSurvey = function(payload, callback) {
         }
 
         workspaces.forEach(function(workspace) {
-            slack.updateMessage(workspace, {
-                channel: payload.channel.id,
-                text: newMessage.text,
-                link_names: true,
-                ts: payload.message_ts,
-                attachments: newMessage.attachments
-            });
+            if (payload.team.id === workspace.team_id) {
+                slack.updateMessage(workspace, {
+                    channel: payload.channel.id,
+                    text: newMessage.text,
+                    link_names: true,
+                    ts: payload.message_ts,
+                    attachments: newMessage.attachments
+                });
+            }
         });
     });
 };
