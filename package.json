@@ -25,7 +25,7 @@
   },
   "keywords": [],
   "devDependencies": {
-    "eslint": "^5.14.1"
+    "eslint": "^6.6.0"
   },
   "snyk": true
 }
