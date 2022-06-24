@@ -11,7 +11,8 @@ exports.getAccessToken = function(code, callback_end, callback_err) {
   var basicAuth = b.toString('base64');
 
   var postData = querystring.stringify({
-    code: code
+    code: code,
+    redirect_uri: process.env.APP_URL + "/api/oauth"
   });
 
   var options = {
