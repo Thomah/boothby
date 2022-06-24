@@ -4,3 +4,4 @@ bin/setenv.sh
 files/backups
 *.log
 .env
+*.pem

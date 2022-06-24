@@ -10,10 +10,11 @@ const router = require("./router.js");
 const scheduler = require("./scheduler.js");
 const slack = require("./slack.js");
 const users = require("./users.js");
-const workspaces = require("./workspaces.js");
 
-const SSL_KEY_FILE = process.env.BOOTHBY_SSL_KEY_FILE;
-const SSL_CERT_FILE = process.env.BOOTHBY_SSL_CERT_FILE;
+require('dotenv').config();
+
+const SSL_KEY_FILE = process.env.SSL_KEY_FILE;
+const SSL_CERT_FILE = process.env.SSL_CERT_FILE;
 
 function readFiles(dirname, onFileContent, onError) {
   fs.readdir(dirname, function (err, filenames) {
@@ -57,7 +58,7 @@ db.init(function () {
       }
     }
   });
-  workspaces.forEach(slack.initRtm);
+  slack.initApp();
   users.createDefaultUser();
   slack.initJobs();
 });
