@@ -4,18 +4,15 @@
   "description": "A bot to provide tips about how to make our softwares greener",
   "repository": {
     "type": "git",
-    "url": "git://github.com/valeuriad-techlab/Boothby.git"
+    "url": "git://github.com/valeuriad/boothby-core.git"
   },
   "license": "SEE LICENSE IN LICENSE",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "snyk-protect": "snyk protect",
-    "prepublish": "npm run snyk-protect"
+    "start": "node src/index.js"
   },
   "dependencies": {
-    "@slack/rtm-api": "^5.0.1",
-    "@slack/web-api": "^5.0.1",
+    "@slack/bolt": "^3.11.3",
     "bcrypt-nodejs": "0.0.3",
     "formidable": "^1.2.1",
     "mongodb": "3.2.7",
