@@ -63,17 +63,17 @@ function doc_refreshWorkspaces(workspaces) {
 
     // Provider ID
     cell = document.createElement("td");
-    cell.textContent = workspace.team_id;
+    cell.textContent = workspace.team.id;
     newEntry.appendChild(cell);
 
     // Name
     cell = document.createElement("td");
-    cell.textContent = workspace.team_name;
+    cell.textContent = workspace.team.name;
     newEntry.appendChild(cell);
 
     // User ID
     cell = document.createElement("td");
-    cell.textContent = workspace.user_id;
+    cell.textContent = workspace.authed_user.id;
     newEntry.appendChild(cell);
 
     // Progression

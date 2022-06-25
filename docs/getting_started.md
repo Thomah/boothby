@@ -13,7 +13,7 @@
 - Create a MongoDb database named `heroku_lqkdtf3k`. Yes the name is static, it's crap and we'll change that in the future.
 - Run the following commands in a a Git Bash terminal
 ```bash
-git clone https://github.com/valeuriad-techlab/Boothby.git
+git clone https://github.com/valeuriad/boothby-core.git
 cd Boothby
 npm install
 cp bin/setenv.sh.template bin/setenv.sh
@@ -23,8 +23,6 @@ cp bin/setenv.sh.template bin/setenv.sh
 export SLACK_CLIENT_ID=<ask-someone-of-the-team>
 export SLACK_CLIENT_SECRET=<ask-someone-of-the-team>
 export MONGODB_URI=mongodb://localhost:27017/heroku_lqkdtf3k
-export SSL_KEY_FILE=<path-of-key.pem>
-export SSL_CERT_FILE=<path-of-server.crt>
 ```
 
 - Run the app using `node src/index.js`
