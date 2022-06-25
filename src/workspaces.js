@@ -17,7 +17,7 @@ var openIM = function (workspace, members, memberId, callback) {
             (async () => {
                 try {
                     const slackIMs = await slack.openIM(workspace, {
-                        user: member.id
+                        users: member.id
                     });
                     workspace.users.push({
                         id: member.id,
@@ -66,7 +66,7 @@ var forEach = function (callback) {
     db.list("workspaces", {}, function (workspaces) {
         var previous_bot_access_token = [];
         for (var workspaceId in workspaces) {
-            var bot_access_token = workspaces[workspaceId].bot.bot_access_token;
+            var bot_access_token = workspaces[workspaceId].access_token;
             if (previous_bot_access_token.indexOf(bot_access_token) < 0) {
                 callback(workspaces[workspaceId]);
                 previous_bot_access_token.push(bot_access_token);
@@ -94,6 +94,17 @@ var reloadUsers = function (workspace) {
             logger.error(error);
         }
     })();
+}
+
+exports.reload = function(req, res) {
+    var objectId = req.params.id;
+    var id = new db.mongodb().ObjectId(objectId);
+    db.read("workspaces", { _id: id }, function (data) {
+        reloadUsers(data);
+    });
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.write("{}");
+    res.end();
 }
 
 var route = function (request, response) {

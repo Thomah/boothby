@@ -17,7 +17,7 @@ exports.getAccessToken = function(code, callback_end, callback_err) {
 
   var options = {
     host: 'slack.com',
-    path: '/api/oauth.access',
+    path: '/api/oauth.v2.access',
     method: 'POST',
     headers: {
       "Authorization": "Basic " + basicAuth,

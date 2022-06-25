@@ -13,11 +13,26 @@ SLACK_SIGNING_SECRET=<Slack App signing secret>
 APP_URL=<URL of this App>
 ```
 
-#### Run a debug HTTPS server with certificates
+## Open a tunnel to test the app locally
 
-Then run the following commands :
+In a dedicated terminal, launch ngrok :
 
 ```cmd
-mkcert -install
-mkcert localhost
+ngrok http 80
 ```
+
+Take note of the ngrok URL and report the HTTPS URL in the `APP_URL` env variable :
+
+```
+APP_URL=<URL of this App>
+```
+
+Then, run the app in another terminal :
+
+```cmd
+npm start
+```
+
+## Subscribe to Slack events
+
+Go to the `Event Subscriptions` page of the Slack App and define the following URL as Request URL : `<Ngrok URL>/slack/events`

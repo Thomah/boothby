@@ -9,9 +9,15 @@ var response404 = function(response) {
     response.end();
 };
 
+exports.play = function(req, res) {
+    var dialogId = req.params.id;
+    playInAllWorkspaces(dialogId);
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end();
+};
+
 var route = function(request, response) {
     var dialogId;
-    var regex_play = /^\/api\/dialogs\/([^/]+)\/play$/;
     var regex_dialogName = /^\/api\/dialogs\/([^/]+)$/;
 
     // api/dialogs
@@ -50,14 +56,6 @@ var route = function(request, response) {
         else {
             response404(response);
         }
-    }
-
-    // api/dialogs/<id>/play
-    else if (request.url.match(regex_play) !== null) {
-        dialogId = request.url.match(regex_play)[1];
-        playInAllWorkspaces(dialogId);
-        response.writeHead(200, { "Content-Type": "application/json" });
-        response.end();
     }
 
     // api/dialogs/<id>
@@ -184,7 +182,7 @@ var speakRecurse = function(workspace, dialog, messageId, callback) {
         } else {
             (async() => {
                 try {
-                    const result = await slack.join(workspace, message.channel);
+                    const result = await slack.join(workspace, workspace.incoming_webhook.channel_id);
                     uploadFilesAndSendMessage(workspace, message, result.channel.id, () => {
                         if (message.outputs.length === 1) {
                             speakRecurse(workspace, dialog, message.outputs[0].id);
