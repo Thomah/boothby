@@ -4,7 +4,7 @@ function login() {
 
   overload_xhr(
     "POST",
-    "/api/user/login",
+    "/api/users/login",
     function (xhr) {
       var token = JSON.parse(xhr.response)['token'];
       setCookie('token', token, 10);
@@ -25,7 +25,7 @@ function login() {
 function logout() {
   overload_xhr(
     "POST",
-    "/api/user/logout",
+    "/api/users/logout",
     function () {
       setCookie('token', '', 0);//Delete the cookie
       window.location = 'admin/auth.html';
@@ -45,7 +45,7 @@ function add_user() {
 
   overload_xhr(
     "POST",
-    "/api/user",
+    "/api/users",
     function () {
       par_success.style.display = "block";
       par_not_success.style.display = "none";
@@ -78,7 +78,7 @@ if (document.getElementById("password")) {
 function refresh() {
   overload_xhr(
     "GET",
-    "/api/user",
+    "/api/users",
     function (xhr) {
       var json = JSON.parse(xhr.responseText);
       fill_users_table(json);
@@ -104,7 +104,7 @@ function fill_users_table(users) {
   for (userId in users) {
     user = users[userId];
     newEntry = document.createElement("tr");
-    newEntry.id = user._id;
+    newEntry.id = user.id;
 
     //Username
     cell = document.createElement("td");
@@ -137,7 +137,7 @@ var remove_user = function remove_user() {
 
   overload_xhr(
     "DELETE",
-    `/api/user/${row.id}`,
+    `/api/users/${row.id}`,
     function () {
       table.removeChild(row);
       par_error.style.display = "none";

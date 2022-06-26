@@ -1,10 +1,9 @@
 const fs = require("fs");
 const path = require("path");
 
-const api = require("./api.js");
 const backups = require("./backups.js");
 const configs = require("./configs.js");
-const db = require("./mongo.js");
+const mongo = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
 const interactive = require("./interactive.js");
@@ -116,7 +115,7 @@ exports.initRoutes = function (receiver) {
       res.end();
     };
     if (req.query.code != undefined) {
-      api.getAccessToken(req.query.code, function (workspace) {
+      slack.getAccessToken(req.query.code, function (workspace) {
         if (!workspace.ok) {
           response_400(workspace, res);
         } else {
@@ -127,9 +126,9 @@ exports.initRoutes = function (receiver) {
             try {
               const result = await slack.authTest(workspace);
               workspace.bot_id = result.bot_id;
-              db.insert("workspaces", workspace, function (data) {
+              mongo.insert("workspaces", workspace, function (data) {
                 workspace = data.ops[0];
-                db.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
+                mongo.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
                   dialogs.playInWorkspace(dialog, workspace);
                 });
                 workspaces.reloadUsers(workspace);
@@ -145,9 +144,11 @@ exports.initRoutes = function (receiver) {
       response_400("No code provided", res);
     }
   });
-  receiver.router.get('/api/user', (req, res) => users.route(req, res));
-  receiver.router.post('/api/user', (req, res) => users.route(req, res));
-  receiver.router.delete('/api/user/:id', (req, res) => users.route(req, res));
+  receiver.router.get('/api/users', users.list);
+  receiver.router.get('/api/users/login', users.login);
+  receiver.router.get('/api/users/logout', users.logout);
+  receiver.router.post('/api/users', users.create);
+  receiver.router.delete('/api/users/:id', users.delete);
   receiver.router.get('/api/workspaces', (req, res) => workspaces.route(req, res));
   receiver.router.get('/api/workspaces/:id', (req, res) => workspaces.route(req, res));
   receiver.router.post('/api/workspaces/:id/reload', (req, res) => workspaces.reload(req, res));

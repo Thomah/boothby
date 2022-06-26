@@ -1,5 +1,5 @@
 const fs = require("fs");
-const db = require("./mongo.js");
+const mongo = require("./mongo.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
@@ -25,7 +25,7 @@ var route = function(request, response) {
         // GET : list dialogs
         if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.list("dialogs", { scheduling: -1 }, function(data) {
+            mongo.list("dialogs", { scheduling: -1 }, function(data) {
                 response.write(JSON.stringify(data));
                 response.end();
             });
@@ -45,7 +45,7 @@ var route = function(request, response) {
                 category: "daily",
                 scheduling: 99999
             };
-            db.insert("dialogs", dialog, function(data) {
+            mongo.insert("dialogs", dialog, function(data) {
                 response.writeHead(200, { "Content-Type": "application/json" });
                 response.write(JSON.stringify(data));
                 response.end();
@@ -65,7 +65,7 @@ var route = function(request, response) {
         // GET : get a dialog
         if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function(data) {
+            mongo.read("dialogs", { _id: new mongo.mongodb().ObjectId(dialogId) }, function(data) {
                 response.write(JSON.stringify(data));
                 response.end();
             })
@@ -80,7 +80,7 @@ var route = function(request, response) {
             });
             request.on("end", () => {
                 var dialog = JSON.parse(body);
-                db.update("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, dialog, function(data) {
+                mongo.update("dialogs", { _id: new mongo.mongodb().ObjectId(dialogId) }, dialog, function(data) {
                     response.write(JSON.stringify(data));
                     response.end();
                 });
@@ -90,7 +90,7 @@ var route = function(request, response) {
         // DELETE : delete a dialog
         else if (request.method === "DELETE") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.delete("dialogs", dialogId, function(data) {
+            mongo.delete("dialogs", dialogId, function(data) {
                 response.write(JSON.stringify(data));
                 response.end();
             })
@@ -110,11 +110,11 @@ var route = function(request, response) {
 
 var resumeDialogs = function() {
     workspaces.forEach(function(workspace) {
-        db.read("dialogs", { scheduling: parseInt(workspace.progression) }, function(dialog) {
+        mongo.read("dialogs", { scheduling: parseInt(workspace.progression) }, function(dialog) {
             if (dialog !== null) {
                 playInWorkspace(dialog, workspace);
                 workspace.progression++;
-                db.update("workspaces", { _id: new db.mongodb().ObjectId(workspace._id) }, workspace, () => {});
+                mongo.update("workspaces", { _id: new mongo.mongodb().ObjectId(workspace._id) }, workspace, () => {});
             }
         });
     });
@@ -136,7 +136,7 @@ var playInWorkspace = function(dialog, workspace) {
 }
 
 var playInAllWorkspaces = function(id) {
-    db.read("dialogs", { _id: new db.mongodb().ObjectId(id) }, function(dialog) {
+    mongo.read("dialogs", { _id: new mongo.mongodb().ObjectId(id) }, function(dialog) {
         if (dialog !== null) {
             workspaces.forEach(function(workspace) {
                 if (dialog.channel !== "pm_everybody") {
@@ -252,7 +252,7 @@ var uploadFilesAndSendMessage = function(workspace, message, channelId, callback
                 conversation.status = "ended";
             }
         }
-        db.upsert("conversations", {
+        mongo.upsert("conversations", {
             workspaceId: workspace._id,
             channelId: channelId,
             dialogId: message.dialogId

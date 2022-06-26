@@ -1,5 +1,5 @@
 const fs = require("fs");
-const db = require("./mongo.js");
+const mongo = require("./mongo.js");
 const logger = require("./logger.js");
 
 const collections = ['conversations', 'configs', 'dialogs', 'files', 'messages', 'surveys', 'user', 'workspaces'];
@@ -14,7 +14,7 @@ var backup = function() {
     const path = 'files/backups/' + now.getFullYear() + '-' + now.getMonth() + '-' + now.getDate() + '-' + now.getHours() + now.getMinutes() + now.getSeconds();
     for(var collectionNum in collections) {
         var collection = collections[collectionNum];
-        db.list(collection, {_id: 1}, function(result, collection) {
+        mongo.list(collection, {_id: 1}, function(result, collection) {
             const file = path + '/' + collection + '.json'
             fs.mkdir(path, { recursive: true }, (err) => {
                 if (err && err.code !== 'EEXIST') throw err;

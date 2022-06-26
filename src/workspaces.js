@@ -1,4 +1,4 @@
-const db = require("./mongo.js");
+const mongo = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
@@ -64,7 +64,7 @@ var getUsersByChannelId = function (workspace, channelId) {
 };
 
 var forEach = function (callback) {
-    db.list("workspaces", {}, function (workspaces) {
+    mongo.list("workspaces", {}, function (workspaces) {
         var previous_bot_access_token = [];
         for (var workspaceId in workspaces) {
             var bot_access_token = workspaces[workspaceId].access_token;
@@ -84,9 +84,9 @@ var reloadUsers = function (workspace) {
             workspace.users = [];
             openIM(workspace, slackUsers.members, 0, function () {
                 var workspaceId = workspace._id;
-                db.update("workspaces", { _id: new db.mongodb().ObjectId(workspace._id) }, workspace, function () {
+                mongo.update("workspaces", { _id: new mongo.mongodb().ObjectId(workspace._id) }, workspace, function () {
                     workspace._id = workspaceId;
-                    db.read("dialogs", { name: "Consent PM" }, function (dialog) {
+                    mongo.read("dialogs", { name: "Consent PM" }, function (dialog) {
                         dialogs.playInWorkspace(dialog, workspace);
                     })
                 });
@@ -99,8 +99,8 @@ var reloadUsers = function (workspace) {
 
 exports.reload = function(req, res) {
     var objectId = req.params.id;
-    var id = new db.mongodb().ObjectId(objectId);
-    db.read("workspaces", { _id: id }, function (data) {
+    var id = new mongo.mongodb().ObjectId(objectId);
+    mongo.read("workspaces", { _id: id }, function (data) {
         reloadUsers(data);
     });
     res.writeHead(200, { "Content-Type": "application/json" });
@@ -120,7 +120,7 @@ var route = function (request, response) {
         // GET : Detail of workspace
         if (request.method === "GET") {
             response.writeHead(200, { "Content-Type": "application/json" });
-            db.read("workspaces", { _id: new db.mongodb().ObjectId(objectId) }, function (data) {
+            mongo.read("workspaces", { _id: new mongo.mongodb().ObjectId(objectId) }, function (data) {
                 response.write(JSON.stringify(data));
                 response.end();
             });
@@ -128,7 +128,7 @@ var route = function (request, response) {
 
         // DELETE : revoke a workspace token
         else if (request.method === "DELETE") {
-            db.read("workspaces", { _id: new db.mongodb().ObjectId(objectId) }, function (workspace) {
+            mongo.read("workspaces", { _id: new mongo.mongodb().ObjectId(objectId) }, function (workspace) {
                 (async () => {
                     try {
                         await slack.revokeToken(workspace);
@@ -137,7 +137,7 @@ var route = function (request, response) {
                     }
                 })();
             });
-            db.delete("workspaces", objectId, function () {
+            mongo.delete("workspaces", objectId, function () {
                 response.writeHead(200, { "Content-Type": "application/json" });
                 response.end();
             });
@@ -150,8 +150,8 @@ var route = function (request, response) {
 
     else if (request.url.match(regex_workspaceIdReload) !== null) {
         objectId = request.url.match(regex_workspaceIdReload)[1];
-        var id = new db.mongodb().ObjectId(objectId);
-        db.read("workspaces", { _id: id }, function (data) {
+        var id = new mongo.mongodb().ObjectId(objectId);
+        mongo.read("workspaces", { _id: id }, function (data) {
             reloadUsers(data);
         });
         response.writeHead(200, { "Content-Type": "application/json" });
@@ -162,7 +162,7 @@ var route = function (request, response) {
     // GET : retrieve workspaces
     else if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        db.list("workspaces", {}, function (data) {
+        mongo.list("workspaces", {}, function (data) {
             response.write(JSON.stringify(data));
             response.end();
         });
