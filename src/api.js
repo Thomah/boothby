@@ -1,6 +1,6 @@
 const https = require("https");
 var querystring = require("querystring");
-const db = require("./db.js");
+const db = require("./mongo.js");
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;

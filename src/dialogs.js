@@ -1,5 +1,5 @@
 const fs = require("fs");
-const db = require("./db.js");
+const db = require("./mongo.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");

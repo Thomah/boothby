@@ -2,6 +2,7 @@ const fs = require("fs");
 
 var log = function (message) {
     message = '[' + new Date().toLocaleString("FR", { timeZone: 'Europe/Paris' }) + '] ' + message;
+    // eslint-disable-next-line no-console
     console.log(message);
     fs.appendFile('console.log', message + '\n', function (err) {
         if (err) throw err;

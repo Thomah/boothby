@@ -1,7 +1,7 @@
 const fs = require("fs");
 var formidable = require('formidable');
 
-const db = require("./db.js");
+const db = require("./mongo.js");
 
 var response404 = function (response) {
   response.writeHead(404, { "Content-Type": "application/octet-stream" });

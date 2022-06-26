@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt-nodejs');
 const NodeCache = require("node-cache");
 
 const api = require("./api.js");
-const db = require("./db.js");
+const db = require("./mongo.js");
 const logger = require("./logger.js");
 
 var myCache;
