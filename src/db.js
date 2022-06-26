@@ -38,6 +38,10 @@ exports.read = function(collection, match, callback) {
   });
 };
 
+exports.readSync = async function(collection, match) {
+  return dbo.collection(collection).findOne(match);
+};
+
 exports.update = function (collection, condition, content, callback) {
   delete content._id;
   dbo

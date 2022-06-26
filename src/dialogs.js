@@ -144,7 +144,9 @@ var playInAllWorkspaces = function(id) {
                 } else {
                     var channelsId = [];
                     for (var userId in workspace.users) {
-                        channelsId.push(workspace.users[userId].im_id);
+                        if(!workspace.users[userId].deleted) {
+                            channelsId.push(workspace.users[userId].im_id);
+                        }
                     }
                     speakRecurseInChannels(workspace, dialog, channelsId);
                 }
