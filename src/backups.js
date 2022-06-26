@@ -1,5 +1,5 @@
 const fs = require("fs");
-const db = require("./db.js");
+const db = require("./mongo.js");
 const logger = require("./logger.js");
 
 const collections = ['conversations', 'configs', 'dialogs', 'files', 'messages', 'surveys', 'user', 'workspaces'];

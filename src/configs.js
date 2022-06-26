@@ -1,4 +1,4 @@
-const db = require("./db.js");
+const db = require("./mongo.js");
 const scheduler = require("./scheduler.js");
 
 var init = function() {

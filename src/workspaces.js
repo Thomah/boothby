@@ -1,4 +1,4 @@
-const db = require("./db.js");
+const db = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");

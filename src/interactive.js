@@ -1,6 +1,6 @@
 const { parse } = require("querystring");
 
-const db = require("./db.js");
+const db = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");

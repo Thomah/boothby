@@ -1,5 +1,5 @@
 const { parse } = require("querystring");
-const db = require("./db.js");
+const db = require("./mongo.js");
 const slack = require("./slack.js");
 
 var response404 = function (response) {

@@ -3,7 +3,7 @@ const { App, ExpressReceiver, LogLevel } = require('@slack/bolt');
 
 const backups = require("./backups.js");
 const configs = require("./configs.js");
-const db = require("./db.js");
+const db = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
 const router = require("./router.js");
