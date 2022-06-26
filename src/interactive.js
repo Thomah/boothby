@@ -1,22 +1,22 @@
 const { parse } = require("querystring");
 
-const db = require("./mongo.js");
+const mongo = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
 
 var answerSurvey = function(payload, callback) {
     var splitActionValue = payload.actions[0].value.split("-");
-    db.read("dialogs", { _id: new db.mongodb().ObjectId(splitActionValue[0]) }, function(data) {
+    mongo.read("dialogs", { _id: new mongo.mongodb().ObjectId(splitActionValue[0]) }, function(data) {
         callback(data.messages[splitActionValue[1]]);
     });
 
-    db.read("surveys", { name: payload.actions[0].name }, function(data) {
+    mongo.read("surveys", { name: payload.actions[0].name }, function(data) {
         var newMessage = payload.original_message;
         if (data === null) {
             data = {};
             data.name = payload.actions[0].name;
-            db.insert("surveys", data);
+            mongo.insert("surveys", data);
         }
         if (data.texts === undefined) {
             data.texts = {};
@@ -49,7 +49,7 @@ var answerSurvey = function(payload, callback) {
             data.values[data.users[payload.user.id]]--;
             data.users[payload.user.id] = undefined;
         }
-        db.updateByName("surveys", payload.actions[0].name, data);
+        mongo.updateByName("surveys", payload.actions[0].name, data);
 
         for (var id in data.texts) {
             newMessage.attachments[0].actions[data.actions[id]].text =
@@ -77,7 +77,7 @@ var updateButtonAndSpeak = function(payload, workspace, dialog) {
     var channelId = actionValueSplit[1];
     var outputSelectedId = actionValueSplit[4];
 
-    db.insert("messages", {
+    mongo.insert("messages", {
         ts: payload.actions[0].action_ts,
         user: payload.user.id,
         channel: channelId,
@@ -107,10 +107,10 @@ var resumeConversation = function(payload) {
         var dialogId = actionValueSplit[2];
         var messageId = actionValueSplit[3];
         var outputSelectedId = actionValueSplit[4];
-        db.read("conversations", {
-            workspaceId: new db.mongodb().ObjectId(workspaceId),
+        mongo.read("conversations", {
+            workspaceId: new mongo.mongodb().ObjectId(workspaceId),
             channelId: channelId,
-            dialogId: new db.mongodb().ObjectId(dialogId)
+            dialogId: new mongo.mongodb().ObjectId(dialogId)
         }, function(conversation) {
             if (conversation.lastMessageId === messageId) {
                 var isValidOutput = false;
@@ -118,10 +118,10 @@ var resumeConversation = function(payload) {
                     isValidOutput |= outputSelectedId === conversation.outputs[outputNum].id;
                 }
                 if (isValidOutput) {
-                    var marchWorkspaceId = { _id: new db.mongodb().ObjectId(workspaceId) };
-                    db.read("workspaces", marchWorkspaceId, function(workspace) {
+                    var marchWorkspaceId = { _id: new mongo.mongodb().ObjectId(workspaceId) };
+                    mongo.read("workspaces", marchWorkspaceId, function(workspace) {
                         var workspaceBackup = JSON.parse(JSON.stringify(workspace));
-                        db.read("dialogs", { _id: new db.mongodb().ObjectId(dialogId) }, function(dialog) {
+                        mongo.read("dialogs", { _id: new mongo.mongodb().ObjectId(dialogId) }, function(dialog) {
                             var numUserFound = false;
                             var consentPM = false;
                             if (payload.channel.name === "directmessage") {
@@ -140,7 +140,7 @@ var resumeConversation = function(payload) {
                             if (dialog.name === "Consent PM" && numUserFound) {
                                 workspaceBackup.users[userNum - 1].consent = outputSelectedId === '3';
                                 workspace.users[0].consent = outputSelectedId === '3';
-                                db.update("workspaces", marchWorkspaceId, workspaceBackup, () => {
+                                mongo.update("workspaces", marchWorkspaceId, workspaceBackup, () => {
                                     updateButtonAndSpeak(payload, workspace, dialog);
                                 });
                             } else if ((payload.channel.name === "directmessage" && consentPM) || payload.channel.name !== "directmessage") {

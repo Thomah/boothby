@@ -1,36 +1,94 @@
+const https = require("https");
 const schedule = require("node-schedule");
+const querystring = require("querystring");
 const logger = require("./logger.js");
+
+const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
+const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
 
 let app
 
-var initJobs = function () {
+exports.setApp = function(newApp) {
+    app = newApp;
+}
+
+exports.initJobs = function () {
     schedule.scheduleJob("* * * * * *", postShift);
     schedule.scheduleJob("*/2 * * * * *", updateShift);
 };
 
-var setApp = function(newApp) {
-    app = newApp;
+exports.getAccessToken = function(code, callback_end, callback_err) {
+
+  var b = new Buffer.from(SLACK_CLIENT_ID + ":" + SLACK_CLIENT_SECRET);
+  var basicAuth = b.toString('base64');
+
+  var postData = querystring.stringify({
+    code: code,
+    redirect_uri: process.env.APP_URL + "/api/oauth"
+  });
+
+  var options = {
+    host: 'slack.com',
+    path: '/api/oauth.v2.access',
+    method: 'POST',
+    headers: {
+      "Authorization": "Basic " + basicAuth,
+      "Content-Type": 'application/x-www-form-urlencoded'
+    }
+  };
+
+  var req = https.request(options, function(response) {
+    var str = ''
+    response.on('data', function (chunk) {
+      str += chunk;
+    });
+
+    response.on('end', function () {
+      callback_end(JSON.parse(str));
+    });
+  });
+  
+  req.on('error', function (err) {
+    callback_err(JSON.parse(err));
+  });
+ 
+  req.write(postData);
+  req.end();
 }
 
-var authTest = function (workspace) {
+exports.authTest = function (workspace) {
     return app.client.auth.test({ token: workspace.access_token });
 };
 
-var join = function (workspace, channelId) {
+exports.join = function (workspace, channelId) {
     return app.client.conversations.join({ token: workspace.access_token, channel: channelId });
 };
 
-var listUsers = function (workspace) {
+exports.listUsers = function (workspace) {
     return app.client.users.list({ token: workspace.access_token });
 };
 
-var openIM = function (workspace, params) {
+exports.openIM = function (workspace, params) {
     params.token = workspace.access_token;
     return app.client.conversations.open(params);
 }
 
+exports.revokeToken = function (workspace) {
+    return app.client.auth.revoke(workspace.access_token);
+};
+
+exports.sendSimpleMessage = function (workspace, channelId, message) {
+    var content = { text: message };
+    postMessage(workspace, channelId, content);
+};
+
+exports.uploadFiles = function (workspace, files) {
+    files.token = workspace.access_token;
+    return app.client.files.upload(files);
+};
+
 var postQueue = [];
-var postMessage = function (workspace, channelId, content) {
+exports.postMessage = function (workspace, channelId, content) {
     if (content.text !== undefined) {
         postQueue.push({
             token: workspace.access_token,
@@ -68,17 +126,8 @@ var postShift = function () {
     }
 };
 
-var revokeToken = function (workspace) {
-    return app.client.auth.revoke(workspace.access_token);
-};
-
-var sendSimpleMessage = function (workspace, channelId, message) {
-    var content = { text: message };
-    postMessage(workspace, channelId, content);
-};
-
 var updateQueue = [];
-var updateMessage = function (workspace, message) {
+exports.updateMessage = function (workspace, message) {
     updateQueue.push({
         token: workspace.access_token,
         message: message
@@ -97,20 +146,3 @@ var updateShift = function () {
         })(app);
     }
 };
-
-var uploadFiles = function (workspace, files) {
-    files.token = workspace.access_token;
-    return app.client.files.upload(files);
-};
-
-exports.setApp = setApp;
-exports.initJobs = initJobs;
-exports.authTest = authTest;
-exports.join = join;
-exports.listUsers = listUsers;
-exports.openIM = openIM;
-exports.postMessage = postMessage;
-exports.revokeToken = revokeToken;
-exports.sendSimpleMessage = sendSimpleMessage;
-exports.updateMessage = updateMessage;
-exports.uploadFiles = uploadFiles;

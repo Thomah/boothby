@@ -1,19 +1,19 @@
-const db = require("./mongo.js");
+const mongo = require("./mongo.js");
 const scheduler = require("./scheduler.js");
 
 var init = function() {
-    db.read("configs", {name: "dialog-publish"}, function(config) {
+    mongo.read("configs", {name: "dialog-publish"}, function(config) {
         if(config === null) {
-            db.insert("configs", {
+            mongo.insert("configs", {
                 name: "dialog-publish",
                 cron: "42 9 * * 2,4",
                 active: true
             }, () => {});
         }
     });
-    db.read("configs", {name: "dialog-publish"}, function(config) {
+    mongo.read("configs", {name: "dialog-publish"}, function(config) {
         if(config === null) {
-            db.insert("configs", {
+            mongo.insert("configs", {
                 name: "backup",
                 cron: "0 17 * * *",
                 active: true
@@ -23,7 +23,7 @@ var init = function() {
 };
 
 var get = function(callback) {
-    db.list("configs", {_id: 1}, function(configs) {
+    mongo.list("configs", {_id: 1}, function(configs) {
         for(var configNum in configs) {
             configs[configNum].nextInvocation = scheduler.nextInvocation(configs[configNum]);
         }
@@ -53,7 +53,7 @@ var route = function (request, response) {
         var configs = JSON.parse(body);
         for(var configNum in configs) {
           var config = configs[configNum];
-          db.update("configs", { name: config.name }, config, () => {});
+          mongo.update("configs", { name: config.name }, config, () => {});
           scheduler.reschedule(config);
         }
         response.write(JSON.stringify({}));

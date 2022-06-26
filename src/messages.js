@@ -1,5 +1,5 @@
 const { parse } = require("querystring");
-const db = require("./mongo.js");
+const mongo = require("./mongo.js");
 const slack = require("./slack.js");
 
 var response404 = function (response) {
@@ -12,7 +12,7 @@ var route = function (request, response) {
     // GET : retrieve messages
     if (request.method === "GET") {
         response.writeHead(200, { "Content-Type": "application/json" });
-        db.list("messages", { ts: 1 }, function (data) {
+        mongo.list("messages", { ts: 1 }, function (data) {
             response.write(JSON.stringify(data));
             response.end();
         });
@@ -23,7 +23,7 @@ var route = function (request, response) {
         var regex_delete = /^\/api\/messages\/([^/]+)\/?$/;
         if (request.url.match(regex_delete) !== null) {
             var objectId = request.url.match(regex_delete)[1];
-            db.delete("messages", objectId, function () {
+            mongo.delete("messages", objectId, function () {
                 response.writeHead(200, { "Content-Type": "application/json" });
                 response.end();
             });
@@ -41,7 +41,7 @@ var route = function (request, response) {
             });
             request.on("end", () => {
                 var parsedBody = parse(body);
-                db.read("workspaces", {team_id: parsedBody.workspace}, function(workspace) {
+                mongo.read("workspaces", {team_id: parsedBody.workspace}, function(workspace) {
                     slack.sendSimpleMessage(workspace, parsedBody.channel, parsedBody.message);
                 });
             });

@@ -1,7 +1,7 @@
 const fs = require("fs");
 var formidable = require('formidable');
 
-const db = require("./mongo.js");
+const mongo = require("./mongo.js");
 
 var response404 = function (response) {
   response.writeHead(404, { "Content-Type": "application/octet-stream" });
@@ -20,7 +20,7 @@ var route = function (request, response) {
         name: request.headers.filename,
         type: files.file.type
       };
-      db.insert('files', fileInDb, function (data) {
+      mongo.insert('files', fileInDb, function (data) {
         fs.mkdir('files', { recursive: true }, (err) => {
           if (err && err.code !== 'EEXIST') throw err;
           fs.copyFile(files.file.path, 'files/' + data.insertedId, function (err) {
@@ -36,7 +36,7 @@ var route = function (request, response) {
   // /api/files/<id>
   else if (request.url.match(regex_fileId) !== null) {
     var fileId = request.url.match(regex_fileId)[1];
-    db.read("files", { _id: new db.mongodb().ObjectId(fileId) }, function(data) {
+    mongo.read("files", { _id: new mongo.mongodb().ObjectId(fileId) }, function(data) {
       fs.readFile("files/" + fileId, function (error, content) {
         if (error) {
           if (error.code === "ENOENT") {
