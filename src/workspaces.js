@@ -21,7 +21,8 @@ var openIM = function (workspace, members, memberId, callback) {
                     });
                     workspace.users.push({
                         id: member.id,
-                        im_id: slackIMs.channel.id
+                        im_id: slackIMs.channel.id,
+                        deleted: member.deleted
                     });
                     openIM(workspace, members, memberId + 1, callback);
                 } catch (error) {

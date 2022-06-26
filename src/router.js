@@ -71,8 +71,17 @@ var serveFile = function (req, res) {
   });
 };
 
-var unhandledRequestHandler = function(args) {
-  logger.log(args)
+var unhandledRequestHandler = function() {
+  logger.log('Acknowledging this incoming request because 2 seconds already passed...');
+  return true;
+};
+
+var processEventErrorHandler = function({ error, logger, response }) {
+  logger.error(`processEvent error: ${error}`);
+  // acknowledge it anyway!
+  response.writeHead(200);
+  response.end();
+  return true;
 };
 
 exports.initRoutes = function (receiver) {
@@ -99,7 +108,7 @@ exports.initRoutes = function (receiver) {
   });
   receiver.router.get('/api/messages', (req, res) => messages.route(req, res));
   receiver.router.post('/api/messages', (req, res) => messages.route(req, res));
-  receiver.router.delete('/api/messages', (req, res) => messages.route(req, res));
+  receiver.router.delete('/api/messages/:id', (req, res) => messages.route(req, res));
   receiver.router.get('/api/oauth', (req, res) => {
     var response_400 = function (err, res) {
       res.writeHead(400, { "Content-Type": "application/json" });
@@ -157,4 +166,5 @@ exports.initRoutes = function (receiver) {
 
   // Slack
   receiver.unhandledRequestHandler = unhandledRequestHandler;
+  receiver.processEventErrorHandler = processEventErrorHandler;
 };

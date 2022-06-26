@@ -33,6 +33,8 @@ Then, run the app in another terminal :
 npm start
 ```
 
-## Subscribe to Slack events
+## Configure Slack with Ngrok
 
-Go to the `Event Subscriptions` page of the Slack App and define the following URL as Request URL : `<Ngrok URL>/slack/events`
+In the Slack App, navigate to :
+- `OAuth & Permissions` : set the Redirect URLs as `<NGrok URL>`
+- `Event Subscriptions` : set the Request URL as `<Ngrok URL>/slack/events`
