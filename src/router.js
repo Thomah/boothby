@@ -3,13 +3,11 @@ const path = require("path");
 
 const backups = require("./backups.js");
 const configs = require("./configs.js");
-const mongo = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
 const interactive = require("./interactive.js");
 const logger = require("./logger.js");
 const messages = require("./messages.js");
-const slack = require("./slack.js");
 const users = require("./users.js");
 const workspaces = require("./workspaces.js");
 
@@ -19,7 +17,8 @@ const resourceFolder = {
   ".js": "./public/js",
   ".ico": "./public/img",
   ".png": "./public/img",
-  ".jpg": "./public/img"
+  ".jpg": "./public/img",
+  ".xsd": "./public/xsd"
 };
 
 const mimeTypes = {
@@ -28,7 +27,8 @@ const mimeTypes = {
   ".css": "text/css",
   ".ico": "image/x-icon",
   ".png": "image/png",
-  ".jpg": "image/jpg"
+  ".jpg": "image/jpg",
+  ".xsd": "text/xml"
 };
 
 var getFilePath = function (request) {
@@ -94,7 +94,7 @@ exports.initRoutes = function (receiver) {
   receiver.router.get('/api/dialogs/:id/play', (req, res) => dialogs.play(req, res));
   receiver.router.post('/api/dialogs', (req, res) => dialogs.route(req, res));
   receiver.router.delete('/api/dialogs', (req, res) => dialogs.route(req, res));
-  receiver.router.get('/api/files', (req, res) => files.route(req, res));
+  receiver.router.get('/api/files/*', (req, res) => files.route(req, res));
   receiver.router.post('/api/files', (req, res) => files.route(req, res));
   receiver.router.get('/api/interactive', (req, res) => interactive.route(req, res));
   receiver.router.get('/api/links', (req, res) => {
@@ -108,51 +108,17 @@ exports.initRoutes = function (receiver) {
   receiver.router.get('/api/messages', (req, res) => messages.route(req, res));
   receiver.router.post('/api/messages', (req, res) => messages.route(req, res));
   receiver.router.delete('/api/messages/:id', (req, res) => messages.route(req, res));
-  receiver.router.get('/api/oauth', (req, res) => {
-    var response_400 = function (err, res) {
-      res.writeHead(400, { "Content-Type": "application/json" });
-      res.write(JSON.stringify(err));
-      res.end();
-    };
-    if (req.query.code != undefined) {
-      slack.getAccessToken(req.query.code, function (workspace) {
-        if (!workspace.ok) {
-          response_400(workspace, res);
-        } else {
-          logger.log("Workspace : " + workspace);
-          workspace.team_id = workspace.team.id;
-          workspace.progression = 1;
-          (async () => {
-            try {
-              const result = await slack.authTest(workspace);
-              workspace.bot_id = result.bot_id;
-              mongo.insert("workspaces", workspace, function (data) {
-                workspace = data.ops[0];
-                mongo.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
-                  dialogs.playInWorkspace(dialog, workspace);
-                });
-                workspaces.reloadUsers(workspace);
-                res.redirect(302, '/?installed=1')
-              })
-            } catch (error) {
-              logger.error(error);
-            }
-          })();
-        }
-      }, response_400);
-    } else {
-      response_400("No code provided", res);
-    }
-  });
+  receiver.router.get('/api/oauth', workspaces.create);
   receiver.router.get('/api/users', users.list);
   receiver.router.get('/api/users/login', users.login);
   receiver.router.get('/api/users/logout', users.logout);
   receiver.router.post('/api/users', users.create);
   receiver.router.delete('/api/users/:id', users.delete);
-  receiver.router.get('/api/workspaces', (req, res) => workspaces.route(req, res));
-  receiver.router.get('/api/workspaces/:id', (req, res) => workspaces.route(req, res));
-  receiver.router.post('/api/workspaces/:id/reload', (req, res) => workspaces.reload(req, res));
-  receiver.router.delete('/api/workspaces/:id', (req, res) => workspaces.route(req, res));
+  receiver.router.get('/api/workspaces', workspaces.list);
+  receiver.router.get('/api/workspaces/:id', workspaces.get);
+  receiver.router.get('/api/workspaces/:id/users', workspaces.getSlackUsers);
+  receiver.router.post('/api/workspaces/:id/users', workspaces.reloadSlackUsers);
+  receiver.router.delete('/api/workspaces/:id', workspaces.delete);
 
   // Static files
   receiver.router.get('/favicon.ico', (req, res) => serveFile(req, res));
