@@ -59,21 +59,21 @@ function doc_refreshWorkspaces(workspaces) {
   for (workspaceId in workspaces) {
     workspace = workspaces[workspaceId];
     newEntry = document.createElement("tr");
-    newEntry.id = workspace._id;
+    newEntry.id = workspace.id;
 
     // Provider ID
     cell = document.createElement("td");
-    cell.textContent = workspace.team.id;
+    cell.textContent = workspace.team_id;
     newEntry.appendChild(cell);
 
     // Name
     cell = document.createElement("td");
-    cell.textContent = workspace.team.name;
+    cell.textContent = workspace.team_name;
     newEntry.appendChild(cell);
 
-    // User ID
+    // Channel
     cell = document.createElement("td");
-    cell.textContent = workspace.authed_user.id;
+    cell.textContent = workspace.incoming_webhook_channel;
     newEntry.appendChild(cell);
 
     // Progression

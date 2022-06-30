@@ -5,11 +5,11 @@ function refresh() {
   var textButton = document.getElementById("refresh");
   overload_xhr(
     "GET", 
-    `/api/workspaces/${id}`,
+    `/api/workspaces/${id}/users`,
     function(xhr){
       textButton.style["backgroundColor"] = "greenyellow";
       var json = JSON.parse(xhr.responseText);
-      doc_refresh(json.users);
+      doc_refresh(json);
     },
     function(){},
     function(){
@@ -25,7 +25,7 @@ function reload() {
   var textButton = document.getElementById("reload");
   overload_xhr(
     "POST", 
-    `/api/workspaces/${id}/reload`,
+    `/api/workspaces/${id}/users`,
     function(){
       textButton.style["backgroundColor"] = "greenyellow";
     },
@@ -59,7 +59,7 @@ function doc_refresh(elements) {
 
     // Provider ID
     cell = document.createElement("td");
-    cell.textContent = element.id;
+    cell.textContent = element.slack_id;
     newEntry.appendChild(cell);
 
     // IM ID
