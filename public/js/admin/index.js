@@ -24,7 +24,7 @@ function sendMessage() {
 
   overload_xhr(
     "POST",
-    "/api/messages/send",
+    "/api/messages",
     function (xhr) {
       var json = JSON.parse(xhr.responseText);
       doc_refreshMessages(json);
@@ -79,7 +79,7 @@ function doc_refreshMessages(messages) {
 
     // Workspace
     cell = document.createElement("td");
-    cell.textContent = message.team;
+    cell.textContent = message.team_slack;
     row.appendChild(cell);
 
     // Channel
@@ -89,12 +89,12 @@ function doc_refreshMessages(messages) {
 
     // User
     cell = document.createElement("td");
-    cell.textContent = message.user;
+    cell.textContent = message.user_slack;
     row.appendChild(cell);
 
     // Text
     cell = document.createElement("td");
-    cell.textContent = message.text;
+    cell.textContent = message.text_slack;
     row.appendChild(cell);
 
     // Actions
@@ -102,7 +102,7 @@ function doc_refreshMessages(messages) {
     cellSpan = document.createElement("span");
     button = document.createElement("button");
     button.appendChild(document.createTextNode("Delete"));
-    button.id = message._id;
+    button.id = message.id;
     button.onclick = deleteMessage;
     cellSpan.appendChild(button);
     cell.appendChild(cellSpan);

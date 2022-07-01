@@ -36,5 +36,6 @@ npm start
 ## Configure Slack with Ngrok
 
 In the Slack App, navigate to :
+- `Interactivity & Shortcuts` : set the Request URL as `<Ngrok URL>/api/interactive`
 - `OAuth & Permissions` : set the Redirect URLs as `<NGrok URL>`
 - `Event Subscriptions` : set the Request URL as `<Ngrok URL>/slack/events`

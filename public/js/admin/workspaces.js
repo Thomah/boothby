@@ -61,6 +61,11 @@ function doc_refreshWorkspaces(workspaces) {
     newEntry = document.createElement("tr");
     newEntry.id = workspace.id;
 
+    // ID
+    cell = document.createElement("td");
+    cell.textContent = workspace.id;
+    newEntry.appendChild(cell);
+
     // Provider ID
     cell = document.createElement("td");
     cell.textContent = workspace.team_id;

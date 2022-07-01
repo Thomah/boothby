@@ -26,7 +26,28 @@ exports.initCache = function () {
     myCache = new NodeCache({ stdTTL: ttlCache });
 };
 
-exports.login = function (req, res) {
+exports.createDefaultUser = async function () {
+    bcrypt.hash(ADMIN_PASSWORD, null, null, function (err, hash) {
+        var credentials = {
+            'username': ADMIN_USERNAME,
+            'password': hash
+        };
+        db.querySync('SELECT username FROM users WHERE username = $1', [credentials['username']], (err, data) => {
+            if (err) {
+                logger.error('Cannot create user ' + credentials['username'] + ' : \n -> ' + err);
+            } else if (data.rowCount >= 1) {
+                logger.log('No need to create default admin : already users in database ');
+            } else {
+                credentials.name = credentials['username'];
+                db.query("INSERT INTO users(username, password) VALUES ($1, $2)", [credentials['username'], credentials['password']]);
+            }
+        });
+    });
+};
+
+exports.router = {};
+
+exports.router.login = function (req, res) {
     var credentials = {
         username: req.headers.user,
         password: req.headers.pwd
@@ -85,7 +106,7 @@ exports.login = function (req, res) {
     });
 };
 
-exports.logout = function (req, res) {
+exports.router.logout = function (req, res) {
     myCache.get("tokens", function (err, value) {
         if (!err) {
             //We remove this specific token from the server cache
@@ -107,7 +128,7 @@ exports.logout = function (req, res) {
     res.status(200).end();
 };
 
-exports.list = function (req, res) {
+exports.router.list = function (req, res) {
     db.querySync('SELECT id, username FROM users', [], (err, data) => {
         if (err) {
             logger.error('Cannot list users : \n -> ' + err);
@@ -118,7 +139,7 @@ exports.list = function (req, res) {
     });
 };
 
-exports.create = function (req, res) {
+exports.router.create = function (req, res) {
     var credentials = {
         username: req.headers.user,
         password: req.headers.pwd
@@ -147,7 +168,7 @@ exports.create = function (req, res) {
     });
 };
 
-exports.delete = function (req, res) {
+exports.router.delete = function (req, res) {
     var userId = req.params.id;
     db.querySync('SELECT COUNT(id) AS nb_users FROM users', [], (err, data) => {
         if (err) {
@@ -161,23 +182,4 @@ exports.delete = function (req, res) {
             res.status(200).end();
         }
     })
-};
-
-exports.createDefaultUser = async function () {
-    bcrypt.hash(ADMIN_PASSWORD, null, null, function (err, hash) {
-        var credentials = {
-            'username': ADMIN_USERNAME,
-            'password': hash
-        };
-        db.querySync('SELECT username FROM users WHERE username = $1', [credentials['username']], (err, data) => {
-            if (err) {
-                logger.error('Cannot create user ' + credentials['username'] + ' : \n -> ' + err);
-            } else if (data.rowCount >= 1) {
-                logger.log('No need to create default admin : already users in database ');
-            } else {
-                credentials.name = credentials['username'];
-                db.query("INSERT INTO users(username, password) VALUES ($1, $2)", [credentials['username'], credentials['password']]);
-            }
-        });
-    });
 };
