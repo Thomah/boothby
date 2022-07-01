@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 
-const backups = require("./backups.js");
 const configs = require("./configs.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
@@ -86,10 +85,8 @@ var processEventErrorHandler = function({ error, logger, response }) {
 exports.initRoutes = function (receiver) {
 
   // API
-  receiver.router.get('/api/backups', (req, res) => backups.route(req, res));
-  receiver.router.post('/api/backups', (req, res) => backups.route(req, res));
-  receiver.router.get('/api/configs', (req, res) => configs.route(req, res));
-  receiver.router.put('/api/configs', (req, res) => configs.route(req, res));
+  receiver.router.get('/api/configs', configs.router.list);
+  receiver.router.put('/api/configs', configs.router.update);
   receiver.router.get('/api/dialogs', (req, res) => dialogs.route(req, res));
   receiver.router.get('/api/dialogs/:id/play', (req, res) => dialogs.play(req, res));
   receiver.router.post('/api/dialogs', (req, res) => dialogs.route(req, res));
@@ -105,20 +102,20 @@ exports.initRoutes = function (receiver) {
     }));
     res.end();
   });
-  receiver.router.get('/api/messages', (req, res) => messages.route(req, res));
-  receiver.router.post('/api/messages', (req, res) => messages.route(req, res));
-  receiver.router.delete('/api/messages/:id', (req, res) => messages.route(req, res));
-  receiver.router.get('/api/oauth', workspaces.create);
-  receiver.router.get('/api/users', users.list);
-  receiver.router.get('/api/users/login', users.login);
-  receiver.router.get('/api/users/logout', users.logout);
-  receiver.router.post('/api/users', users.create);
-  receiver.router.delete('/api/users/:id', users.delete);
-  receiver.router.get('/api/workspaces', workspaces.list);
-  receiver.router.get('/api/workspaces/:id', workspaces.get);
-  receiver.router.get('/api/workspaces/:id/users', workspaces.getSlackUsers);
-  receiver.router.post('/api/workspaces/:id/users', workspaces.reloadSlackUsers);
-  receiver.router.delete('/api/workspaces/:id', workspaces.delete);
+  receiver.router.get('/api/messages', messages.router.list);
+  receiver.router.post('/api/messages', messages.router.send);
+  receiver.router.delete('/api/messages/:id', messages.router.delete);
+  receiver.router.get('/api/oauth', workspaces.router.create);
+  receiver.router.get('/api/users', users.router.list);
+  receiver.router.get('/api/users/login', users.router.login);
+  receiver.router.get('/api/users/logout', users.router.logout);
+  receiver.router.post('/api/users', users.router.create);
+  receiver.router.delete('/api/users/:id', users.router.delete);
+  receiver.router.get('/api/workspaces', workspaces.router.list);
+  receiver.router.get('/api/workspaces/:id', workspaces.router.get);
+  receiver.router.get('/api/workspaces/:id/users', workspaces.router.getSlackUsers);
+  receiver.router.post('/api/workspaces/:id/users', workspaces.router.reloadSlackUsers);
+  receiver.router.delete('/api/workspaces/:id', workspaces.router.delete);
 
   // Static files
   receiver.router.get('/favicon.ico', (req, res) => serveFile(req, res));

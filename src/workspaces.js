@@ -4,7 +4,7 @@ const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
 
-var saveSlackUsersInDb = function (slackUsers, slackUserIndex, callback) {
+exports.saveSlackUsersInDb = function (slackUsers, slackUserIndex, callback) {
     var slackUser = slackUsers[slackUserIndex];
     if (slackUser === undefined) {
         callback();
@@ -19,7 +19,7 @@ var saveSlackUsersInDb = function (slackUsers, slackUserIndex, callback) {
                     if (err) {
                         logger.error('Cannot sync slack_user ' + slackUser.id + ' : \n -> ' + err);
                     } else {
-                        saveSlackUsersInDb(slackUsers, slackUserIndex + 1, callback);
+                        exports.saveSlackUsersInDb(slackUsers, slackUserIndex + 1, callback);
                     }
                 });
             } else if (data.rowCount == 0) {
@@ -27,7 +27,7 @@ var saveSlackUsersInDb = function (slackUsers, slackUserIndex, callback) {
                     if (err) {
                         logger.error('Cannot sync slack_user ' + slackUser.id + ' : \n -> ' + err);
                     } else {
-                        saveSlackUsersInDb(slackUsers, slackUserIndex + 1, callback);
+                        exports.saveSlackUsersInDb(slackUsers, slackUserIndex + 1, callback);
                     }
                 });
             }
@@ -35,13 +35,13 @@ var saveSlackUsersInDb = function (slackUsers, slackUserIndex, callback) {
     }
 };
 
-var reload = function (workspace) {
+exports.reload = function (workspace) {
     (async () => {
         try {
             // First API call
             const slackUsers = await slack.listUsers(workspace);
             exports.openIM(workspace, slackUsers.members, 0, function () {
-                saveSlackUsersInDb(slackUsers.members, 0, () => {
+                exports.saveSlackUsersInDb(slackUsers.members, 0, () => {
                     mongo.read("dialogs", { name: "Consent PM" }, function (dialog) {
                         dialogs.playInWorkspace(dialog, workspace);
                     });
@@ -51,6 +51,42 @@ var reload = function (workspace) {
             logger.error(error);
         }
     })();
+};
+
+exports.get = function (id, callback_success, callback_error) {
+    db.querySync('SELECT access_token, team_name, team_id, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams WHERE id = $1', [id], (err, data) => {
+        if (err) {
+            logger.error('Cannot get slack_team ' + id + ': \n -> ' + err);
+            if(callback_error !== undefined) {
+                callback_error();
+            }
+        } else if (data.rowCount > 1) {
+            logger.error('Cannot get slack_team ' + id + ': multiple occurrences in DB');
+            if(callback_error !== undefined) {
+                callback_error();
+            }
+        } else {
+            callback_success(data.rows[0]);
+        }
+    });
+};
+
+exports.getByTeamId = function (teamId, callback_success, callback_error) {
+    db.querySync('SELECT id, access_token, bot_user_id, team_id, team_name, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams WHERE team_id = $1', [teamId], (err, data) => {
+        if (err) {
+            logger.error('Cannot get slack_team ' + teamId + ': \n -> ' + err);
+            if(callback_error !== undefined) {
+                callback_error();
+            }
+        } else if (data.rowCount > 1) {
+            logger.error('Cannot get slack_team ' + teamId + ': multiple occurrences in DB');
+            if(callback_error !== undefined) {
+                callback_error();
+            }
+        } else {
+            callback_success(data.rows[0]);
+        }
+    });
 };
 
 exports.openIM = function (workspace, members, memberId, callback) {
@@ -92,18 +128,16 @@ exports.getUsersById = function (workspace, userId) {
     return null;
 };
 
-exports.getUsersByChannelId = function (workspace, channelId) {
-    var numUserFound = false;
-    var userNum = 0;
-    var users = workspace.users;
-    while (!numUserFound && userNum < users.length) {
-        numUserFound |= users[userNum].im_id === channelId;
-        userNum++;
-    }
-    if (numUserFound) {
-        return users[userNum - 1];
-    }
-    return null;
+exports.getUsersByChannelId = function (channelId, callback_success) {
+    db.querySync('SELECT id, slack_id, im_id, consent FROM slack_users WHERE im_id = $1', [channelId], (err, data) => {
+        if (err) {
+            logger.error('Cannot get slack_users by IM ID : \n -> ' + err);
+        } else if(data.rowCount !== 1) {
+            logger.error('Cannot get slack_users by IM ID : \n -> multiple occurrences in DB');
+        } else if(data.rowCount === 1) {
+            callback_success(data.rows[0])
+        }
+    });
 };
 
 exports.forEach = function (callback) {
@@ -123,7 +157,9 @@ exports.forEach = function (callback) {
     });
 };
 
-exports.getSlackUsers = function (req, res) {
+exports.router = {};
+
+exports.router.getSlackUsers = function (req, res) {
     db.querySync('SELECT id, slack_id, im_id, consent FROM slack_users WHERE slack_team_id = $1', [req.params.id], (err, data) => {
         if (err) {
             logger.error('Cannot list slack_users : \n -> ' + err);
@@ -134,7 +170,7 @@ exports.getSlackUsers = function (req, res) {
     });
 };
 
-exports.reloadSlackUsers = function (req, res) {
+exports.router.reloadSlackUsers = function (req, res) {
     db.querySync('SELECT id, access_token, incoming_webhook_channel_id FROM slack_teams WHERE id = $1', [req.params.id], (err, data) => {
         if (err) {
             logger.error('Cannot reload slack_users ' + req.params.id + ': \n -> ' + err);
@@ -143,13 +179,13 @@ exports.reloadSlackUsers = function (req, res) {
             logger.error('Cannot reload slack_users ' + req.params.id + ': multiple occurrences of slack_teams in db');
             res.status(500).end();
         } else {
-            reload(data.rows[0]);
+            exports.reload(data.rows[0]);
             res.status(200).end();
         }
     });
 };
 
-exports.list = function (req, res) {
+exports.router.list = function (req, res) {
     db.querySync('SELECT id, team_name, team_id, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams', [], (err, data) => {
         if (err) {
             logger.error('Cannot list slack_teams : \n -> ' + err);
@@ -160,21 +196,17 @@ exports.list = function (req, res) {
     });
 };
 
-exports.get = function (req, res) {
-    db.querySync('SELECT team_name, team_id, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams WHERE id = $1', [req.params.id], (err, data) => {
-        if (err) {
-            logger.error('Cannot get slack_teams ' + req.params.id + ': \n -> ' + err);
+exports.router.get = function (req, res) {
+    exports.get(req.params.id,
+        slackTeam => {
+            res.send(slackTeam);
+        },
+        () => {
             res.status(500).end();
-        } else if (data.rowCount !== 1) {
-            logger.error('Cannot get slack_teams ' + req.params.id + ': multiple occurrences in db');
-            res.status(500).end();
-        } else {
-            res.send(data.rows[0]);
-        }
-    });
+        });
 };
 
-exports.create = function (req, res) {
+exports.router.create = function (req, res) {
     var response_400 = function (err, res) {
         res.writeHead(400, { "Content-Type": "application/json" });
         res.write(JSON.stringify(err));
@@ -201,7 +233,7 @@ exports.create = function (req, res) {
                                 mongo.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
                                     dialogs.playInWorkspace(dialog, workspace);
                                 });
-                                reload(workspace);
+                                exports.reload(workspace);
                                 res.redirect(302, '/?installed=1');
                             }
                         });
@@ -216,7 +248,7 @@ exports.create = function (req, res) {
     }
 };
 
-exports.delete = function (req, res) {
+exports.router.delete = function (req, res) {
     db.querySync('SELECT access_token FROM slack_teams WHERE id = $1', [req.params.id], (err, data) => {
         if (err) {
             logger.error(err);

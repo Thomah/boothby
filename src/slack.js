@@ -79,7 +79,7 @@ exports.revokeToken = function (workspace) {
 
 exports.sendSimpleMessage = function (workspace, channelId, message) {
     var content = { text: message };
-    postMessage(workspace, channelId, content);
+    exports.postMessage(workspace, channelId, content);
 };
 
 exports.uploadFiles = function (workspace, files) {

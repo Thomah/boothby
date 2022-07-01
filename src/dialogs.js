@@ -202,36 +202,37 @@ var uploadFilesAndSendMessageInChannels = function(workspace, dialog, messageId,
     var message = dialog.messages[messageId];
     message.dialogId = dialog._id;
     message.messageId = messageId;
-    var user = workspaces.getUsersByChannelId(workspace, dialog.channelId);
-    if (dialog.name === "Consent PM" || user.consent) {
-        uploadFilesAndSendMessage(workspace, message, dialog.channelId, () => {
-            if (message.outputs.length > 1) {
-                var ids = workspace._id + '-' + dialog.channelId + '-' + dialog._id + '-' + messageId
-                var actions = {
-                    type: "actions",
-                    block_id: ids + '-' + dialog.name,
-                    elements: []
-                }
-                for (var outputId in message.outputs) {
-                    var output = message.outputs[outputId];
-                    var buttonId = ids + '-' + output.id;
-                    actions.elements[outputId] = {
-                        type: "button",
-                        text: {
-                            type: "plain_text",
-                            text: output.text
-                        },
-                        value: buttonId,
-                        action_id: outputId
+    workspaces.getUsersByChannelId(dialog.channelId, user => {
+        if (dialog.name === "Consent PM" || user.consent) {
+            uploadFilesAndSendMessage(workspace, message, dialog.channelId, () => {
+                if (message.outputs.length > 1) {
+                    var ids = workspace._id + '-' + dialog.channelId + '-' + dialog._id + '-' + messageId
+                    var actions = {
+                        type: "actions",
+                        block_id: ids + '-' + dialog.name,
+                        elements: []
                     }
+                    for (var outputId in message.outputs) {
+                        var output = message.outputs[outputId];
+                        var buttonId = ids + '-' + output.id;
+                        actions.elements[outputId] = {
+                            type: "button",
+                            text: {
+                                type: "plain_text",
+                                text: output.text
+                            },
+                            value: buttonId,
+                            action_id: outputId
+                        }
+                    }
+                    slack.postMessage(workspace, dialog.channelId, [actions]);
                 }
-                slack.postMessage(workspace, dialog.channelId, [actions]);
-            }
+                callback();
+            });
+        } else {
             callback();
-        });
-    } else {
-        callback();
-    }
+        }
+    });
 }
 
 var uploadFilesAndSendMessage = function(workspace, message, channelId, callback) {

@@ -1,12 +1,12 @@
 const fs = require("fs");
 const { App, ExpressReceiver, LogLevel } = require('@slack/bolt');
 
-const backups = require("./backups.js");
 const configs = require("./configs.js");
 const db = require('./db/index.js');
 const mongo = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
+const messages = require("./messages.js");
 const router = require("./router.js");
 const scheduler = require("./scheduler.js");
 const slack = require("./slack.js");
@@ -40,23 +40,17 @@ function readFiles(dirname, onFileContent, onError) {
 
 db.waitForLiquibase(() => {
   mongo.init(function () {
-    configs.init();
     readFiles('./files/preset-dialogs/', function (content) {
       var contentToSave = JSON.parse(content);
       mongo.upsert("dialogs", { name: contentToSave.name }, contentToSave, function () { });
     }, logger.error);
-    configs.get(function (data) {
+    configs.list(data => {
       for (var dataNum in data) {
         var config = data[dataNum];
         if (config.name === "dialog-publish") {
           scheduler.schedule(config, function (fireDate) {
             logger.log('CRON Execution : dialog-publish (scheduled at ' + fireDate + ')');
             dialogs.resumeDialogs();
-          });
-        } else if (config.name === "backup") {
-          scheduler.schedule(config, function (fireDate) {
-            logger.log('CRON Execution : backup (scheduled at ' + fireDate + ')');
-            backups.backup();
           });
         }
       }
@@ -96,46 +90,35 @@ const app = new App({
 
 app.message(async ({ message }) => {
   if (message.text !== undefined) {
-    mongo.insert("messages", message);
+    messages.create(message);
   }
   if (message.text === ":house:") {
-    mongo.read("workspaces", { team_id: message.team }, function (workspacesInDb) {
-      var workspace = workspacesInDb;
-      if (workspacesInDb.access_token === undefined) {
-        workspace = workspacesInDb[0];
-      }
-      var user = workspaces.getUsersByChannelId(workspace, message.channel);
-      if (user !== null) {
-        mongo.read("dialogs", { name: "Consent PM" }, function (dialog) {
-          dialog.channelId = message.channel;
-          dialogs.speakRecurse(workspace, dialog, "0", () => { });
-        })
-      }
-    });
+    workspaces.getByTeamId(message.team,
+      slackTeam => {
+        workspaces.getUsersByChannelId(message.channel, user => {
+          if (user !== null) {
+            mongo.read("dialogs", { name: "Consent PM" }, function (dialog) {
+              dialog.channelId = message.channel;
+              dialogs.speakRecurse(slackTeam, dialog, "0", () => { });
+            })
+          }
+        });
+      });
   }
 });
 
 app.event('team_join', async ({ event }) => {
-  mongo.read("workspaces", { team_id: event.user.team_id }, function (workspacesOfNewUser) {
-    if (!Array.isArray(workspacesOfNewUser)) {
-      workspacesOfNewUser = [workspacesOfNewUser];
-    }
-    var previous_bot_access_token = [];
-    for (var workspaceNum in workspacesOfNewUser) {
-      var workspaceOfNewUser = workspacesOfNewUser[workspaceNum];
-      if (previous_bot_access_token.indexOf(workspaceOfNewUser.access_token) < 0) {
-        workspaces.openIM(workspaceOfNewUser, [event.user], 0, function () {
-          var workspaceId = workspaceOfNewUser._id;
-          mongo.update("workspaces", { _id: new mongo.mongodb().ObjectId(workspaceId) }, workspaceOfNewUser, function () {
-            mongo.read("dialogs", { name: "Consent PM" }, function (dialog) {
-              dialog.channelId = workspaces.getUsersById(workspaceOfNewUser, event.user.id).im_id;
-              workspaceOfNewUser._id = workspaceId;
-              dialogs.speakRecurse(workspaceOfNewUser, dialog, 0);
-            });
+  workspaces.getByTeamId(event.user.team_id, slackTeam => {
+    if (slackTeam !== undefined) {
+      var slackUser = [event.user];
+      workspaces.openIM(slackTeam, slackUser, 0, () => {
+        workspaces.saveSlackUsersInDb(slackUser, 0, () => {
+          mongo.read("dialogs", { name: "Consent PM" }, function (dialog) {
+            dialog.channelId = workspaces.getUsersById(slackTeam, event.user.id).im_id;
+            dialogs.speakRecurse(slackTeam, dialog, 0);
           });
-        });
-        previous_bot_access_token.push(workspaceOfNewUser.access_token);
-      }
+        })
+      });
     }
   });
 });

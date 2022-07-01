@@ -11,7 +11,7 @@ exports.waitForLiquibase = async function (callback) {
             setTimeout(() => exports.waitForLiquibase(callback), 1000);
         } else {
             res = await exports.query('SELECT COUNT(id) AS nb_changelog FROM databasechangelog', []);
-            if (res.rowCount === 1 && res.rows[0].nb_changelog != 5) {
+            if (res.rowCount === 1 && res.rows[0].nb_changelog != 8) {
                 logger.log(res.rows[0].nb_changelog + ' changelog has been executed so far');
                 setTimeout(() => exports.waitForLiquibase(callback), 1000);
             } else {
@@ -28,7 +28,11 @@ exports.query = async function (text, params) {
     const start = Date.now()
     const res = await pool.query(text, params)
     const duration = Date.now() - start
-    logger.log('Executed query : "' + text + '"\n - Duration : ' + duration + '\n - Nb results : ' + res.rowCount)
+    if(res === undefined) {
+        logger.log('Executed query : "' + text + '"\n - Duration : ' + duration + '\n - Nb results : 0');
+    } else {
+        logger.log('Executed query : "' + text + '"\n - Duration : ' + duration + '\n - Nb results : ' + res.rowCount);
+    }
     return res
 };
 
@@ -36,7 +40,11 @@ exports.querySync = function (text, params, callback) {
     const start = Date.now()
     return pool.query(text, params, (err, res) => {
         const duration = Date.now() - start
-        logger.log('Executed query : "' + text + '"\n - Duration : ' + duration + '\n - Nb results : ' + res.rowCount)
+        if(res === undefined) {
+            logger.log('Executed query : "' + text + '"\n - Duration : ' + duration + '\n - Nb results : 0');
+        } else {
+            logger.log('Executed query : "' + text + '"\n - Duration : ' + duration + '\n - Nb results : ' + res.rowCount);
+        }
         if(callback) {
             callback(err, res)
         }
