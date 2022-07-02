@@ -88,28 +88,29 @@ exports.uploadFiles = function (workspace, files) {
 };
 
 var postQueue = [];
-exports.postMessage = function (workspace, channelId, content) {
-    if (content.text !== undefined) {
-        postQueue.push({
-            token: workspace.access_token,
-            message: {
-                channel: channelId,
-                text: content.text,
-                link_names: true,
-                attachments: content.attachments
-            }
-        })
-    } else {
+exports.postMessage = function (workspace, channelId, message) {
+    logger.debug(JSON.stringify(message.blocks));
+    if (message.blocks.length > 0) {
         postQueue.push({
             token: workspace.access_token,
             message: {
                 channel: channelId,
                 type: "message",
                 text: "Impossible d'afficher ce contenu",
-                blocks: JSON.stringify(content),
+                blocks: JSON.stringify(message.blocks),
                 link_names: true
             }
-        })
+        });
+    } else {
+        postQueue.push({
+            token: workspace.access_token,
+            message: {
+                channel: channelId,
+                text: message.text,
+                link_names: true,
+                attachments: message.attachments
+            }
+        });
     }
 };
 var postShift = function () {

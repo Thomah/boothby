@@ -9,7 +9,15 @@ var print = function (level, message) {
     });
 }
 
+exports.debug = function(message) {
+    print('DEBUG', message);
+}
+
 exports.log = function(message) {
+    print('INFO', message);
+}
+
+exports.info = function(message) {
     print('INFO', message);
 }
 

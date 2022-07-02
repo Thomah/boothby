@@ -1,6 +1,7 @@
 const { parse } = require("querystring");
 
 const mongo = require("./mongo.js");
+const logger = require("./logger.js");
 const dialogs = require("./dialogs.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
@@ -154,26 +155,26 @@ var resumeConversation = function(payload) {
     }
 };
 
-var route = function(request, response) {
-    response.writeHead(200, { "Content-Type": "application/json" });
+exports.router = {};
+
+exports.router.interact = function(req, res) {
     let body = "";
-    request.on("data", chunk => {
+    req.on("data", chunk => {
         body += chunk.toString();
     });
-    request.on("end", () => {
+    req.on("end", () => {
         var payload = JSON.parse(parse(body).payload);
-        if (payload.type === "interactive_message") {
-            answerSurvey(payload, function(data) {
-                response.write(JSON.stringify(data));
-                response.end();
-            });
-        } else if (payload.type === "block_actions") {
-            resumeConversation(payload);
-            response.write("{}");
-            response.end();
-        }
+        logger.info(JSON.stringify(payload));
+        res.status(200).end();
+        // if (payload.type === "interactive_message") {
+        //     answerSurvey(payload, function(data) {
+        //         res.write(JSON.stringify(data));
+        //         res.end();
+        //     });
+        // } else if (payload.type === "block_actions") {
+        //     resumeConversation(payload);
+        //     res.write("{}");
+        //     res.end();
+        // }
     });
-
 };
-
-exports.route = route;

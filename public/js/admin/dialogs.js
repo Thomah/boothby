@@ -85,7 +85,7 @@ function doc_refreshDialogs(dialogs) {
   for (dialogId in dialogs) {
     dialog = dialogs[dialogId];
     newEntry = document.createElement("tr");
-    newEntry.id = dialog._id;
+    newEntry.id = dialog.id;
 
     // Scheduling
     cell = document.createElement("td");
