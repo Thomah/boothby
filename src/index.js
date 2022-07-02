@@ -1,4 +1,3 @@
-const fs = require("fs");
 const { App, ExpressReceiver, LogLevel } = require('@slack/bolt');
 
 const configs = require("./configs.js");
@@ -20,30 +19,8 @@ const PORT = process.env.PORT ? process.env.PORT : 80;
 const HttpsProxyAgent = require('https-proxy-agent');
 const proxy = process.env.HTTP_PROXY ? new HttpsProxyAgent(process.env.HTTP_PROXY) : null;
 
-function readFiles(dirname, onFileContent, onError) {
-  fs.readdir(dirname, function (err, filenames) {
-    if (err) {
-      onError(err);
-      return;
-    }
-    filenames.forEach(function (filename) {
-      fs.readFile(dirname + filename, 'utf-8', function (err, content) {
-        if (err) {
-          onError(err);
-          return;
-        }
-        onFileContent(content);
-      });
-    });
-  });
-}
-
 db.waitForLiquibase(() => {
   mongo.init(function () {
-    readFiles('./files/preset-dialogs/', function (content) {
-      var contentToSave = JSON.parse(content);
-      mongo.upsert("dialogs", { name: contentToSave.name }, contentToSave, function () { });
-    }, logger.error);
     configs.list(data => {
       for (var dataNum in data) {
         var config = data[dataNum];
@@ -63,8 +40,7 @@ db.waitForLiquibase(() => {
 users.initCache();
 
 const authorizeFn = async ({ teamId }) => {
-  var marchWorkspaceId = { team_id: teamId };
-  var workspace = await mongo.readSync("workspaces", marchWorkspaceId);
+  var workspace = await workspaces.getByTeamIdSync(teamId);
   if (workspace != null) {
     return {
       botToken: workspace.access_token,
@@ -93,17 +69,14 @@ app.message(async ({ message }) => {
     messages.create(message);
   }
   if (message.text === ":house:") {
-    workspaces.getByTeamId(message.team,
-      slackTeam => {
-        workspaces.getUsersByChannelId(message.channel, user => {
-          if (user !== null) {
-            mongo.read("dialogs", { name: "Consent PM" }, function (dialog) {
-              dialog.channelId = message.channel;
-              dialogs.speakRecurse(slackTeam, dialog, "0", () => { });
-            })
-          }
+    workspaces.getByTeamId(message.team, slackTeam => {
+      workspaces.getUsersByChannelId(message.channel, user => {
+        dialogs.getByName("Content PM", dialog => {
+          dialog.channelId = user.im_id;
+          dialogs.speakRecurse(slackTeam, dialog, "0", () => { });
         });
       });
+    });
   }
 });
 
@@ -113,9 +86,11 @@ app.event('team_join', async ({ event }) => {
       var slackUser = [event.user];
       workspaces.openIM(slackTeam, slackUser, 0, () => {
         workspaces.saveSlackUsersInDb(slackUser, 0, () => {
-          mongo.read("dialogs", { name: "Consent PM" }, function (dialog) {
-            dialog.channelId = workspaces.getUsersById(slackTeam, event.user.id).im_id;
-            dialogs.speakRecurse(slackTeam, dialog, 0);
+          dialogs.getByName("Content PM", dialog => {
+            workspaces.getUsersBySlackId(event.user.id, slackUser => {
+              dialog.channelId = slackUser.im_id;
+              dialogs.speakRecurse(slackTeam, dialog, 0);
+            });
           });
         })
       });

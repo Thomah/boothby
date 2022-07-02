@@ -87,13 +87,15 @@ exports.initRoutes = function (receiver) {
   // API
   receiver.router.get('/api/configs', configs.router.list);
   receiver.router.put('/api/configs', configs.router.update);
-  receiver.router.get('/api/dialogs', (req, res) => dialogs.route(req, res));
-  receiver.router.get('/api/dialogs/:id/play', (req, res) => dialogs.play(req, res));
-  receiver.router.post('/api/dialogs', (req, res) => dialogs.route(req, res));
-  receiver.router.delete('/api/dialogs', (req, res) => dialogs.route(req, res));
+  receiver.router.get('/api/dialogs', dialogs.router.list);
+  receiver.router.post('/api/dialogs', dialogs.router.create);
+  receiver.router.get('/api/dialogs/:id', dialogs.router.get);
+  receiver.router.put('/api/dialogs/:id', dialogs.router.update);
+  receiver.router.delete('/api/dialogs/:id', dialogs.router.delete);
+  receiver.router.get('/api/dialogs/:id/play', dialogs.router.play);
   receiver.router.get('/api/files/*', (req, res) => files.route(req, res));
   receiver.router.post('/api/files', (req, res) => files.route(req, res));
-  receiver.router.get('/api/interactive', (req, res) => interactive.route(req, res));
+  receiver.router.post('/api/interactive', interactive.router.interact);
   receiver.router.get('/api/links', (req, res) => {
     var slackLink = "https://slack.com/oauth/v2/authorize?client_id=" + process.env.SLACK_CLIENT_ID + "&scope=app_mentions:read,channels:join,channels:read,chat:write,files:write,im:write,incoming-webhook,users:read,links:read,channels:history,im:history&user_scope=&redirect_uri=" + process.env.APP_URL + "/api/oauth"
     res.writeHead(200, { "Content-Type": "application/json" });
