@@ -166,6 +166,11 @@ exports.router.interact = function(req, res) {
         var payload = JSON.parse(parse(body).payload);
         logger.info(JSON.stringify(payload));
         res.status(200).end();
+        if(payload.type === "block_actions") {
+            if(payload.actions[0].action_id.startsWith('survey_')) {
+                logger.debug("c'est un survey !");
+            }
+        }
         // if (payload.type === "interactive_message") {
         //     answerSurvey(payload, function(data) {
         //         res.write(JSON.stringify(data));
