@@ -7,6 +7,7 @@ const files = require("./files.js");
 const interactive = require("./interactive.js");
 const logger = require("./logger.js");
 const messages = require("./messages.js");
+const surveys = require("./surveys.js");
 const users = require("./users.js");
 const workspaces = require("./workspaces.js");
 
@@ -108,6 +109,8 @@ exports.initRoutes = function (receiver) {
   receiver.router.post('/api/messages', messages.router.send);
   receiver.router.delete('/api/messages/:id', messages.router.delete);
   receiver.router.get('/api/oauth', workspaces.router.create);
+  receiver.router.post('/api/surveys', surveys.router.create);
+  receiver.router.post('/api/surveys/:id/answers', surveys.router.createAnswer);
   receiver.router.get('/api/users', users.router.list);
   receiver.router.get('/api/users/login', users.router.login);
   receiver.router.get('/api/users/logout', users.router.logout);

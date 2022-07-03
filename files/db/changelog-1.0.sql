@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS slack_users (
 );
 --rollback drop table slack_users;
 
---changeset lesprojetscagnottes:add-fk-slack_users
+--changeset boothby:add-fk-slack_users
 ALTER TABLE ONLY slack_users
     ADD CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id),
     ADD CONSTRAINT fk_slack_team FOREIGN KEY (slack_team_id) REFERENCES slack_teams(id) ON DELETE CASCADE;
@@ -95,10 +95,43 @@ CREATE TABLE IF NOT EXISTS dialogs (
 );
 --rollback drop table dialogs;
 
-
 --changeset boothby:create-data-dialogs
 INSERT INTO dialogs("name", category, channel, scheduling, messages) VALUES('Consent PM', 'intro', 'nowhere', 0, '{"0":{"channel":"pm_everybody","wait":0,"text":"Salut !","attachments":[],"outputs":[{"id":"1","text":"Default"}],"next":"1"},"1":{"channel":"pm_everybody","wait":800,"text":"Tu ne me connais peut-être pas, je suis Boothby, le bot du Green IT. Je publie régulièrement des infos dans #greenit mais parfois, je m''adresse directement à vous en message privé.","attachments":[],"outputs":[{"id":"2","text":"Default"}],"next":"2"},"2":{"channel":"pm_everybody","wait":800,"text":"Acceptes-tu de recevoir sur ce canal des astuces, quizz ou infos pour t''aider à améliorer ton impact écologique au sein de ton entreprise ? Rassure-toi, je ne suis pas aussi bavard que j''en ai l''air :wink:","attachments":[],"outputs":[{"id":"3","text":":+1: Avec plaisir !"},{"id":"4","text":":-1: Non, merci."}],"next":"3"},"3":{"channel":"pm_everybody","wait":800,"text":"Super ! Content de pouvoir échanger avec toi. A très vite !","attachments":[],"outputs":[],"next":"4"},"4":{"channel":"pm_everybody","wait":800,"text":"Dommage... Mais je respecte ton choix. Tu ne recevras plus de message de ma part.","attachments":[],"outputs":[]}}');
 INSERT INTO dialogs("name", category, channel, scheduling, messages)
 VALUES('Welcome Message', 'intro', 'nowhere', 0, '{"0":{"channel":"general","wait":0,"text":"Bonjour tout le monde !","attachments":[],"outputs":[{"id":"1","text":"Default"}],"next":"1"},"1":{"channel":"general","wait":3000,"text":"Vous connaissez le Green IT ?","attachments":[],"outputs":[{"id":"2","text":"Default"}],"next":"2"},"2":{"channel":"general","wait":3000,"text":"Que vous soyez expert ou débutant, je vous donne plein d''infos pour progresser dans ce domaine et suivre l''actualité","attachments":[],"outputs":[{"id":"3","text":"Default"}],"next":"3"},"3":{"channel":"general","wait":5000,"text":"Rendez-vous sur #greenit pour le début de notre aventure ! :rocket:","attachments":[],"outputs":[]}}');
 --rollback delete from dialogs where name = 'Welcome Message';
 --rollback delete from dialogs where name = 'Consent PM';
+
+--changeset boothby:create-table-surveys
+CREATE TABLE IF NOT EXISTS surveys (
+    id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
+    type CHARACTER VARYING(255)
+);
+--rollback drop table surveys;
+
+--changeset boothby:create-table-surveys_answers
+CREATE TABLE IF NOT EXISTS surveys_answers (
+    id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
+    text CHARACTER VARYING(255),
+    nb_votes BIGINT,
+    survey_id BIGINT
+);
+--rollback drop table surveys_answers;
+
+--changeset boothby:add-fk-surveys_answers
+ALTER TABLE ONLY surveys_answers
+    ADD CONSTRAINT fk_survey FOREIGN KEY (survey_id) REFERENCES surveys(id) ON DELETE CASCADE;
+--rollback alter table surveys_answers drop constraint fk_survey;
+
+--changeset boothby:create-table-surveys_answers_slack_users
+CREATE TABLE IF NOT EXISTS surveys_answers_slack_users (
+    id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
+    slack_id CHARACTER VARYING(255),
+    surveys_answer_id BIGINT
+);
+--rollback drop table surveys_answers_slack_users;
+
+--changeset boothby:add-fk-surveys_answers_slack_users
+ALTER TABLE ONLY surveys_answers_slack_users
+    ADD CONSTRAINT fk_surveys_answer FOREIGN KEY (surveys_answer_id) REFERENCES surveys_answers(id) ON DELETE CASCADE;
+--rollback alter table surveys_answers_slack_users drop constraint fk_surveys_answer;
