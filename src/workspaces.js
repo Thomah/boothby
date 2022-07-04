@@ -41,7 +41,7 @@ exports.reload = function (workspace) {
             const slackUsers = await slack.listUsers(workspace);
             exports.openIM(workspace, slackUsers.members, 0, function () {
                 exports.saveSlackUsersInDb(slackUsers.members, 0, () => {
-                    dialogs.getByName("Content PM", dialog => {
+                    dialogs.getByName("Consent PM", dialog => {
                         dialogs.playInWorkspace(dialog, workspace);
                     });
                 });
@@ -163,7 +163,7 @@ exports.getUsersByChannelId = function (channelId, callback_success) {
 };
 
 exports.forEach = function (callback) {
-    db.querySync('SELECT access_token, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams', [], (err, data) => {
+    db.querySync('SELECT id, access_token, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams', [], (err, data) => {
         if (err) {
             logger.error('Cannot run for each Slack Team : \n -> ' + err);
         } else {

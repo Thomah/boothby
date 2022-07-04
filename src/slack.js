@@ -90,7 +90,7 @@ exports.uploadFiles = function (workspace, files) {
 var postQueue = [];
 exports.postMessage = function (workspace, channelId, message) {
     logger.debug(JSON.stringify(message.blocks));
-    if (message.blocks.length > 0) {
+    if (message.blocks !== undefined && message.blocks.length > 0) {
         postQueue.push({
             token: workspace.access_token,
             message: {

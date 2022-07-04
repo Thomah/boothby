@@ -71,7 +71,7 @@ app.message(async ({ message }) => {
   if (message.text === ":house:") {
     workspaces.getByTeamId(message.team, slackTeam => {
       workspaces.getUsersByChannelId(message.channel, user => {
-        dialogs.getByName("Content PM", dialog => {
+        dialogs.getByName("Consent PM", dialog => {
           dialog.channelId = user.im_id;
           dialogs.speakRecurse(slackTeam, dialog, "0", () => { });
         });
@@ -86,7 +86,7 @@ app.event('team_join', async ({ event }) => {
       var slackUser = [event.user];
       workspaces.openIM(slackTeam, slackUser, 0, () => {
         workspaces.saveSlackUsersInDb(slackUser, 0, () => {
-          dialogs.getByName("Content PM", dialog => {
+          dialogs.getByName("Consent PM", dialog => {
             workspaces.getUsersBySlackId(event.user.id, slackUser => {
               dialog.channelId = slackUser.im_id;
               dialogs.speakRecurse(slackTeam, dialog, 0);
