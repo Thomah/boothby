@@ -46,7 +46,7 @@ exports.getByScheduling = function (scheduling, callback_success, callback_error
 };
 
 exports.getByName = function (name, callback_success, callback_error) {
-    db.querySync('SELECT id, "name", category, channel, scheduling, messages FROM dialogs WHERE name = $1', [name], (err, data) => {
+    db.querySync("SELECT id, name, category, channel, scheduling, messages FROM dialogs WHERE name = $1", [name], (err, data) => {
         if (err) {
             logger.error('Cannot get dialog by name ' + name + ' : \n -> ' + err);
             if (callback_error) {
@@ -197,7 +197,7 @@ var playInAllWorkspaces = function (id) {
                         workspace.id,
                         users => {
                             for (var userId in users) {
-                                channelsId.push(workspace.users[userId].im_id);
+                                channelsId.push(users[userId].im_id);
                             }
                             speakRecurseInChannels(workspace, dialog, channelsId);
                         })
