@@ -1,18 +1,20 @@
 const { parse } = require("querystring");
 
 const mongo = require("./mongo.js");
-const logger = require("./logger.js");
+const conversations = require("./conversations.js");
 const dialogs = require("./dialogs.js");
+const logger = require("./logger.js");
+const messages = require("./messages.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
 
-var answerSurvey = function(payload, callback) {
+var answerSurvey = function (payload, callback) {
     var splitActionValue = payload.actions[0].value.split("-");
-    mongo.read("dialogs", { _id: new mongo.mongodb().ObjectId(splitActionValue[0]) }, function(data) {
+    mongo.read("dialogs", { _id: new mongo.mongodb().ObjectId(splitActionValue[0]) }, function (data) {
         callback(data.messages[splitActionValue[1]]);
     });
 
-    mongo.read("surveys", { name: payload.actions[0].name }, function(data) {
+    mongo.read("surveys", { name: payload.actions[0].name }, function (data) {
         var newMessage = payload.original_message;
         if (data === null) {
             data = {};
@@ -57,7 +59,7 @@ var answerSurvey = function(payload, callback) {
                 data.texts[id] + " (" + data.values[id] + ")";
         }
 
-        workspaces.forEach(function(workspace) {
+        workspaces.forEach(function (workspace) {
             if (payload.team.id === workspace.team_id) {
                 slack.updateMessage(workspace, {
                     channel: payload.channel.id,
@@ -71,19 +73,22 @@ var answerSurvey = function(payload, callback) {
     });
 };
 
-var updateButtonAndSpeak = function(payload, workspace, dialog) {
-    var actionId = payload.actions[0].action_id;
+var updateButtonAndSpeak = function (payload, workspace, dialog) {
+    var actionId = payload.actions[0].action_id.replace('output_', '');
     var actionValue = payload.actions[0].value;
     var actionValueSplit = actionValue.split('-');
     var channelId = actionValueSplit[1];
     var outputSelectedId = actionValueSplit[4];
 
-    mongo.insert("messages", {
-        ts: payload.actions[0].action_ts,
+    messages.create({
+        type: 'message',
+        text: payload.message.blocks[0].elements[actionId].text.text + ' (' + outputSelectedId + ')',
         user: payload.user.id,
-        channel: channelId,
+        ts: payload.actions[0].action_ts,
         team: workspace.team_id,
-        text: payload.message.blocks[0].elements[actionId].text.text + ' (' + outputSelectedId + ')'
+        channel: channelId,
+        event_ts: payload.actions[0].action_ts,
+        channel_type: payload.channel.name == 'directmessage' ? 'im' : 'channel'
     });
 
     dialog.channelId = channelId;
@@ -97,9 +102,9 @@ var updateButtonAndSpeak = function(payload, workspace, dialog) {
     delete newMessage.username;
     delete newMessage.bot_id;
     slack.updateMessage(workspace, newMessage);
-}
+};
 
-var resumeConversation = function(payload) {
+var resumeConversation = function (payload) {
     if (payload.actions !== undefined && payload.actions.length === 1 && payload.channel !== undefined) {
         var actionValue = payload.actions[0].value;
         var actionValueSplit = actionValue.split('-');
@@ -108,45 +113,26 @@ var resumeConversation = function(payload) {
         var dialogId = actionValueSplit[2];
         var messageId = actionValueSplit[3];
         var outputSelectedId = actionValueSplit[4];
-        mongo.read("conversations", {
-            workspaceId: new mongo.mongodb().ObjectId(workspaceId),
-            channelId: channelId,
-            dialogId: new mongo.mongodb().ObjectId(dialogId)
-        }, function(conversation) {
-            if (conversation.lastMessageId === messageId) {
+        conversations.get({ slack_team_id: workspaceId, dialog_id: dialogId, channel: channelId }, conversation => {
+            if (conversation.last_message_id === messageId) {
                 var isValidOutput = false;
-                for (var outputNum in conversation.outputs) {
-                    isValidOutput |= outputSelectedId === conversation.outputs[outputNum].id;
+                var outputs = JSON.parse(conversation.outputs);
+                for (var outputNum in outputs) {
+                    isValidOutput |= outputSelectedId === outputs[outputNum].id;
                 }
                 if (isValidOutput) {
-                    var marchWorkspaceId = { _id: new mongo.mongodb().ObjectId(workspaceId) };
-                    mongo.read("workspaces", marchWorkspaceId, function(workspace) {
-                        var workspaceBackup = JSON.parse(JSON.stringify(workspace));
-                        mongo.read("dialogs", { _id: new mongo.mongodb().ObjectId(dialogId) }, function(dialog) {
-                            var numUserFound = false;
-                            var consentPM = false;
-                            if (payload.channel.name === "directmessage") {
-                                workspace.users = [{
-                                    im_id: channelId
-                                }];
-                                var userNum = 0;
-                                var users = workspaceBackup.users;
-                                while (!numUserFound && userNum < users.length) {
-                                    numUserFound |= users[userNum].im_id === channelId;
-                                    userNum++;
-                                }
-                                consentPM = workspaceBackup.users[userNum - 1].consent;
-                                workspace.users[0].consent = workspaceBackup.users[userNum - 1].consent;
-                            }
-                            if (dialog.name === "Consent PM" && numUserFound) {
-                                workspaceBackup.users[userNum - 1].consent = outputSelectedId === '3';
-                                workspace.users[0].consent = outputSelectedId === '3';
-                                mongo.update("workspaces", marchWorkspaceId, workspaceBackup, () => {
+                    workspaces.get(workspaceId, workspace => {
+                        dialogs.get(dialogId, dialog => {
+                            workspaces.getUsersBySlackId(payload.user.id, slackUser => {
+                                if (dialog.name === "Consent PM") {
+                                    slackUser.consent = outputSelectedId === '3';
+                                    workspaces.saveSlackUsersInDb([slackUser], 0, () => {
+                                        updateButtonAndSpeak(payload, workspace, dialog);
+                                    });
+                                } else if ((payload.channel.name === "directmessage" && slackUser.consent)) {
                                     updateButtonAndSpeak(payload, workspace, dialog);
-                                });
-                            } else if ((payload.channel.name === "directmessage" && consentPM) || payload.channel.name !== "directmessage") {
-                                updateButtonAndSpeak(payload, workspace, dialog);
-                            }
+                                }
+                            });
                         });
                     });
                 }
@@ -157,7 +143,7 @@ var resumeConversation = function(payload) {
 
 exports.router = {};
 
-exports.router.interact = function(req, res) {
+exports.router.interact = function (req, res) {
     let body = "";
     req.on("data", chunk => {
         body += chunk.toString();
@@ -166,9 +152,12 @@ exports.router.interact = function(req, res) {
         var payload = JSON.parse(parse(body).payload);
         logger.info(JSON.stringify(payload));
         res.status(200).end();
-        if(payload.type === "block_actions") {
-            if(payload.actions[0].action_id.startsWith('survey_')) {
+        if (payload.type === "block_actions") {
+            if (payload.actions[0].action_id.startsWith('survey_')) {
                 logger.debug("c'est un survey !");
+            }
+            else if (payload.actions[0].action_id.startsWith('output_')) {
+                resumeConversation(payload);
             }
         }
         // if (payload.type === "interactive_message") {

@@ -1,6 +1,6 @@
 const fs = require("fs");
 const db = require('./db/index.js');
-const mongo = require("./mongo.js");
+const conversations = require("./conversations.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
 const workspaces = require("./workspaces.js");
@@ -256,29 +256,7 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
     workspaces.getUsersByChannelId(dialog.channelId, user => {
         if (dialog.name === "Consent PM" || user.consent) {
             uploadFilesAndSendMessage(workspace, message, dialog.channelId, () => {
-                if (message.outputs.length > 1) {
-                    var ids = workspace.id + '-' + dialog.channelId + '-' + dialog.id + '-' + messageId
-                    var actions = {
-                        type: "actions",
-                        block_id: ids + '-' + dialog.name,
-                        elements: []
-                    }
-                    for (var outputId in message.outputs) {
-                        var output = message.outputs[outputId];
-                        var buttonId = ids + '-' + output.id;
-                        actions.elements[outputId] = {
-                            type: "button",
-                            text: {
-                                type: "plain_text",
-                                text: output.text
-                            },
-                            value: buttonId,
-                            action_id: outputId
-                        }
-                    }
-                    slack.postMessage(workspace, dialog.channelId, [actions]);
-                }
-                callback();
+                sendOutputChoices(workspace, dialog, message, callback);
             });
         } else {
             callback();
@@ -292,11 +270,11 @@ var uploadFilesAndSendMessage = function (workspace, message, channelId, callbac
         workspace, message, 0,
         () => {
             var conversation = {
-                workspaceId: workspace.id,
-                channelId: channelId,
-                dialogId: message.dialogId,
-                lastMessageId: message.messageId,
-                outputs: message.outputs,
+                slack_team_id: workspace.id,
+                channel: channelId,
+                dialog_id: message.dialogId,
+                last_message_id: message.messageId,
+                outputs: JSON.stringify(message.outputs),
                 status: "processing"
             };
             if (message.outputs !== undefined) {
@@ -306,14 +284,10 @@ var uploadFilesAndSendMessage = function (workspace, message, channelId, callbac
                     conversation.status = "ended";
                 }
             }
-            mongo.upsert("conversations", {
-                workspaceId: workspace.id,
-                channelId: channelId,
-                dialogId: message.dialogId
-            }, conversation, function () { });
-
-            slack.postMessage(workspace, channelId, message);
-            callback();
+            conversations.save(conversation, () => {
+                slack.postMessage(workspace, channelId, message);
+                callback();
+            });
         });
 }
 
@@ -374,6 +348,37 @@ var addFilesOnMessage = function (workspace, message, attachmentId, callback) {
         callback();
     }
 };
+
+var sendOutputChoices = function(workspace, dialog, message, callback) {
+    if (message.outputs.length > 1) {
+        var ids = workspace.id + '-' + dialog.channelId + '-' + dialog.id + '-' + message.messageId
+        var messageOutputs = {
+            blocks: [
+                {
+                    type: "actions",
+                    block_id: ids + '-' + dialog.name,
+                    elements: []
+                }
+            ]
+        };
+
+        for (var outputId in message.outputs) {
+            var output = message.outputs[outputId];
+            var buttonId = ids + '-' + output.id;
+            messageOutputs.blocks[0].elements[outputId] = {
+                type: "button",
+                text: {
+                    type: "plain_text",
+                    text: output.text
+                },
+                value: buttonId,
+                action_id: "output_" + outputId
+            }
+        }
+        slack.postMessage(workspace, dialog.channelId, messageOutputs);
+    }
+    callback();
+}
 
 exports.speakRecurse = speakRecurse;
 exports.playInWorkspace = playInWorkspace;
