@@ -134,3 +134,22 @@ CREATE TABLE IF NOT EXISTS surveys_answers_slack_users (
 ALTER TABLE ONLY surveys_answers_slack_users
     ADD CONSTRAINT fk_surveys_answer FOREIGN KEY (surveys_answer_id) REFERENCES surveys_answers(id) ON DELETE CASCADE;
 --rollback alter table surveys_answers_slack_users drop constraint fk_surveys_answer;
+
+--changeset boothby:create-table-conversations
+CREATE TABLE IF NOT EXISTS conversations (
+    id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
+    channel CHARACTER VARYING(255), 
+    slack_team_id BIGINT,
+    dialog_id BIGINT,
+    last_message_id BIGINT,
+    outputs TEXT,
+    status CHARACTER VARYING(255)
+);
+--rollback drop table conversations;
+
+--changeset boothby:add-fk-conversations
+ALTER TABLE ONLY conversations
+    ADD CONSTRAINT fk_slack_team FOREIGN KEY (slack_team_id) REFERENCES slack_teams(id),
+    ADD CONSTRAINT fk_dialog FOREIGN KEY (dialog_id) REFERENCES dialogs(id);
+--rollback alter table conversations drop constraint fk_dialog;
+--rollback alter table conversations drop constraint fk_slack_team;

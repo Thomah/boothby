@@ -8,13 +8,13 @@ exports.saveSlackUsersInDb = function (slackUsers, slackUserIndex, callback) {
     if (slackUser === undefined) {
         callback();
     } else {
-        db.querySync("SELECT id, im_id FROM slack_users where slack_id = $1", [slackUser.id], (err, data) => {
+        db.querySync("SELECT id, im_id FROM slack_users where slack_id = $1", [slackUser.slack_id], (err, data) => {
             if (err) {
                 logger.error('Cannot sync slack_user ' + slackUser.id + ' : \n -> ' + err);
             } else if (data.rowCount > 1) {
                 logger.error('Cannot sync slack_user ' + slackUser.id + ' : multiple occurrences in db');
             } else if (data.rowCount == 1) {
-                db.querySync("UPDATE slack_users SET im_id = $1, slack_id = $2, slack_team_id = $3", [slackUser.im_id, slackUser.id, slackUser.slack_team_id], (err) => {
+                db.querySync("UPDATE slack_users SET im_id = $2, slack_id = $3, slack_team_id = $4, consent = $5 WHERE id = $1", [data.rows[0].id, slackUser.im_id, slackUser.slack_id, slackUser.slack_team_id, slackUser.consent], (err) => {
                     if (err) {
                         logger.error('Cannot sync slack_user ' + slackUser.id + ' : \n -> ' + err);
                     } else {
@@ -22,7 +22,7 @@ exports.saveSlackUsersInDb = function (slackUsers, slackUserIndex, callback) {
                     }
                 });
             } else if (data.rowCount == 0) {
-                db.querySync("INSERT INTO slack_users(im_id, slack_id, slack_team_id) VALUES($1, $2, $3)", [slackUser.im_id, slackUser.id, slackUser.slack_team_id], (err) => {
+                db.querySync("INSERT INTO slack_users(im_id, slack_id, slack_team_id, consent) VALUES($1, $2, $3, $4)", [slackUser.im_id, slackUser.slack_id, slackUser.slack_team_id, slackUser.consent], (err) => {
                     if (err) {
                         logger.error('Cannot sync slack_user ' + slackUser.id + ' : \n -> ' + err);
                     } else {
@@ -39,6 +39,7 @@ exports.reload = function (workspace) {
         try {
             // First API call
             const slackUsers = await slack.listUsers(workspace);
+            slackUsers.members.forEach(member => member.slack_id = member.id);
             exports.openIM(workspace, slackUsers.members, 0, function () {
                 exports.saveSlackUsersInDb(slackUsers.members, 0, () => {
                     dialogs.getByName("Consent PM", dialog => {
@@ -53,7 +54,7 @@ exports.reload = function (workspace) {
 };
 
 exports.get = function (id, callback_success, callback_error) {
-    db.querySync('SELECT access_token, team_name, team_id, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams WHERE id = $1', [id], (err, data) => {
+    db.querySync('SELECT id, access_token, team_name, team_id, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams WHERE id = $1', [id], (err, data) => {
         if (err) {
             logger.error('Cannot get slack_team ' + id + ': \n -> ' + err);
             if (callback_error !== undefined) {
@@ -71,7 +72,7 @@ exports.get = function (id, callback_success, callback_error) {
 };
 
 exports.getByTeamIdSync = async function (teamId) {
-    return await db.query('SELECT access_token, team_name, team_id, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams WHERE team_id = $1', [teamId]);
+    return await db.query('SELECT id, access_token, team_name, team_id, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams WHERE team_id = $1', [teamId]);
 };
 
 exports.getByTeamId = function (teamId, callback_success, callback_error) {
@@ -126,7 +127,7 @@ exports.openIM = function (workspace, members, memberId, callback) {
 };
 
 exports.getUsers = function(slackTeamId, callback_success, callback_error) {
-    db.querySync('SELECT id, slack_id, im_id, consent FROM slack_users WHERE slack_team_id = $1', [slackTeamId], (err, data) => {
+    db.querySync('SELECT id, slack_id, slack_team_id, im_id, consent FROM slack_users WHERE slack_team_id = $1', [slackTeamId], (err, data) => {
         if (err) {
             logger.error('Cannot list slack_users : \n -> ' + err);
             if(callback_error) {
@@ -139,7 +140,7 @@ exports.getUsers = function(slackTeamId, callback_success, callback_error) {
 }
 
 exports.getUsersBySlackId = function (slackId, callback_success) {
-    db.querySync('SELECT id, slack_id, im_id, consent FROM slack_users WHERE slack_id = $1', [slackId], (err, data) => {
+    db.querySync('SELECT id, slack_id, slack_team_id, im_id, consent FROM slack_users WHERE slack_id = $1', [slackId], (err, data) => {
         if (err) {
             logger.error('Cannot get slack_users by Slack ID : \n -> ' + err);
         } else if (data.rowCount !== 1) {
@@ -151,7 +152,7 @@ exports.getUsersBySlackId = function (slackId, callback_success) {
 };
 
 exports.getUsersByChannelId = function (channelId, callback_success) {
-    db.querySync('SELECT id, slack_id, im_id, consent FROM slack_users WHERE im_id = $1', [channelId], (err, data) => {
+    db.querySync('SELECT id, slack_id, slack_team_id, im_id, consent FROM slack_users WHERE im_id = $1', [channelId], (err, data) => {
         if (err) {
             logger.error('Cannot get slack_users by IM ID : \n -> ' + err);
         } else if (data.rowCount !== 1) {
