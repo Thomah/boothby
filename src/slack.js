@@ -140,6 +140,7 @@ var updateShift = function () {
         (async (app) => {
             try {
                 shift.message.token = shift.token;
+                logger.debug("Sending Slack chat.update : " + shift.message.blocks);
                 await app.client.chat.update(shift.message);
             } catch (error) {
                 logger.error(error);

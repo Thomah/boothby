@@ -11,7 +11,7 @@ exports.waitForLiquibase = async function (callback) {
             setTimeout(() => exports.waitForLiquibase(callback), 1000);
         } else {
             res = await exports.query('SELECT COUNT(id) AS nb_changelog FROM databasechangelog', []);
-            if (res.rowCount === 1 && res.rows[0].nb_changelog != 17) {
+            if (res.rowCount === 1 && res.rows[0].nb_changelog != 18) {
                 logger.log(res.rows[0].nb_changelog + ' changelog has been executed so far');
                 setTimeout(() => exports.waitForLiquibase(callback), 1000);
             } else {
