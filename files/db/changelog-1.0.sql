@@ -104,7 +104,8 @@ INSERT INTO dialogs("name", category, channel, scheduling, messages) VALUES('Wel
 --changeset boothby:create-table-surveys
 CREATE TABLE IF NOT EXISTS surveys (
     id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
-    type CHARACTER VARYING(255)
+    type CHARACTER VARYING(255),
+    text CHARACTER VARYING(255)
 );
 --rollback drop table surveys;
 
@@ -126,6 +127,7 @@ ALTER TABLE ONLY surveys_answers
 CREATE TABLE IF NOT EXISTS surveys_answers_slack_users (
     id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
     slack_id CHARACTER VARYING(255),
+    slack_team_id CHARACTER VARYING(255),
     surveys_answer_id BIGINT
 );
 --rollback drop table surveys_answers_slack_users;
@@ -149,7 +151,66 @@ CREATE TABLE IF NOT EXISTS conversations (
 
 --changeset boothby:add-fk-conversations
 ALTER TABLE ONLY conversations
-    ADD CONSTRAINT fk_slack_team FOREIGN KEY (slack_team_id) REFERENCES slack_teams(id),
-    ADD CONSTRAINT fk_dialog FOREIGN KEY (dialog_id) REFERENCES dialogs(id);
+    ADD CONSTRAINT fk_slack_team FOREIGN KEY (slack_team_id) REFERENCES slack_teams(id) ON DELETE CASCADE,
+    ADD CONSTRAINT fk_dialog FOREIGN KEY (dialog_id) REFERENCES dialogs(id) ON DELETE CASCADE;
 --rollback alter table conversations drop constraint fk_dialog;
 --rollback alter table conversations drop constraint fk_slack_team;
+
+--changeset boothby:add-function-surveys_vote
+CREATE OR REPLACE FUNCTION surveys_vote(
+        IN _survey_id BIGINT, 
+        IN _surveys_answer_id BIGINT,
+        IN _slack_id VARCHAR, 
+        OUT answer_id BIGINT, 
+        OUT votes BIGINT, 
+        OUT votes_team BIGINT)
+    RETURNS SETOF RECORD
+	LANGUAGE plpgsql
+    AS '
+        DECLARE
+            _survey_type VARCHAR;
+			_answer record;
+            _nb_user_votes BIGINT;
+            _has_voted BIGINT;
+            _slack_team_id VARCHAR;
+        BEGIN
+
+            -- Get survey type
+            select s.type into _survey_type from surveys s where s.id = _survey_id;
+
+            -- Verify if user has already voted this answer
+            select count(*) into _has_voted from surveys_answers_slack_users where slack_id = _slack_id and surveys_answer_id = _surveys_answer_id;
+
+            -- If the type is "single_answer", we remove all previous answers of the user
+            if _survey_type = ''single_answer'' then
+                for _answer in select id from surveys_answers
+                loop 
+                    select count(*) into _nb_user_votes from surveys_answers_slack_users sasu inner join surveys_answers sa on sasu.surveys_answer_id = sa.id inner join surveys s on s.id = sa.survey_id where sa.id = _answer.id and sasu.slack_id = _slack_id;
+                    update surveys_answers sa set nb_votes = sa.nb_votes - _nb_user_votes where sa.id = _answer.id;
+                    delete from surveys_answers_slack_users sasu where sasu.slack_id = _slack_id and sasu.surveys_answer_id = _answer.id;
+                end loop;
+            end if;
+
+            -- Get the corresponding Slack team
+            select st.team_id into _slack_team_id from slack_users su inner join slack_teams st on st.id = su.slack_team_id where su.slack_id = _slack_id group by st.team_id;
+
+            -- If has not previously voted the answer, submit the answer
+            if _has_voted = 0 then
+                insert into surveys_answers_slack_users(slack_id, slack_team_id, surveys_answer_id) values (_slack_id, _slack_team_id, _surveys_answer_id);
+                update surveys_answers set nb_votes = nb_votes + 1 where survey_id = _survey_id and id = _surveys_answer_id;
+            end if;
+
+            -- Return a table of current votes
+			return query
+				select 
+                    sa.id as answer_id, 
+                    sa.nb_votes as votes, 
+                    count(sasu.id) as votes_team 
+                from surveys_answers sa 
+                    left outer join surveys_answers_slack_users sasu on sasu.surveys_answer_id = sa.id 
+                where sa.survey_id = _survey_id 
+                    and (sasu.slack_team_id = _slack_team_id or sasu.id is null)
+                group by sa.id, sasu.surveys_answer_id;
+        END;
+';
+--rollback drop function if exists surveys_vote;

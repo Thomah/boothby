@@ -1,74 +1,40 @@
 const { parse } = require("querystring");
 
-const mongo = require("./mongo.js");
 const conversations = require("./conversations.js");
 const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
 const messages = require("./messages.js");
 const slack = require("./slack.js");
+const surveys = require("./surveys.js");
 const workspaces = require("./workspaces.js");
 
-var answerSurvey = function (payload, callback) {
-    var splitActionValue = payload.actions[0].value.split("-");
-    mongo.read("dialogs", { _id: new mongo.mongodb().ObjectId(splitActionValue[0]) }, function (data) {
-        callback(data.messages[splitActionValue[1]]);
-    });
-
-    mongo.read("surveys", { name: payload.actions[0].name }, function (data) {
-        var newMessage = payload.original_message;
-        if (data === null) {
-            data = {};
-            data.name = payload.actions[0].name;
-            mongo.insert("surveys", data);
-        }
-        if (data.texts === undefined) {
-            data.texts = {};
-            data.actions = {};
-            data.values = {};
-            data.users = {};
-            for (
-                var noAction = 0; noAction < newMessage.attachments[0].actions.length; noAction++
-            ) {
-                var value = newMessage.attachments[0].actions[noAction].value;
-                data.actions[value] = noAction;
-                data.texts[value] = newMessage.attachments[0].actions[noAction].text;
-                data.values[value] = 0;
-            }
-        }
-        if (data.values[payload.actions[0].value] === undefined) {
-            data.values[payload.actions[0].value] = 0;
-        }
-        if (data.users[payload.user.id] === undefined) {
-            data.values[payload.actions[0].value]++;
-            data.users[payload.user.id] = payload.actions[0].value;
-        } else if (
-            data.users[payload.user.id] !== undefined &&
-            data.users[payload.user.id] !== payload.actions[0].value
-        ) {
-            data.values[data.users[payload.user.id]]--;
-            data.users[payload.user.id] = payload.actions[0].value;
-            data.values[payload.actions[0].value]++;
-        } else {
-            data.values[data.users[payload.user.id]]--;
-            data.users[payload.user.id] = undefined;
-        }
-        mongo.updateByName("surveys", payload.actions[0].name, data);
-
-        for (var id in data.texts) {
-            newMessage.attachments[0].actions[data.actions[id]].text =
-                data.texts[id] + " (" + data.values[id] + ")";
-        }
-
-        workspaces.forEach(function (workspace) {
-            if (payload.team.id === workspace.team_id) {
-                slack.updateMessage(workspace, {
+var answerSurvey = function (payload) {
+    var actionId = payload.actions[0].action_id.split("_");
+    var surveyId = actionId[1];
+    var answerId = actionId[2];
+    var userId = payload.user.id;
+    surveys.get(surveyId, survey => {
+        surveys.vote(survey.id, answerId, userId, data => {
+            var blocks = payload.message.blocks;
+            payload.message.blocks.forEach((block, index) => {
+                if(block.accessory !== undefined) {
+                    var answer = data.find(row => block.accessory.action_id === 'survey_' + surveyId + '_' + row['answer_id']);
+                    logger.debug(answer);
+                    if(answer !== undefined) {
+                        logger.debug(answer['votes_team']);
+                        blocks[index + 1].elements[0].text = answer['votes_team'] + ' vote(s)';
+                    }
+                }
+            });
+            workspaces.getByTeamId(payload.team.id, slackTeam => {
+                slack.updateMessage(slackTeam, {
                     channel: payload.channel.id,
-                    text: newMessage.text,
+                    text: payload.message.text,
                     link_names: true,
-                    ts: payload.message_ts,
-                    attachments: newMessage.attachments
+                    ts: payload.message.ts,
+                    blocks: JSON.stringify(blocks)
                 });
-            }
+            });
         });
     });
 };
@@ -154,21 +120,11 @@ exports.router.interact = function (req, res) {
         res.status(200).end();
         if (payload.type === "block_actions") {
             if (payload.actions[0].action_id.startsWith('survey_')) {
-                logger.debug("c'est un survey !");
+                answerSurvey(payload);
             }
             else if (payload.actions[0].action_id.startsWith('output_')) {
                 resumeConversation(payload);
             }
         }
-        // if (payload.type === "interactive_message") {
-        //     answerSurvey(payload, function(data) {
-        //         res.write(JSON.stringify(data));
-        //         res.end();
-        //     });
-        // } else if (payload.type === "block_actions") {
-        //     resumeConversation(payload);
-        //     res.write("{}");
-        //     res.end();
-        // }
     });
 };

@@ -3,6 +3,7 @@ const db = require('./db/index.js');
 const conversations = require("./conversations.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
+const surveys = require("./surveys.js");
 const workspaces = require("./workspaces.js");
 
 exports.get = function (id, callback_success, callback_error) {
@@ -145,6 +146,36 @@ exports.router.update = function (req, res) {
             if (err) {
                 logger.error('Cannot update dialog ' + dialog.id + ' : \n -> ' + err);
             } else {
+                Object.values(dialog.messages).forEach(message => {
+                    message.attachments.forEach(attachment => {
+                        if(attachment.type === 'survey') {
+                            var surveyId = attachment.content[0].accessory.action_id.split('_')[1];
+                            var survey = {
+                                id: surveyId,
+                                type: 'single_answer',
+                                text: message.text,
+                                answers: []
+                            };
+                            var answers = [];
+                            attachment.content.forEach(answerInMessage => {
+                                var answerId = answerInMessage.accessory.action_id.split('_')[2];
+                                var answerIndex = answers.findIndex(answer => answer.id === answerId);
+                                var answer = answers[answerIndex];
+                                if(answer === undefined) {
+                                    answer = {
+                                        id: answerId,
+                                        text: answerInMessage.text.text,
+                                    };
+                                    answerIndex = answers.length;
+                                    answers.push(answer);
+                                }
+                                answers[answerIndex] = answer;
+                            });
+                            survey.answers = answers;
+                            surveys.update(survey, () => {});
+                        }
+                    });
+                });
                 res.write(JSON.stringify(data));
                 res.end();
             }
@@ -266,7 +297,7 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
 
 var uploadFilesAndSendMessage = function (workspace, message, channelId, callback) {
     message.channelId = channelId;
-    addFilesOnMessage(
+    addAttachmentsOnMessage(
         workspace, message, 0,
         () => {
             var conversation = {
@@ -291,7 +322,7 @@ var uploadFilesAndSendMessage = function (workspace, message, channelId, callbac
         });
 }
 
-var addFilesOnMessage = function (workspace, message, attachmentId, callback) {
+var addAttachmentsOnMessage = function (workspace, message, attachmentId, callback) {
     var attachment;
     if (message.attachments !== undefined && message.attachments[attachmentId] !== undefined && message.attachments[attachmentId].type === 'file') {
         attachment = message.attachments[attachmentId].content;
@@ -309,7 +340,7 @@ var addFilesOnMessage = function (workspace, message, attachmentId, callback) {
                     try {
                         await slack.uploadFiles(workspace, files);
                         delete message.attachments[attachmentId];
-                        addFilesOnMessage(workspace, message, attachmentId + 1, callback);
+                        addAttachmentsOnMessage(workspace, message, attachmentId + 1, callback);
                     } catch (error) {
                         logger.error(error);
                     }
@@ -341,9 +372,9 @@ var addFilesOnMessage = function (workspace, message, attachmentId, callback) {
                 ]
             });
         });
-        addFilesOnMessage(workspace, message, attachmentId + 1, callback);
+        addAttachmentsOnMessage(workspace, message, attachmentId + 1, callback);
     } else if (message.attachments !== undefined && message.attachments[attachmentId + 1] !== undefined) {
-        addFilesOnMessage(workspace, message, attachmentId + 1, callback);
+        addAttachmentsOnMessage(workspace, message, attachmentId + 1, callback);
     } else {
         callback();
     }

@@ -1,0 +1,37 @@
+display_information:
+  name: Boothby Beta
+  description: Bonjour humains ! Je vous donne des infos sur le Green IT. Et parfois, je dors.
+  background_color: "#13a844"
+features:
+  bot_user:
+    display_name: Boothby Beta
+    always_online: false
+oauth_config:
+  redirect_urls:
+    - <Boothby_URL>
+  scopes:
+    bot:
+      - app_mentions:read
+      - channels:join
+      - channels:read
+      - chat:write
+      - files:write
+      - im:write
+      - incoming-webhook
+      - users:read
+      - links:read
+      - channels:history
+      - im:history
+settings:
+  event_subscriptions:
+    request_url: <Boothby_URL>/slack/events
+    bot_events:
+      - message.channels
+      - message.im
+      - team_join
+  interactivity:
+    is_enabled: true
+    request_url: <Boothby_URL>/api/interactive
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false
