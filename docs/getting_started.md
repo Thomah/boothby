@@ -1,35 +1,31 @@
 # Prerequisites
 
 - NodeJS 10.15+ with npm in PATH variable
-- MongoDB Server 4.0
+- PostgreSQL Database
 - Slack Client
 - Be added to the Testing Boothby Slack workspace
-- MongoDB Client (not mandatory but strongly recommanded if you're not a PGM of Mongo)
+- PostgreSQL Client (not mandatory but strongly recommanded if you're not a PGM of `psql`)
 
 # Run the app
 
 ## On a development workstation
 
-- Create a MongoDb database named `heroku_lqkdtf3k`. Yes the name is static, it's crap and we'll change that in the future.
-- Run the following commands in a a Git Bash terminal
-```bash
-git clone https://github.com/valeuriad/boothby-core.git
-cd Boothby
-npm install
-cp bin/setenv.sh.template bin/setenv.sh
+Provide the following environment variables (in a `.env` file for example):
+
 ```
-- Fill the file `bin/setenv.sh` with the following values (1) :
-```bash
-export SLACK_CLIENT_ID=<ask-someone-of-the-team>
-export SLACK_CLIENT_SECRET=<ask-someone-of-the-team>
-export MONGODB_URI=mongodb://localhost:27017/heroku_lqkdtf3k
+PORT = <Port Boothby will listen on | Default : 80>
+
+PGHOST = <Host of the PostgreSQL DB | Default : localhost>
+PGPORT = <Port of the PostgreSQL DB | Default : 5432>
+PGDATABASE = <Name of the PostgreSQL DB | Default : boothby>
+PGUSER = <User used to connect to the PostgreSQL DB | Default : boothby>
+PGPASSWORD = <Password used to connect to the PostgreSQL DB | Default : boothby>
+
+SLACK_CLIENT_ID=<Slack App client ID>
+SLACK_CLIENT_SECRET=<Slack App client secret>
+SLACK_SIGNING_SECRET=<Slack App signing secret>
+
+APP_URL=<Exposed URL of Boothby>
 ```
 
-- Run the app using `node src/index.js`
-
-(1) On Windows, you should create each environment variables in `bin\setenv.sh` inside your environment variables. They are located here :
-`System > Advanced System Parameters > Environment Variables`.
-
-(2) On Linux, just run `source bin/setenv.sh` after setting values
-
-## On a Ubuntu production environment
+Run the app using `npm start`

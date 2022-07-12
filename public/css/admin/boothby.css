@@ -52,6 +52,22 @@ label,
   border: 0;
 }
 
+label.file-label {
+  cursor: pointer;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  padding: 5px 15px;
+  margin: 5px;
+  background: #dddddd;
+  display: inline-block;
+}
+
+input.file-file {
+  opacity: 0;
+  position: absolute;
+  z-index: -1;
+}
+
 /* CONFIG */
 #next-execution-p {
   display: inline;
