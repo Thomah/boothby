@@ -52,10 +52,5 @@ function doc_getConfig() {
     cron: document.getElementById("cron-0").value,
     active: true
   };
-  configs["backup"] = {
-    name: "backup",
-    cron: document.getElementById("cron-1").value,
-    active: true
-  };
   return configs;
 }

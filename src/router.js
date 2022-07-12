@@ -1,15 +1,13 @@
 const fs = require("fs");
 const path = require("path");
 
-const api = require("./api.js");
-const backups = require("./backups.js");
 const configs = require("./configs.js");
-const db = require("./db.js");
 const dialogs = require("./dialogs.js");
 const files = require("./files.js");
 const interactive = require("./interactive.js");
+const logger = require("./logger.js");
 const messages = require("./messages.js");
-const slack = require("./slack.js");
+const surveys = require("./surveys.js");
 const users = require("./users.js");
 const workspaces = require("./workspaces.js");
 
@@ -19,7 +17,8 @@ const resourceFolder = {
   ".js": "./public/js",
   ".ico": "./public/img",
   ".png": "./public/img",
-  ".jpg": "./public/img"
+  ".jpg": "./public/img",
+  ".xsd": "./public/xsd"
 };
 
 const mimeTypes = {
@@ -28,23 +27,26 @@ const mimeTypes = {
   ".css": "text/css",
   ".ico": "image/x-icon",
   ".png": "image/png",
-  ".jpg": "image/jpg"
+  ".jpg": "image/jpg",
+  ".xsd": "text/xml"
 };
 
 var getFilePath = function (request) {
   var extname = String(path.extname(request.url)).toLowerCase();
   var folder = resourceFolder[extname] || resourceFolder[".html"];
-  var filePath = folder + request.url;
+  var filePath = folder + request.url.replace('/public', '/').replace('//', '/').replace(/\?.*/, '');
   if (filePath === resourceFolder[".html"] + "/") {
     filePath = resourceFolder[".html"] + "/index.html";
   } else if (filePath === resourceFolder[".html"] + "/admin/") {
     filePath = resourceFolder[".html"] + "/admin/index.html";
   }
+  logger.log(`Serving ${filePath}`);
   return filePath;
 };
 
-var routeStatic = function (request, response) {
-  var filePath = getFilePath(request);
+var serveFile = function (req, res) {
+
+  var filePath = getFilePath(req);
   var extname = String(path.extname(filePath)).toLowerCase();
   var contentType = mimeTypes[extname] || "application/octet-stream";
 
@@ -52,169 +54,86 @@ var routeStatic = function (request, response) {
   fs.readFile(filePath, function (error, content) {
     if (error) {
       if (error.code === "ENOENT") {
-        response.writeHead(404);
-        response.end();
+        res.writeHead(404);
+        res.end();
       } else {
-        response.writeHead(500);
-        response.end(
+        res.writeHead(500);
+        res.end(
           "Sorry, check with the site admin for error: " + error.code + " ..\n"
         );
-        response.end();
+        res.end();
       }
     } else {
-      response.writeHead(200, { "Content-Type": contentType });
-      response.end(content, "utf-8");
+      res.writeHead(200, { "Content-Type": contentType });
+      res.end(content, "utf-8");
     }
   });
 };
 
-var routeApi = function (request, response) {
-
-  if (request.url.startsWith("/api/user")) {
-    users.route(request, response);
-  }
-
-  // /api/dialogs*
-  else if (request.url.startsWith("/api/backups")) {
-    backups.route(request, response);
-  }
-
-  // /api/config
-  else if (request.url.startsWith("/api/configs")) {
-    configs.route(request, response);
-  }
-
-  // /api/dialogs*
-  else if (request.url.startsWith("/api/dialogs")) {
-    dialogs.route(request, response);
-  }
-
-  // /api/files/*
-  else if(request.url.startsWith("/api/files/")) {
-    files.route(request, response);
-  }
-
-  // GET : endpoint to interactive components
-  else if (request.url === "/api/interactive") {
-    interactive.route(request, response);
-  }
-
-  // /api/dialogs*
-  else if (request.url == "/api/links") {
-    var slackLink = "https://slack.com/oauth/authorize?client_id=" + process.env.SLACK_CLIENT_ID + "&scope=bot,channels:read,channels:write,chat:write:bot,users:read"
-    response.writeHead(200, { "Content-Type": "application/json" });
-    response.write(JSON.stringify({
-      "slack": slackLink
-    }));
-    response.end();
-  }
-
-  // /api/oauth
-  else if (request.url.startsWith("/api/oauth") && request.method === "GET") {
-    var response_400 = function (err, response) {
-      response.writeHead(400, { "Content-Type": "application/json" });
-      response.write(JSON.stringify(err));
-      response.end();
-    };
-    if (request.params.code != undefined) {
-      api.getAccessToken(request.params.code, function (workspace) {
-        if (!workspace.ok) {
-          response_400(workspace, response);
-        } else {
-          workspace.progression = 1;
-          db.insert("workspaces", workspace, function (data) {
-            workspace = data.ops[0];
-            db.read("dialogs", { name: "Welcome Message", category: "intro" }, function (dialog) {
-              dialogs.playInWorkspace(dialog, workspace);
-            });
-            workspaces.reloadUsers(workspace);
-            slack.initRtm(workspace);
-            response.writeHead(302, {
-              'Location': "/index.html?installed=1"
-            });
-            response.end();
-          })
-        }
-      }, response_400);
-    } else {
-      response_400("No code provided", response);
-    }
-  }
-
-  // /api/workspaces
-  else if (request.url.startsWith("/api/workspaces")) {
-    workspaces.route(request, response);
-  }
-
-  // /api/simple-messages
-  else if (request.url.startsWith("/api/messages")) {
-    messages.route(request, response);
-  }
-
-  else {
-    response.writeHead(404, { "Content-Type": "application/octet-stream" });
-    response.end();
-  }
+var unhandledRequestHandler = function() {
+  logger.log('Acknowledging this incoming request because 2 seconds already passed...');
+  return true;
 };
 
-exports.serve = function (request, response) {
-  var regex_params = /(\?|&)([^=]+)=([^&]+)/g;
-  if (request.url.match(regex_params) !== null) {
-    var matchs = request.url.match(regex_params);
-    var params = {};
-    var match, k;
-    for (k = 0; k < matchs.length; k++) {
-      match = matchs[k].match(/(\?|&)([^=]+)=([^&]+)/);
-      params[match[2]] = match[3];
-    }
-    request.params = params;
-  }
+var processEventErrorHandler = function({ error, logger, response }) {
+  logger.error(`processEvent error: ${error}`);
+  // acknowledge it anyway!
+  response.writeHead(200);
+  response.end();
+  return true;
+};
 
-  //If API request, there is a token in the request header which proves that 
-  //   the user is authenticated
-  if (request.headers.token) {
-    var token = request.headers.token;
-  }
+exports.initRoutes = function (receiver) {
 
-  var auth = false;
+  // API
+  receiver.router.get('/api/configs', configs.router.list);
+  receiver.router.put('/api/configs', configs.router.update);
+  receiver.router.get('/api/dialogs', dialogs.router.list);
+  receiver.router.post('/api/dialogs', dialogs.router.create);
+  receiver.router.get('/api/dialogs/:id', dialogs.router.get);
+  receiver.router.put('/api/dialogs/:id', dialogs.router.update);
+  receiver.router.delete('/api/dialogs/:id', dialogs.router.delete);
+  receiver.router.get('/api/dialogs/:id/play', dialogs.router.play);
+  receiver.router.get('/api/files/:id', files.router.get);
+  receiver.router.post('/api/files', files.router.create);
+  receiver.router.post('/api/interactive', interactive.router.interact);
+  receiver.router.get('/api/links', (req, res) => {
+    var slackLink = "https://slack.com/oauth/v2/authorize?client_id=" + process.env.SLACK_CLIENT_ID + "&scope=app_mentions:read,channels:join,channels:read,chat:write,files:write,im:write,incoming-webhook,users:read,links:read,channels:history,im:history&user_scope=&redirect_uri=" + process.env.APP_URL + "/api/oauth"
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.write(JSON.stringify({
+      "slack": slackLink
+    }));
+    res.end();
+  });
+  receiver.router.get('/api/messages', messages.router.list);
+  receiver.router.post('/api/messages', messages.router.send);
+  receiver.router.delete('/api/messages/:id', messages.router.delete);
+  receiver.router.get('/api/oauth', workspaces.router.create);
+  receiver.router.post('/api/surveys', surveys.router.create);
+  receiver.router.post('/api/surveys/:id/answers', surveys.router.createAnswer);
+  receiver.router.get('/api/users', users.router.list);
+  receiver.router.get('/api/users/login', users.router.login);
+  receiver.router.get('/api/users/logout', users.router.logout);
+  receiver.router.post('/api/users', users.router.create);
+  receiver.router.delete('/api/users/:id', users.router.delete);
+  receiver.router.get('/api/workspaces', workspaces.router.list);
+  receiver.router.get('/api/workspaces/:id', workspaces.router.get);
+  receiver.router.get('/api/workspaces/:id/users', workspaces.router.getSlackUsers);
+  receiver.router.post('/api/workspaces/:id/users', workspaces.router.reloadSlackUsers);
+  receiver.router.delete('/api/workspaces/:id', workspaces.router.delete);
 
-  // We check if the token in the request header, is the same that matches the one
-  //   which has been saved in the cache server
-  if (typeof token !== 'undefined') {
-    users.getInCache("tokens", function (err, value) {
-      if (!err) {
-        if (value == undefined) {
-          auth = false;
-        } else {
-          if (value.includes(token)) {
-            auth = true;
-          }
-        }
-      }
+  // Static files
+  receiver.router.get('/favicon.ico', (req, res) => serveFile(req, res));
+  receiver.router.get('/', (req, res) => {
+    fs.readFile(resourceFolder[".html"] + "/index.html", function (error, content) {
+      res.writeHead(200, { "Content-Type": mimeTypes['.html'] });
+      res.end(content, "utf-8");
     });
-  }
+  });
+  receiver.router.get('/admin/*', (req, res) => serveFile(req, res));
+  receiver.router.get('/public/*', (req, res) => serveFile(req, res));
 
-  var match_params = request.url.match(/^.*(\?.+)\/?$/);
-  if (match_params !== null) {
-    request.url = request.url.replace(match_params[1], "");
-  }
-
-  if (!request.url.startsWith("/api/")) {
-    routeStatic(request, response);
-  } else {
-    if (!auth) {
-      if ((request.url === '/api/user/login' && request.method === 'POST')
-        || (request.url === '/api/links' && request.method === 'GET')
-        || (request.url === '/api/oauth' && request.method === 'GET')
-        || (request.url === '/api/interactive' && request.method === 'POST')) {
-        routeApi(request, response);
-      } else {
-        response.writeHead(401); // 401 status code = not allowed to access API
-        response.end();
-      }
-    } else {
-      routeApi(request, response);
-    }
-  }
-  return response;
+  // Slack
+  receiver.unhandledRequestHandler = unhandledRequestHandler;
+  receiver.processEventErrorHandler = processEventErrorHandler;
 };

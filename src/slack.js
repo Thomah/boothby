@@ -1,155 +1,150 @@
-const { WebClient } = require('@slack/web-api');
-const { RTMClient } = require('@slack/rtm-api');
+const https = require("https");
 const schedule = require("node-schedule");
-const db = require("./db.js");
-const dialogs = require("./dialogs.js");
+const querystring = require("querystring");
 const logger = require("./logger.js");
-const workspaces = require("./workspaces.js");
 
-var initJobs = function() {
+const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
+const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
+
+let app
+
+exports.setApp = function(newApp) {
+    app = newApp;
+}
+
+exports.initJobs = function () {
     schedule.scheduleJob("* * * * * *", postShift);
     schedule.scheduleJob("*/2 * * * * *", updateShift);
 };
 
-var initRtm = function(workspace) {
-    const rtm = new RTMClient(workspace.bot.bot_access_token);
-    rtm.start();
-    rtm.on("message", message => {
-        if (message.text !== undefined) {
-            db.insert("messages", message);
-        }
-        if (message.text === ":house:") {
-            db.read("workspaces", { team_id: message.team }, function(workspacesInDb) {
-                var workspace = workspacesInDb;
-                if (workspacesInDb.access_token === undefined) {
-                    workspace = workspacesInDb[0];
-                }
-                var user = workspaces.getUsersByChannelId(workspace, message.channel);
-                if (user !== null) {
-                    db.read("dialogs", { name: "Consent PM" }, function(dialog) {
-                        dialog.channelId = message.channel;
-                        dialogs.speakRecurse(workspace, dialog, "0", () => {});
-                    })
-                }
-            });
-        }
+exports.getAccessToken = function(code, callback_end, callback_err) {
+
+  var b = new Buffer.from(SLACK_CLIENT_ID + ":" + SLACK_CLIENT_SECRET);
+  var basicAuth = b.toString('base64');
+
+  var postData = querystring.stringify({
+    code: code,
+    redirect_uri: process.env.APP_URL + "/api/oauth"
+  });
+
+  var options = {
+    host: 'slack.com',
+    path: '/api/oauth.v2.access',
+    method: 'POST',
+    headers: {
+      "Authorization": "Basic " + basicAuth,
+      "Content-Type": 'application/x-www-form-urlencoded'
+    }
+  };
+
+  var req = https.request(options, function(response) {
+    var str = ''
+    response.on('data', function (chunk) {
+      str += chunk;
     });
-    rtm.on("team_join", event => {
-        db.read("workspaces", { team_id: event.user.team_id }, function(workspacesOfNewUser) {
-            if (!Array.isArray(workspacesOfNewUser)) {
-                workspacesOfNewUser = [workspacesOfNewUser];
-            }
-            var previous_bot_access_token = [];
-            for (var workspaceNum in workspacesOfNewUser) {
-                var workspaceOfNewUser = workspacesOfNewUser[workspaceNum];
-                if (previous_bot_access_token.indexOf(workspaceOfNewUser.bot.bot_access_token) < 0) {
-                    workspaces.openIM(workspaceOfNewUser, [event.user], 0, function() {
-                        var workspaceId = workspaceOfNewUser._id;
-                        db.update("workspaces", { _id: new db.mongodb().ObjectId(workspaceId) }, workspaceOfNewUser, function() {
-                            db.read("dialogs", { name: "Consent PM" }, function(dialog) {
-                                dialog.channelId = workspaces.getUsersById(workspaceOfNewUser, event.user.id).im_id;
-                                workspaceOfNewUser._id = workspaceId;
-                                dialogs.speakRecurse(workspaceOfNewUser, dialog, 0);
-                            });
-                        });
-                    });
-                    previous_bot_access_token.push(workspaceOfNewUser.bot.bot_access_token);
-                }
-            }
-        });
+
+    response.on('end', function () {
+      callback_end(JSON.parse(str));
     });
-};
-
-var join = function(workspace, channelName) {
-    return new WebClient(workspace.access_token).channels.join({ name: channelName });
-};
-
-var listUsers = function(workspace) {
-    return new WebClient(workspace.bot.bot_access_token).users.list();
-};
-
-var openIM = function(workspace, params) {
-    return new WebClient(workspace.bot.bot_access_token).im.open(params);
+  });
+  
+  req.on('error', function (err) {
+    callback_err(JSON.parse(err));
+  });
+ 
+  req.write(postData);
+  req.end();
 }
 
+exports.authTest = function (workspace) {
+    return app.client.auth.test({ token: workspace.access_token });
+};
+
+exports.join = function (workspace, channelId) {
+    return app.client.conversations.join({ token: workspace.access_token, channel: channelId });
+};
+
+exports.listUsers = function (workspace) {
+    return app.client.users.list({ token: workspace.access_token });
+};
+
+exports.openIM = function (workspace, params) {
+    params.token = workspace.access_token;
+    return app.client.conversations.open(params);
+}
+
+exports.revokeToken = function (workspace) {
+    return app.client.auth.revoke(workspace.access_token);
+};
+
+exports.sendSimpleMessage = function (workspace, channelId, message) {
+    var content = { text: message };
+    exports.postMessage(workspace, channelId, content);
+};
+
+exports.uploadFiles = function (workspace, files) {
+    files.token = workspace.access_token;
+    return app.client.files.upload(files);
+};
+
 var postQueue = [];
-var postMessage = function(workspace, channelId, content) {
-    if (content.text !== undefined) {
+exports.postMessage = function (workspace, channelId, message) {
+    logger.debug(JSON.stringify(message.blocks));
+    if (message.blocks !== undefined && message.blocks.length > 0) {
         postQueue.push({
-            token: workspace.bot.bot_access_token,
-            message: {
-                channel: channelId,
-                text: content.text,
-                link_names: true,
-                attachments: content.attachments
-            }
-        })
-    } else {
-        postQueue.push({
-            token: workspace.bot.bot_access_token,
+            token: workspace.access_token,
             message: {
                 channel: channelId,
                 type: "message",
                 text: "Impossible d'afficher ce contenu",
-                blocks: JSON.stringify(content),
+                blocks: JSON.stringify(message.blocks),
                 link_names: true
             }
-        })
+        });
+    } else {
+        postQueue.push({
+            token: workspace.access_token,
+            message: {
+                channel: channelId,
+                text: message.text,
+                link_names: true,
+                attachments: message.attachments
+            }
+        });
     }
 };
-var postShift = function() {
+var postShift = function () {
     var shift = postQueue.shift();
     if (shift !== undefined) {
-        (async() => {
+        (async (app) => {
             try {
-                await new WebClient(shift.token).chat.postMessage(shift.message);
+                shift.message.token = shift.token;
+                await app.client.chat.postMessage(shift.message);
             } catch (error) {
                 logger.error(error);
             }
-        })();
+        })(app);
     }
-};
-
-var revokeToken = function(workspace) {
-    return new WebClient(workspace.bot.bot_access_token).auth.revoke(workspace.access_token);
-};
-
-var sendSimpleMessage = function(workspace, channelId, message) {
-    var content = { text: message };
-    postMessage(workspace, channelId, content);
 };
 
 var updateQueue = [];
-var updateMessage = function(workspace, message) {
+exports.updateMessage = function (workspace, message) {
     updateQueue.push({
-        token: workspace.bot.bot_access_token,
+        token: workspace.access_token,
         message: message
     })
 };
-var updateShift = function() {
+var updateShift = function () {
     var shift = updateQueue.shift();
     if (shift !== undefined) {
-        (async() => {
+        (async (app) => {
             try {
-                await new WebClient(shift.token).chat.update(shift.message);
+                shift.message.token = shift.token;
+                logger.debug("Sending Slack chat.update : " + shift.message.blocks);
+                await app.client.chat.update(shift.message);
             } catch (error) {
                 logger.error(error);
             }
-        })();
+        })(app);
     }
 };
-
-var uploadFiles = function(workspace, files) {
-    return new WebClient(workspace.bot.bot_access_token).files.upload(files);
-};
-
-exports.initJobs = initJobs;
-exports.initRtm = initRtm;
-exports.join = join;
-exports.listUsers = listUsers;
-exports.openIM = openIM;
-exports.postMessage = postMessage;
-exports.revokeToken = revokeToken;
-exports.sendSimpleMessage = sendSimpleMessage;
-exports.updateMessage = updateMessage;
-exports.uploadFiles = uploadFiles;

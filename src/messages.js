@@ -1,59 +1,67 @@
 const { parse } = require("querystring");
-const db = require("./db.js");
+const db = require('./db/index.js');
+const logger = require("./logger.js");
+const messages = require("./messages.js");
 const slack = require("./slack.js");
+const workspaces = require("./workspaces.js");
 
-var response404 = function (response) {
-    response.writeHead(404, { "Content-Type": "application/octet-stream" });
-    response.end();
-};
-
-var route = function (request, response) {
-
-    // GET : retrieve messages
-    if (request.method === "GET") {
-        response.writeHead(200, { "Content-Type": "application/json" });
-        db.list("messages", { ts: 1 }, function (data) {
-            response.write(JSON.stringify(data));
-            response.end();
-        });
-    }
-
-    // DELETE : delete a message
-    else if (request.method === "DELETE") {
-        var regex_delete = /^\/api\/messages\/([^/]+)\/?$/;
-        if (request.url.match(regex_delete) !== null) {
-            var objectId = request.url.match(regex_delete)[1];
-            db.delete("messages", objectId, function () {
-                response.writeHead(200, { "Content-Type": "application/json" });
-                response.end();
-            });
+exports.create = function(message, callback) {
+    db.querySync('INSERT INTO messages(type_slack, client_msg_id, text_slack, user_slack, ts, team_slack, blocks, channel, event_ts, channel_type) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)', [message.type, message.client_msg_id, message.text, message.user, message.ts, message.team, JSON.stringify(message.blocks), message.channel, message.event_ts, message.channel_type], err => {
+        if (err) {
+            logger.error('Cannot create message in DB ' + message.text + ' : \n -> ' + err);
         } else {
-            response404(response);
+            if(callback !== undefined) {
+                callback();
+            }
         }
-    }
+    });
+}
 
-    // POST : send a message
-    else if (request.method === "POST") {
-        if (request.url === "/api/messages/send") {
-            let body = "";
-            request.on("data", chunk => {
-                body += chunk.toString();
-            });
-            request.on("end", () => {
-                var parsedBody = parse(body);
-                db.read("workspaces", {team_id: parsedBody.workspace}, function(workspace) {
-                    slack.sendSimpleMessage(workspace, parsedBody.channel, parsedBody.message);
-                });
-            });
-            response.writeHead(200, { "Content-Type": "application/octet-stream" });
-            response.end();
+exports.router = {};
+
+exports.router.list = function (req, res) {
+    db.querySync('SELECT id, text_slack, user_slack, ts, team_slack, channel FROM messages', [], (err, data) => {
+        if (err) {
+            logger.error('Cannot list messages : \n -> ' + err);
+            res.status(500).end();
+        } else {
+            res.send(data.rows);
         }
-    }
-
-    // Any other verb
-    else {
-        response404(response);
-    }
+    });
 };
 
-exports.route = route;
+exports.router.send = function (req, res) {
+    let body = "";
+    req.on("data", chunk => {
+        body += chunk.toString();
+    });
+    req.on("end", () => {
+        var parsedBody = parse(body);
+        workspaces.getByTeamId(parsedBody.workspace,
+            slackTeam => {
+                slack.sendSimpleMessage(slackTeam, parsedBody.channel, parsedBody.message);
+                messages.create({
+                    type: 'message',
+                    client_msg_id: '',
+                    text: parsedBody.message,
+                    user: slackTeam.bot_user_id,
+                    ts: Math.floor(new Date().getTime() / 1000),
+                    team: slackTeam.team_id,
+                    blocks: '[]',
+                    channel: parsedBody.channel,
+                    event_ts: Math.floor(new Date().getTime() / 1000),
+                    channel_type: 'channel'
+                });
+            },
+            () => {
+                res.status(500).end();
+            });
+    });
+    res.writeHead(200, { "Content-Type": "application/octet-stream" });
+    res.end();
+};
+
+exports.router.delete = function (req, res) {
+    db.querySync('DELETE FROM messages WHERE id = $1', [req.params.id]);
+    res.status(200).end();
+};

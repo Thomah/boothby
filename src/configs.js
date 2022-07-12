@@ -1,73 +1,48 @@
-const db = require("./db.js");
+const db = require('./db/index.js');
+const logger = require("./logger.js");
 const scheduler = require("./scheduler.js");
 
-var init = function() {
-    db.read("configs", {name: "dialog-publish"}, function(config) {
-        if(config === null) {
-            db.insert("configs", {
-                name: "dialog-publish",
-                cron: "42 9 * * 2,4",
-                active: true
-            }, () => {});
-        }
-    });
-    db.read("configs", {name: "dialog-publish"}, function(config) {
-        if(config === null) {
-            db.insert("configs", {
-                name: "backup",
-                cron: "0 17 * * *",
-                active: true
-            }, () => {});
-        }
-    });
-};
+exports.list = function (callback_success, callback_error) {
+  db.querySync('SELECT id, name, cron, active FROM configs', [], (err, data) => {
+    if (err) {
+      logger.error('Cannot list configs : \n -> ' + err);
+      callback_error();
+    } else {
+      for (var configNum in data.rows) {
+        data.rows[configNum].nextInvocation = scheduler.nextInvocation(data.rows[configNum]);
+      }
+      callback_success(data.rows);
+    }
+  });
+}
 
-var get = function(callback) {
-    db.list("configs", {_id: 1}, function(configs) {
-        for(var configNum in configs) {
-            configs[configNum].nextInvocation = scheduler.nextInvocation(configs[configNum]);
-        }
-        callback(configs);
+exports.router = {};
+
+exports.router.list = function (req, res) {
+  exports.list(
+    configs => {
+      res.send(configs)
+    }, () => {
+      res.status(500).end();
     });
 };
 
-var route = function (request, response) {
-
-    // GET : retrieve config
-    if (request.method === "GET") {
-      response.writeHead(200, { "Content-Type": "application/json" });
-      get(function (data) {
-        response.write(JSON.stringify(data));
-        response.end();
-      });
-    }
-
-    // PUT : update config
-    else if (request.method === "PUT") {
-      response.writeHead(200, { "Content-Type": "application/json" });
-      let body = "";
-      request.on("data", chunk => {
-        body += chunk.toString();
-      });
-      request.on("end", () => {
-        var configs = JSON.parse(body);
-        for(var configNum in configs) {
-          var config = configs[configNum];
-          db.update("configs", { name: config.name }, config, () => {});
-          scheduler.reschedule(config);
+exports.router.update = function (req, res) {
+  let body = "";
+  req.on("data", chunk => {
+    body += chunk.toString();
+  });
+  req.on("end", () => {
+    var configs = JSON.parse(body);
+    for (var configNum in configs) {
+      var config = configs[configNum];
+      db.querySync("UPDATE configs SET cron = $1, active = $2 WHERE name = $3", [config.cron, config.active, config.name], (err) => {
+        if (err) {
+          logger.error('Cannot update config ' + config.id + ' : \n -> ' + err);
         }
-        response.write(JSON.stringify({}));
-        response.end();
       });
+      scheduler.reschedule(config);
     }
-
-    // Otherwise 404
-    else {
-      response.writeHead(404, { "Content-Type": "application/octet-stream" });
-      response.end();
-    }
+    res.status(200).end();
+  });
 };
-
-exports.init = init;
-exports.get = get;
-exports.route = route;

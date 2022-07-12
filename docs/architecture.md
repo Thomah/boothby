@@ -2,7 +2,7 @@
 
 This software depends on two external components :
 - The Slack API
-- A MongoDB database
+- A PostgreSQL Database
 
 Furthermore, this software is devivded in two main components :
 - The web interface, located in `public` folder

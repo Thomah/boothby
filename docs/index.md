@@ -13,4 +13,4 @@ Boothby is a french bot available on Slack which publish tips and news about Gre
 ## Contact
 
 - Creator : [@Thomah](https://github.com/thomah)
-- Developer : [@JimmyDore](https://github.com/JimmyDore)
+- Contributor : [@JimmyDore](https://github.com/JimmyDore)
