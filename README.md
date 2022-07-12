@@ -2,15 +2,22 @@
 
 ## Configure the app
 
-Configuration is brought to the app with the `dotenv` package. You need a `.env`
-file with the following content :
+Provide the following environment variables (in a `.env` file for example):
 
 ```
-MONGODB_URI=mongodb://<DB username>:<DB password>@<DB host>:<DB port>/<DB name>
+PORT = <Port Boothby will listen on | Default : 80>
+
+PGHOST = <Host of the PostgreSQL DB | Default : localhost>
+PGPORT = <Port of the PostgreSQL DB | Default : 5432>
+PGDATABASE = <Name of the PostgreSQL DB | Default : boothby>
+PGUSER = <User used to connect to the PostgreSQL DB | Default : boothby>
+PGPASSWORD = <Password used to connect to the PostgreSQL DB | Default : boothby>
+
 SLACK_CLIENT_ID=<Slack App client ID>
 SLACK_CLIENT_SECRET=<Slack App client secret>
 SLACK_SIGNING_SECRET=<Slack App signing secret>
-APP_URL=<URL of this App>
+
+APP_URL=<Exposed URL of Boothby>
 ```
 
 ## Open a tunnel to test the app locally
@@ -24,7 +31,7 @@ ngrok http 80
 Take note of the ngrok URL and report the HTTPS URL in the `APP_URL` env variable :
 
 ```
-APP_URL=<URL of this App>
+APP_URL=<Exposed URL of Boothby>
 ```
 
 Then, run the app in another terminal :

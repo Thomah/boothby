@@ -214,3 +214,11 @@ CREATE OR REPLACE FUNCTION surveys_vote(
         END;
 ';
 --rollback drop function if exists surveys_vote;
+
+--changeset boothby:create-table-files
+CREATE TABLE IF NOT EXISTS files (
+    id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
+    name CHARACTER VARYING(255), 
+    type CHARACTER VARYING(255)
+);
+--rollback drop table files;

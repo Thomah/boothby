@@ -1,6 +1,4 @@
-.travis/id_rsa
 node_modules
-bin/setenv.sh
 *.log
 .env
-*.pem
+files/uploads

@@ -2,7 +2,6 @@ const { App, ExpressReceiver, LogLevel } = require('@slack/bolt');
 
 const configs = require("./configs.js");
 const db = require('./db/index.js');
-const mongo = require("./mongo.js");
 const dialogs = require("./dialogs.js");
 const logger = require("./logger.js");
 const messages = require("./messages.js");
@@ -20,21 +19,19 @@ const HttpsProxyAgent = require('https-proxy-agent');
 const proxy = process.env.HTTP_PROXY ? new HttpsProxyAgent(process.env.HTTP_PROXY) : null;
 
 db.waitForLiquibase(() => {
-  mongo.init(function () {
-    configs.list(data => {
-      for (var dataNum in data) {
-        var config = data[dataNum];
-        if (config.name === "dialog-publish") {
-          scheduler.schedule(config, function (fireDate) {
-            logger.log('CRON Execution : dialog-publish (scheduled at ' + fireDate + ')');
-            dialogs.resumeDialogs();
-          });
-        }
+  configs.list(data => {
+    for (var dataNum in data) {
+      var config = data[dataNum];
+      if (config.name === "dialog-publish") {
+        scheduler.schedule(config, function (fireDate) {
+          logger.log('CRON Execution : dialog-publish (scheduled at ' + fireDate + ')');
+          dialogs.resumeDialogs();
+        });
       }
-    });
-    users.createDefaultUser();
-    slack.initJobs();
+    }
   });
+  users.createDefaultUser();
+  slack.initJobs();
 });
 
 users.initCache();

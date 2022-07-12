@@ -326,7 +326,7 @@ var addAttachmentsOnMessage = function (workspace, message, attachmentId, callba
     var attachment;
     if (message.attachments !== undefined && message.attachments[attachmentId] !== undefined && message.attachments[attachmentId].type === 'file') {
         attachment = message.attachments[attachmentId].content;
-        fs.readFile("files/" + attachment.file_id, function (error, content) {
+        fs.readFile("files/uploads/" + attachment.file_id, function (error, content) {
             if (!error) {
                 var files = {
                     channels: message.channelId,

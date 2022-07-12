@@ -94,8 +94,8 @@ exports.initRoutes = function (receiver) {
   receiver.router.put('/api/dialogs/:id', dialogs.router.update);
   receiver.router.delete('/api/dialogs/:id', dialogs.router.delete);
   receiver.router.get('/api/dialogs/:id/play', dialogs.router.play);
-  receiver.router.get('/api/files/*', (req, res) => files.route(req, res));
-  receiver.router.post('/api/files', (req, res) => files.route(req, res));
+  receiver.router.get('/api/files/:id', files.router.get);
+  receiver.router.post('/api/files', files.router.create);
   receiver.router.post('/api/interactive', interactive.router.interact);
   receiver.router.get('/api/links', (req, res) => {
     var slackLink = "https://slack.com/oauth/v2/authorize?client_id=" + process.env.SLACK_CLIENT_ID + "&scope=app_mentions:read,channels:join,channels:read,chat:write,files:write,im:write,incoming-webhook,users:read,links:read,channels:history,im:history&user_scope=&redirect_uri=" + process.env.APP_URL + "/api/oauth"
