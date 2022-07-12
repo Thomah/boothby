@@ -4,15 +4,14 @@
         "plugins": [
           "@semantic-release/commit-analyzer",
           "@semantic-release/release-notes-generator",
-          "@semantic-release/github",
-          ["@semantic-release/exec", {
-            "prepare": "npm run package"
+          ["@semantic-release/npm", {
+            "npmPublish": false
           }],
+          "@semantic-release/github",
           [
             "@semantic-release/git",
             {
               "assets": [
-                "dist",
                 "package.json",
                 "package-lock.json"
               ],
