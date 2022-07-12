@@ -5,7 +5,7 @@ on:
   push:
 
 jobs:
-  build:
+  npm:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -15,9 +15,7 @@ jobs:
         with:
           cache: npm
           node-version: 16
-      - run: |
-          npm ci
-          npm run all
+      - run: npm ci
 
   docker:
     runs-on: ubuntu-latest
