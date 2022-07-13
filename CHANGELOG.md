@@ -1,0 +1,12 @@
+# 1.0.0 (2022-07-13)
+
+
+### Bug Fixes
+
+* .snyk & package.json to reduce vulnerabilities ([362b93e](https://github.com/thomah/boothby/commit/362b93ed45b70f5952454b6f561961d77c2aecb8))
+* build Docker & provide NPM token to release ([1b825ee](https://github.com/thomah/boothby/commit/1b825eedf39ce60079e2febc41b9b95f7b4a0f22))
+* Build Docker on build workflow ([04a22fe](https://github.com/thomah/boothby/commit/04a22fee0dcdb8cb00ac5786b503e940430d1b6f))
+* Checkout repo before Docker build ([6d26dbe](https://github.com/thomah/boothby/commit/6d26dbe29a8fea8c34fbc850ea5c44e6588cf402))
+* disable publish on npm registry ([e348129](https://github.com/thomah/boothby/commit/e348129ee899aad418bd35a7a09c508e50d43bf9))
+* remove DockerHub authentication for build workflow ([283bdf1](https://github.com/thomah/boothby/commit/283bdf1ef5e7b9dcba7b00b2e42382d12b624b6f))
+* Remove npm run all command from github workflows ([1a8ce07](https://github.com/thomah/boothby/commit/1a8ce07feb82ca33878e59cf398549bd22351379))
