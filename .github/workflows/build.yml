@@ -5,6 +5,7 @@ on:
   push:
 
 jobs:
+
   npm:
     runs-on: ubuntu-latest
     steps:
@@ -14,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           cache: npm
-          node-version: 16
+          node-version: 16.x
       - run: npm ci
 
   docker:
