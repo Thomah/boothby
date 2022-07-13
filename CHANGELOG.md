@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/thomah/boothby/compare/v1.0.0...v1.1.0) (2022-07-13)
+
+
+### Features
+
+* release v2.0.0 ([c11f2d5](https://github.com/thomah/boothby/commit/c11f2d59eb2bb981774288b29ffa0160ac6f3002))
+
 # 1.0.0 (2022-07-13)
 
 
