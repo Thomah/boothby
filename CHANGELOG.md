@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/thomah/boothby/compare/v1.1.0...v2.0.0) (2022-07-13)
+
+
+### Continuous Integration
+
+* disable npm publish ([7ecad1a](https://github.com/thomah/boothby/commit/7ecad1a92376e935b1c7871086a687cc580b8cf7))
+
+
+### BREAKING CHANGES
+
+* Bump version to 2.0.0
+
 # [1.1.0](https://github.com/thomah/boothby/compare/v1.0.0...v1.1.0) (2022-07-13)
 
 
