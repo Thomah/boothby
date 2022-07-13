@@ -1,12 +1,12 @@
 {
   "name": "boothby",
-  "version": "2.0.0",
+  "version": "v2.0.0",
   "description": "A bot to provide tips about how to make our softwares greener",
   "repository": {
     "type": "git",
     "url": "git://github.com/thomah/boothby.git"
   },
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "BEER-WARE",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js"
