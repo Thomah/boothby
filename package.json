@@ -16,7 +16,7 @@
     "@slack/bolt": "^3.11.3",
     "bcrypt-nodejs": "0.0.3",
     "dotenv": "^16.0.1",
-    "formidable": "^1.2.1",
+    "formidable": "^2.0.1",
     "https-proxy-agent": "^5.0.1",
     "node-cache": "4.2.0",
     "node-liquibase": "^4.1.1",
