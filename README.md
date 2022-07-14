@@ -10,7 +10,7 @@
 Provide the following environment variables (in a `.env` file for example):
 
 ```
-PORT = <Port Boothby will listen on | Default : 80>
+PORT = <Port Boothby will listen on | Default : 3000>
 
 PGHOST = <Host of the PostgreSQL DB | Default : localhost>
 PGPORT = <Port of the PostgreSQL DB | Default : 5432>

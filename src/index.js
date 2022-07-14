@@ -13,7 +13,7 @@ const workspaces = require("./workspaces.js");
 
 require('dotenv').config();
 
-const PORT = process.env.PORT ? process.env.PORT : 80;
+const PORT = process.env.PORT ? process.env.PORT : 3000;
 
 const HttpsProxyAgent = require('https-proxy-agent');
 const proxy = process.env.HTTP_PROXY ? new HttpsProxyAgent(process.env.HTTP_PROXY) : null;

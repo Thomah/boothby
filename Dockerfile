@@ -1,7 +1,7 @@
 FROM openjdk:18
 
 # Create user boothby with home and shell
-RUN useradd -ms /bin/sh boothby
+RUN useradd -ms /bin/sh -u 1000 boothby
 
 # Run the following command as boothby
 USER boothby
@@ -28,5 +28,4 @@ ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 # # Bundle app source
 COPY --chown=boothby . .
 
-EXPOSE 8080
 CMD [ "node", "src/index.js" ]
