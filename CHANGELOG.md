@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/thomah/boothby/compare/v2.0.3...v2.1.0) (2022-07-14)
+
+
+### Features
+
+* remove lcao xsd for liquibase and modify default app port ([a7cf98b](https://github.com/thomah/boothby/commit/a7cf98b5ddef06d7c9fac2315bdd92d2dfb9c32b))
+
 ## [2.0.3](https://github.com/thomah/boothby/compare/v2.0.2...v2.0.3) (2022-07-14)
 
 
