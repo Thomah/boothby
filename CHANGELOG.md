@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/thomah/boothby/compare/v2.0.1...v2.0.2) (2022-07-14)
+
+
+### Bug Fixes
+
+* push docker image with correct version ([439d3b9](https://github.com/thomah/boothby/commit/439d3b9e239d665bb3c47ae950f35835d78403b5))
+
 ## [2.0.1](https://github.com/thomah/boothby/compare/v2.0.0...v2.0.1) (2022-07-14)
 
 
