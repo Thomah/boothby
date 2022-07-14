@@ -14,13 +14,18 @@ WORKDIR /usr/src/app
 # where available (npm@5+)
 COPY --chown=boothby package*.json ./
 
+ENV NODE_VERSION 16.16.0
+
 # Install node
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash - \
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash \
   && source ~/.bashrc \
-  && nvm install --lts \
   && npm install --omit=dev
 
-# Bundle app source
+ENV NVM_DIR ~/.nvm
+ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
+ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+
+# # Bundle app source
 COPY --chown=boothby . .
 
 EXPOSE 8080
