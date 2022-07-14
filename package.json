@@ -9,8 +9,7 @@
   "license": "BEER-WARE",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "prepare": "husky install"
+    "start": "node src/index.js"
   },
   "dependencies": {
     "@slack/bolt": "^3.11.3",
@@ -31,7 +30,6 @@
     "@semantic-release/exec": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "eslint": "^5.14.1",
-    "husky": "^8.0.1",
     "semantic-release": "^19.0.3"
   }
 }

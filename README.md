@@ -1,5 +1,10 @@
 # Boothby
 
+## Prerequisites
+
+- NodeJS 16
+- Java 18 (for running liquibase)
+
 ## Configure the app
 
 Provide the following environment variables (in a `.env` file for example):
