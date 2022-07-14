@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/thomah/boothby/compare/v2.0.0...v2.0.1) (2022-07-14)
+
+
+### Bug Fixes
+
+* remove husky and build Docker image with node & java ([f052833](https://github.com/thomah/boothby/commit/f0528338d052bed22b73b384e023679bc7ef6f81))
+
 # [2.0.0](https://github.com/thomah/boothby/compare/v1.1.0...v2.0.0) (2022-07-13)
 
 
