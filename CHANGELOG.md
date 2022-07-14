@@ -1,3 +1,10 @@
+## [2.0.3](https://github.com/thomah/boothby/compare/v2.0.2...v2.0.3) (2022-07-14)
+
+
+### Bug Fixes
+
+* add node in PATH for the run command ([8b2f781](https://github.com/thomah/boothby/commit/8b2f7811206c6044146f21a09c33cade11f84df1))
+
 ## [2.0.2](https://github.com/thomah/boothby/compare/v2.0.1...v2.0.2) (2022-07-14)
 
 
