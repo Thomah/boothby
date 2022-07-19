@@ -87,6 +87,32 @@ exports.uploadFiles = function (workspace, files) {
     return app.client.files.upload(files);
 };
 
+exports.publishDefaultHome = function (workspace, userId) {
+    return app.client.views.publish({
+        token: workspace.access_token,
+        user_id: userId,
+        view: {
+          "type": "home",
+          "blocks": [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "*Welcome home, <@" + userId + "> :house:*"
+              }
+            },
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": "Learn how home tabs can be more useful and interactive <https://api.slack.com/surfaces/tabs/using|*in the documentation*>."
+              }
+            }
+          ]
+        }
+      });
+};
+
 var postQueue = [];
 exports.postMessage = function (workspace, channelId, message) {
     logger.debug(JSON.stringify(message.blocks));
