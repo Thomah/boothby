@@ -40,7 +40,7 @@ exports.reload = function (workspace) {
             // First API call
             const slackUsers = await slack.listUsers(workspace);
             slackUsers.members.forEach(member => member.slack_id = member.id);
-            exports.openIM(workspace, slackUsers.members, 0, function () {
+            exports.initSlackUser(workspace, slackUsers.members, 0, function () {
                 exports.saveSlackUsersInDb(slackUsers.members, 0, () => {
                     dialogs.getByName("Consent PM", dialog => {
                         dialogs.playInWorkspace(dialog, workspace);
@@ -101,7 +101,7 @@ exports.update = function (workspace) {
     });
 };
 
-exports.openIM = function (workspace, members, memberId, callback) {
+exports.initSlackUser = function (workspace, members, memberId, callback) {
     var member = members[memberId];
     if (member === undefined) {
         callback(workspace);
@@ -112,17 +112,18 @@ exports.openIM = function (workspace, members, memberId, callback) {
                     const slackIMs = await slack.openIM(workspace, {
                         users: member.id
                     });
+                    await slack.publishDefaultHome(workspace, member.id);
                     members[memberId].deleted = member.deleted;
                     members[memberId].im_id = slackIMs.channel.id;
                     members[memberId].slack_team_id = workspace.id;
-                    exports.openIM(workspace, members, memberId + 1, callback);
+                    exports.initSlackUser(workspace, members, memberId + 1, callback);
                 } catch (error) {
                     logger.error(error);
                 }
             })();
         }, 600);
     } else {
-        exports.openIM(workspace, members, memberId + 1, callback);
+        exports.initSlackUser(workspace, members, memberId + 1, callback);
     }
 };
 
