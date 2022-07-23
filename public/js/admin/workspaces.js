@@ -40,6 +40,12 @@ var users = function() {
   window.location.href = `/admin/users.html?id=${row.id}`;
 };
 
+var experiences = function() {
+  var textButton = this.firstChild.parentElement;
+  var row = textButton.parentElement.parentElement.parentElement;
+  window.location.href = `/admin/experiences.html?id=${row.id}`;
+};
+
 function doc_refreshWorkspaces(workspaces) {
   var table = document
     .getElementById("workspaces")
@@ -94,6 +100,12 @@ function doc_refreshWorkspaces(workspaces) {
     button = document.createElement("button");
     button.appendChild(document.createTextNode("Users"));
     button.onclick = users;
+    cellSpan.appendChild(button);
+
+    // -- Experiences Button
+    button = document.createElement("button");
+    button.appendChild(document.createTextNode("Experiences"));
+    button.onclick = experiences;
     cellSpan.appendChild(button);
 
     // -- Delete Button
