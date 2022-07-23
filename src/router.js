@@ -93,6 +93,7 @@ exports.initRoutes = function (receiver) {
   receiver.router.put('/api/dialogs/:id', dialogs.router.update);
   receiver.router.delete('/api/dialogs/:id', dialogs.router.delete);
   receiver.router.get('/api/dialogs/:id/play', dialogs.router.play);
+  receiver.router.delete('/api/experiences/:id', experiences.router.delete);
   receiver.router.get('/api/files/:id', files.router.get);
   receiver.router.post('/api/files', files.router.create);
   receiver.router.post('/api/interactive', interactive.router.interact);
