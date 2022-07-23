@@ -15,7 +15,7 @@ exports.create = function(message, callback) {
             }
         }
     });
-}
+};
 
 exports.router = {};
 

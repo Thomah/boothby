@@ -87,30 +87,42 @@ exports.uploadFiles = function (workspace, files) {
     return app.client.files.upload(files);
 };
 
+exports.publishHome = function (workspace, userId, view) {
+  return app.client.views.publish({
+      token: workspace.access_token,
+      user_id: userId,
+      view: view
+    });
+};
+
+exports.updateView = function (workspace, viewId, view) {
+  return app.client.views.update({
+      token: workspace.access_token,
+      view_id: viewId,
+      view: view
+    });
+};
+
 exports.publishDefaultHome = function (workspace, userId) {
-    return app.client.views.publish({
-        token: workspace.access_token,
-        user_id: userId,
-        view: {
-          "type": "home",
-          "blocks": [
-            {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": "*Welcome home, <@" + userId + "> :house:*"
-              }
-            },
-            {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": "Learn how home tabs can be more useful and interactive <https://api.slack.com/surfaces/tabs/using|*in the documentation*>."
-              }
-            }
-          ]
+  return exports.publishHome(workspace, userId, {
+    "type": "home",
+    "blocks": [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "*Welcome home, <@" + userId + "> :house:*"
         }
-      });
+      },
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": "Learn how home tabs can be more useful and interactive <https://api.slack.com/surfaces/tabs/using|*in the documentation*>."
+        }
+      }
+    ]
+  })
 };
 
 var postQueue = [];

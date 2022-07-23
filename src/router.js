@@ -3,6 +3,7 @@ const path = require("path");
 
 const configs = require("./configs.js");
 const dialogs = require("./dialogs.js");
+const experiences = require("./experiences.js");
 const files = require("./files.js");
 const interactive = require("./interactive.js");
 const logger = require("./logger.js");
@@ -118,6 +119,8 @@ exports.initRoutes = function (receiver) {
   receiver.router.get('/api/workspaces/:id', workspaces.router.get);
   receiver.router.get('/api/workspaces/:id/users', workspaces.router.getSlackUsers);
   receiver.router.post('/api/workspaces/:id/users', workspaces.router.reloadSlackUsers);
+  receiver.router.get('/api/workspaces/:id/experiences', experiences.router.list);
+  receiver.router.post('/api/workspaces/:id/experiences', experiences.router.create);
   receiver.router.delete('/api/workspaces/:id', workspaces.router.delete);
 
   // Static files

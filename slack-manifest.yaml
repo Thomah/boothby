@@ -3,6 +3,10 @@ display_information:
   description: Bonjour humains ! Je vous donne des infos sur le Green IT. Et parfois, je dors.
   background_color: "#13a844"
 features:
+  app_home:
+    home_tab_enabled: true
+    messages_tab_enabled: false
+    messages_tab_read_only_enabled: false
   bot_user:
     display_name: Boothby Beta
     always_online: false
@@ -26,6 +30,7 @@ settings:
   event_subscriptions:
     request_url: <Boothby_URL>/slack/events
     bot_events:
+      - app_home_opened
       - message.channels
       - message.im
       - team_join
