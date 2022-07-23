@@ -55,4 +55,31 @@ CREATE OR REPLACE FUNCTION grant_xp(
             return true;
         END;
 ';
---rollback drop function if exists surveys_vote;
+--rollback drop function if exists grant_xp;
+
+--changeset boothby:add-function-remove_xp
+CREATE OR REPLACE FUNCTION remove_xp(
+        IN _id BIGINT)
+    RETURNS BOOLEAN
+	LANGUAGE plpgsql
+    AS '
+        DECLARE
+            _experience experiences%rowtype;
+        BEGIN
+
+            -- Get experience infos
+            select * into _experience from experiences where id = _id;
+
+            -- Update Slack User experience
+            update slack_users set experience = experience - _experience.experience where slack_id = _experience.slack_id;
+
+            -- Update Slack Team experience
+            update slack_teams set experience = experience - _experience.experience where id = _experience.slack_team_id;
+
+            -- Delete in experience history
+            delete from experiences where id = _id;
+
+            return true;
+        END;
+';
+--rollback drop function if exists remove_xp;

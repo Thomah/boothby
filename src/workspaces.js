@@ -76,7 +76,7 @@ exports.getByTeamIdSync = async function (teamId) {
 };
 
 exports.getByTeamId = function (teamId, callback_success, callback_error) {
-    db.querySync('SELECT id, access_token, bot_user_id, team_id, team_name, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams WHERE team_id = $1', [teamId], (err, data) => {
+    db.querySync('SELECT id, access_token, bot_user_id, team_id, team_name, incoming_webhook_channel, incoming_webhook_channel_id, progression, level, experience, experience_required_to_next_level FROM slack_teams WHERE team_id = $1', [teamId], (err, data) => {
         if (err) {
             logger.error('Cannot get slack_team ' + teamId + ': \n -> ' + err);
             if (callback_error !== undefined) {
