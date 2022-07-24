@@ -18,9 +18,9 @@ exports.router.create = function (req, res) {
         res.status(500).end();
       } else {
         fileInDb.id = data.rows[0].id;
-        fs.mkdir('files', { recursive: true }, (err) => {
+        fs.mkdir('files/uploads', { recursive: true }, (err) => {
           if (err && err.code !== 'EEXIST') throw err;
-          fs.copyFile(files.file.path, 'files/' + data.rows[0].id, function (err) {
+          fs.copyFile(files.file.path, 'files/uploads/' + data.rows[0].id, function (err) {
             if (err) throw err;
             res.write(JSON.stringify(fileInDb));
             res.end();

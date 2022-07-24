@@ -1,6 +1,7 @@
 const fs = require("fs");
 const db = require('./db/index.js');
 const conversations = require("./conversations.js");
+const experiences = require("./experiences.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
 const surveys = require("./surveys.js");
@@ -120,7 +121,8 @@ exports.router.create = function (req, res) {
             "0": {
                 channel: "greenit",
                 wait: 0,
-                text: "first message"
+                text: "first message",
+                xp: 0
             }
         },
         name: "new-dialog",
@@ -148,7 +150,7 @@ exports.router.update = function (req, res) {
             } else {
                 Object.values(dialog.messages).forEach(message => {
                     message.attachments.forEach(attachment => {
-                        if(attachment.type === 'survey') {
+                        if (attachment.type === 'survey') {
                             var surveyId = attachment.content[0].accessory.action_id.split('_')[1];
                             var survey = {
                                 id: surveyId,
@@ -161,7 +163,7 @@ exports.router.update = function (req, res) {
                                 var answerId = answerInMessage.accessory.action_id.split('_')[2];
                                 var answerIndex = answers.findIndex(answer => answer.id === answerId);
                                 var answer = answers[answerIndex];
-                                if(answer === undefined) {
+                                if (answer === undefined) {
                                     answer = {
                                         id: answerId,
                                         text: answerInMessage.text.text,
@@ -172,7 +174,7 @@ exports.router.update = function (req, res) {
                                 answers[answerIndex] = answer;
                             });
                             survey.answers = answers;
-                            surveys.update(survey, () => {});
+                            surveys.update(survey, () => { });
                         }
                     });
                 });
@@ -268,6 +270,13 @@ var speakRecurse = function (workspace, dialog, messageId, callback) {
                 try {
                     const result = await slack.join(workspace, workspace.incoming_webhook_channel_id);
                     uploadFilesAndSendMessage(workspace, message, result.channel.id, () => {
+                        if (message.xp > 0) {
+                            experiences.create({
+                                slack_id: workspace.bot_user_id,
+                                reason: "STILL_ALIVE",
+                                experience: message.xp
+                            }, () => { });
+                        }
                         if (message.outputs.length === 1) {
                             speakRecurse(workspace, dialog, message.outputs[0].id);
                         }
@@ -289,6 +298,13 @@ var uploadFilesAndSendMessageInChannels = function (workspace, dialog, messageId
             uploadFilesAndSendMessage(workspace, message, dialog.channelId, () => {
                 sendOutputChoices(workspace, dialog, message, callback);
             });
+            if (dialog.name !== "Consent PM" && message.xp > 0) {
+                experiences.create({
+                    slack_id: user.slack_id,
+                    reason: "GOOD_CHOICE",
+                    experience: message.xp
+                }, () => { });
+            }
         } else {
             callback();
         }
@@ -380,7 +396,7 @@ var addAttachmentsOnMessage = function (workspace, message, attachmentId, callba
     }
 };
 
-var sendOutputChoices = function(workspace, dialog, message, callback) {
+var sendOutputChoices = function (workspace, dialog, message, callback) {
     if (message.outputs.length > 1) {
         var ids = workspace.id + '-' + dialog.channelId + '-' + dialog.id + '-' + message.messageId
         var messageOutputs = {
