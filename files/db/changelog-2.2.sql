@@ -39,18 +39,37 @@ CREATE OR REPLACE FUNCTION grant_xp(
 	LANGUAGE plpgsql
     AS '
         DECLARE
-            _slack_team_id BIGINT;
+            _slack_team_id bigint;
+            _public_message_per_week bigint;
         BEGIN
 
-            -- Update Slack User experience
-            update slack_users set experience = experience + _experience where slack_id = _slack_id;
+            -- Grant XP only if user has sent less than 5 times
+            if (_reason = ''PUBLIC_MESSAGE'') then
+                select nb_messages into _public_message_per_week from (
+                    SELECT date_trunc(''week'', obtained_at) AS week_start , count(*) as nb_messages FROM experiences where reason = ''PUBLIC_MESSAGE'' and slack_id = _slack_id and date_trunc(''week'', obtained_at) = date_trunc(''week'', now()) GROUP BY 1
+                ) as _temp_query;
+            else
+                _public_message_per_week = 0;
+            end if;
 
-            -- Update Slack Team experience
-            select slack_team_id into _slack_team_id from slack_users where slack_id = _slack_id;
-            update slack_teams set experience = experience + _experience where id = _slack_team_id;
+            if(_public_message_per_week < 5) then
 
-            -- Insert in experience history
-            insert into experiences(slack_id, slack_team_id, reason, experience) values (_slack_id, _slack_team_id, _reason, _experience);
+                -- Update Slack User experience
+                update slack_users set experience = experience + _experience where slack_id = _slack_id;
+
+                -- Get Slack Team
+                select slack_team_id into _slack_team_id from slack_users where slack_id = _slack_id;
+                if (_slack_team_id is null) then
+                    select id into _slack_team_id from slack_teams where bot_user_id = _slack_id;
+                end if;
+
+                -- Update Slack Team experience
+                update slack_teams set experience = experience + _experience where id = _slack_team_id;
+
+                -- Insert in experience history
+                insert into experiences(slack_id, slack_team_id, reason, experience) values (_slack_id, _slack_team_id, _reason, _experience);
+
+            end if;
 
             return true;
         END;
@@ -83,3 +102,9 @@ CREATE OR REPLACE FUNCTION remove_xp(
         END;
 ';
 --rollback drop function if exists remove_xp;
+
+--changeset boothby:update-data-dialogs-intro
+UPDATE dialogs SET messages = '{"0":{"channel":"pm_everybody","wait":0,"text":"Salut !","xp":0,"blocks":[],"attachments":[],"outputs":[{"id":"1","text":"Default"}],"next":"1"},"1":{"channel":"pm_everybody","wait":800,"text":"Tu ne me connais peut-être pas, je suis Boothby, le bot du Green IT. Je publie régulièrement des infos dans #greenit mais parfois, je m''adresse directement à vous en message privé.","xp":0,"blocks":[],"attachments":[],"outputs":[{"id":"2","text":"Default"}],"next":"2"},"2":{"channel":"pm_everybody","wait":800,"text":"Acceptes-tu de recevoir sur ce canal des astuces, quizz ou infos pour t''aider à améliorer ton impact écologique au sein de ton entreprise ? Rassure-toi, je ne suis pas aussi bavard que j''en ai l''air :wink:","xp":0,"blocks":[],"attachments":[],"outputs":[{"id":"4","text":":-1: Non, merci."},{"id":"3","text":":+1: Avec plaisir !"}],"next":"3"},"3":{"channel":"pm_everybody","wait":800,"text":"Super ! Content de pouvoir échanger avec toi. A très vite !","xp":0,"blocks":[],"attachments":[],"outputs":[],"next":"4"},"4":{"channel":"pm_everybody","wait":800,"text":"Dommage... Mais je respecte ton choix ! Tu ne recevras plus de message de ma part.","xp":0,"blocks":[],"attachments":[],"outputs":[]}}' where name = 'Consent PM';
+UPDATE dialogs SET messages = '{"0":{"channel":"nowhere","wait":0,"text":"Bonjour tout le monde !","xp":0,"blocks":[],"attachments":[],"outputs":[{"id":"1","text":"Default"}],"next":"1"},"1":{"channel":"nowhere","wait":3000,"text":"Vous connaissez le Green IT ?","xp":0,"blocks":[],"attachments":[],"outputs":[{"id":"2","text":"Default"}],"next":"2"},"2":{"channel":"nowhere","wait":3000,"text":"Que vous soyez expert ou débutant, on essaye d''y voir plus clair en débattant des solutions possibles pour rendre l''IT un peu meilleur.","xp":0,"blocks":[],"attachments":[],"outputs":[{"id":"3","text":"Default"}],"next":"3"},"3":{"channel":"nowhere","wait":9200,"text":"Rendez-vous chaque semaine dans ce canal pour participer à cette aventure ! :rocket:","xp":0,"blocks":[],"attachments":[],"outputs":[]}}' where name = 'Welcome Message';
+--rollback update dialogs SET messages = '{"0":{"channel":"pm_everybody","wait":0,"text":"Salut !","blocks":[],"attachments":[],"outputs":[{"id":"1","text":"Default"}],"next":"1"},"1":{"channel":"pm_everybody","wait":800,"text":"Tu ne me connais peut-être pas, je suis Boothby, le bot du Green IT. Je publie régulièrement des infos dans #greenit mais parfois, je m''adresse directement à vous en message privé.","blocks":[],"attachments":[],"outputs":[{"id":"2","text":"Default"}],"next":"2"},"2":{"channel":"pm_everybody","wait":800,"text":"Acceptes-tu de recevoir sur ce canal des astuces, quizz ou infos pour t''aider à améliorer ton impact écologique au sein de ton entreprise ? Rassure-toi, je ne suis pas aussi bavard que j''en ai l''air :wink:","blocks":[],"attachments":[],"outputs":[{"id":"4","text":":-1: Non, merci."},{"id":"3","text":":+1: Avec plaisir !"}],"next":"3"},"3":{"channel":"pm_everybody","wait":800,"text":"Super ! Content de pouvoir échanger avec toi. A très vite !","blocks":[],"attachments":[],"outputs":[],"next":"4"},"4":{"channel":"pm_everybody","wait":800,"text":"Dommage... Mais je respecte ton choix ! Tu ne recevras plus de message de ma part.","blocks":[],"attachments":[],"outputs":[]}}' where name = 'Consent PM';
+--rollback update dialogs SET messages = '{"0":{"channel":"nowhere","wait":0,"text":"Bonjour tout le monde !","blocks":[],"attachments":[],"outputs":[{"id":"1","text":"Default"}],"next":"1"},"1":{"channel":"nowhere","wait":3000,"text":"Vous connaissez le Green IT ?","blocks":[],"attachments":[],"outputs":[{"id":"2","text":"Default"}],"next":"2"},"2":{"channel":"nowhere","wait":3000,"text":"Que vous soyez expert ou débutant, on essaye d''y voir plus clair en débattant des solutions possibles pour rendre l''IT un peu meilleur.","blocks":[],"attachments":[],"outputs":[{"id":"3","text":"Default"}],"next":"3"},"3":{"channel":"nowhere","wait":9200,"text":"Rendez-vous chaque semaine dans ce canal pour participer à cette aventure ! :rocket:","blocks":[],"attachments":[],"outputs":[]}}' where name = 'Welcome Message';

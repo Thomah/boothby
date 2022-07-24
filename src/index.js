@@ -63,30 +63,47 @@ const app = new App({
 });
 
 app.message(async ({ message }) => {
-  if (message.text !== undefined) {
-    messages.create(message);
-  }
-  if (message.text === ":house:") {
+  if (message.subtype === undefined) {
+    if (message.text !== undefined) {
+      messages.create(message);
+    }
     workspaces.getByTeamId(message.team, slackTeam => {
-      workspaces.getUsersByChannelId(message.channel, user => {
-        dialogs.getByName("Consent PM", dialog => {
-          dialog.channelId = user.im_id;
-          dialogs.speakRecurse(slackTeam, dialog, "0", () => { });
+      if (message.channel === slackTeam.incoming_webhook_channel_id) {
+        experiences.create({
+          slack_id: message.user,
+          reason: 'PUBLIC_MESSAGE',
+          experience: 1
+        },
+          () => { });
+      }
+      if (message.text === ":house:") {
+        workspaces.getUsersByChannelId(message.channel, user => {
+          dialogs.getByName("Consent PM", dialog => {
+            dialog.channelId = user.im_id;
+            dialogs.speakRecurse(slackTeam, dialog, "0", () => { });
+          });
         });
-      });
+      }
     });
   }
 });
 
 app.event('team_join', async ({ event }) => {
+  logger.log("A new user has joined the team : " + JSON.stringify(event));
   workspaces.getByTeamId(event.user.team_id, slackTeam => {
     if (slackTeam !== undefined) {
       var slackUser = [event.user];
-      workspaces.openIM(slackTeam, slackUser, 0, () => {
+      workspaces.initSlackUser(slackTeam, slackUser, 0, () => {
+        slackUser = [{
+          slack_id: event.user.id,
+          im_id: slackUser[0].im_id,
+          slack_team_id: slackTeam.id,
+          consent: null
+        }];
         workspaces.saveSlackUsersInDb(slackUser, 0, () => {
           dialogs.getByName("Consent PM", dialog => {
-            workspaces.getUsersBySlackId(event.user.id, slackUser => {
-              dialog.channelId = slackUser.im_id;
+            workspaces.getUsersBySlackId(event.user.id, slackUserUpdated => {
+              dialog.channelId = slackUserUpdated.im_id;
               dialogs.speakRecurse(slackTeam, dialog, 0);
             });
           });

@@ -8,7 +8,7 @@ exports.saveSlackUsersInDb = function (slackUsers, slackUserIndex, callback) {
     if (slackUser === undefined) {
         callback();
     } else {
-        db.querySync("SELECT id, im_id FROM slack_users where slack_id = $1", [slackUser.slack_id], (err, data) => {
+        db.querySync("SELECT id FROM slack_users where slack_id = $1", [slackUser.slack_id], (err, data) => {
             if (err) {
                 logger.error('Cannot sync slack_user ' + slackUser.id + ' : \n -> ' + err);
             } else if (data.rowCount > 1) {
@@ -165,7 +165,7 @@ exports.getUsersByChannelId = function (channelId, callback_success) {
 };
 
 exports.forEach = function (callback) {
-    db.querySync('SELECT id, access_token, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams', [], (err, data) => {
+    db.querySync('SELECT id, access_token, bot_user_id, incoming_webhook_channel, incoming_webhook_channel_id, progression FROM slack_teams', [], (err, data) => {
         if (err) {
             logger.error('Cannot run for each Slack Team : \n -> ' + err);
         } else {

@@ -145,11 +145,12 @@ var onCreateSurveyBtnClick = function () {
         }
       }
     ]);
+
+    var buttonAddAttachments = row.getElementsByClassName('btn-add-attachment');
+    for (var btnIndex = 0; btnIndex < buttonAddAttachments.length; btnIndex++) {
+      buttonAddAttachments[btnIndex].remove();
+    }
   });
-  var buttonAddAttachments = event.target.parentElement.getElementsByClassName('btn-add-attachment');
-  for (var btnIndex = 0; btnIndex < buttonAddAttachments.length; btnIndex++) {
-    buttonAddAttachments[btnIndex].remove();
-  }
 };
 
 var onCreateSurveyAnswerBtnClick = function () {
@@ -355,35 +356,35 @@ function doc_appendAttachments(id, cell, attachments) {
   cellContent.className = "attachments";
 
   // Add attachments in div
-  if (attachments !== undefined) {
+  if (attachments !== undefined && attachments.length > 0) {
     for (var numAttachment in attachments) {
       doc_appendAttachment(cellContent, attachments[numAttachment]);
     }
   } else {
 
     // Add Attachment button
-    cellContent = document.createElement("button");
-    cellContent.className = "btn-add-attachment";
-    cellContent.appendChild(document.createTextNode("Add Survey"));
-    cellContent.onclick = onCreateSurveyBtnClick;
-    cell.appendChild(cellContent);
+    var divContent = document.createElement("button");
+    divContent.className = "btn-add-attachment";
+    divContent.appendChild(document.createTextNode("Add Survey"));
+    divContent.onclick = onCreateSurveyBtnClick;
+    cellContent.appendChild(divContent);
 
     // Add upload file button
-    cellContent = document.createElement("div");
-    cellContent.className = "btn-add-attachment";
+    divContent = document.createElement("div");
+    divContent.className = "btn-add-attachment";
     var label = document.createElement("label");
     label.setAttribute("for", "upload_" + id);
     label.className = "file-label";
     label.appendChild(document.createTextNode("Add File"));
-    cellContent.appendChild(label);
+    divContent.appendChild(label);
     var input = document.createElement("input");
     input.id = "upload_" + id;
     input.type = "file";
     input.className = "file-file";
     input.appendChild(document.createTextNode("Add File"));
     input.onchange = onSelectFileBtnClick;
-    cellContent.appendChild(input);
-    cell.appendChild(cellContent);
+    divContent.appendChild(input);
+    cellContent.appendChild(divContent);
 
   }
 
@@ -463,6 +464,14 @@ function doc_addRow(table, message) {
   // Attachments
   cell = document.createElement("td");
   doc_appendAttachments(message.id, cell, message.attachments);
+  row.appendChild(cell);
+
+  // Wait
+  cell = document.createElement("td");
+  cellContent = document.createElement("input");
+  cellContent.value = message.xp === undefined ? 0 : message.xp;
+  cellContent.className = "xp";
+  cell.appendChild(cellContent);
   row.appendChild(cell);
 
   // Outputs
@@ -578,6 +587,7 @@ function doc_getDialog() {
       channel: dialog.channel,
       wait: parseInt(row.getElementsByClassName("wait")[0].value),
       text: row.getElementsByClassName("text")[0].value,
+      xp: parseInt(row.getElementsByClassName("xp")[0].value),
       blocks: [],
       attachments: [],
       outputs: [],
