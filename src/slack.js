@@ -1,7 +1,7 @@
-const https = require("https");
 const schedule = require("node-schedule");
-const querystring = require("querystring");
 const logger = require("./logger.js");
+
+require('dotenv').config();
 
 const SLACK_CLIENT_ID = process.env.SLACK_CLIENT_ID;
 const SLACK_CLIENT_SECRET = process.env.SLACK_CLIENT_SECRET;
@@ -17,44 +17,13 @@ exports.initJobs = function () {
     schedule.scheduleJob("*/2 * * * * *", updateShift);
 };
 
-exports.getAccessToken = function(code, callback_end, callback_err) {
-
-  var b = new Buffer.from(SLACK_CLIENT_ID + ":" + SLACK_CLIENT_SECRET);
-  var basicAuth = b.toString('base64');
-
-  var postData = querystring.stringify({
+exports.getAccessToken = function (code) {
+  return app.client.oauth.v2.access({ 
+    client_id: SLACK_CLIENT_ID, 
+    client_secret: SLACK_CLIENT_SECRET,
     code: code,
-    redirect_uri: process.env.APP_URL + "/api/oauth"
-  });
-
-  var options = {
-    host: 'slack.com',
-    path: '/api/oauth.v2.access',
-    method: 'POST',
-    headers: {
-      "Authorization": "Basic " + basicAuth,
-      "Content-Type": 'application/x-www-form-urlencoded'
-    }
-  };
-
-  var req = https.request(options, function(response) {
-    var str = ''
-    response.on('data', function (chunk) {
-      str += chunk;
-    });
-
-    response.on('end', function () {
-      callback_end(JSON.parse(str));
-    });
-  });
-  
-  req.on('error', function (err) {
-    callback_err(JSON.parse(err));
-  });
- 
-  req.write(postData);
-  req.end();
-}
+    redirect_uri: process.env.APP_URL + "/api/oauth" });
+};
 
 exports.authTest = function (workspace) {
     return app.client.auth.test({ token: workspace.access_token });
