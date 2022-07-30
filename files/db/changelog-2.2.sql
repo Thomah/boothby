@@ -14,12 +14,27 @@ ALTER TABLE ONLY slack_users
     ADD experience BIGINT DEFAULT 0;
 --rollback alter table slack_users drop column experience;
 
+--changeset boothby:create-table-levels
+CREATE TABLE IF NOT EXISTS levels (
+    id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
+    slack_team_id BIGINT,
+    level BIGINT DEFAULT 1,
+    experience BIGINT DEFAULT 0,
+    max_experience BIGINT DEFAULT 1000
+);
+--rollback drop table levels;
+
+--changeset boothby:add-fk-experiences
+ALTER TABLE ONLY levels
+    ADD CONSTRAINT fk_slack_team FOREIGN KEY (slack_team_id) REFERENCES slack_teams(id) ON DELETE CASCADE;
+--rollback alter table experiences drop constraint fk_slack_team;
+
 --changeset boothby:create-table-experiences
 CREATE TABLE IF NOT EXISTS experiences (
     id BIGINT PRIMARY KEY DEFAULT NEXTVAL('id_number'),
     obtained_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW(),
     slack_id CHARACTER VARYING(255),
-    slack_team_id BIGINT,
+    level_id BIGINT,
     reason CHARACTER VARYING(255),
     experience BIGINT NOT NULL
 );
@@ -27,7 +42,7 @@ CREATE TABLE IF NOT EXISTS experiences (
 
 --changeset boothby:add-fk-experiences
 ALTER TABLE ONLY experiences
-    ADD CONSTRAINT fk_slack_team FOREIGN KEY (slack_team_id) REFERENCES slack_teams(id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_level FOREIGN KEY (level_id) REFERENCES levels(id) ON DELETE CASCADE;
 --rollback alter table experiences drop constraint fk_slack_team;
 
 --changeset boothby:add-function-grant_xp
@@ -40,6 +55,8 @@ CREATE OR REPLACE FUNCTION grant_xp(
     AS '
         DECLARE
             _slack_team_id bigint;
+            _slack_team_experience bigint;
+            _slack_team_experience_required_to_next_level bigint;
             _public_message_per_week bigint;
         BEGIN
 
@@ -57,10 +74,25 @@ CREATE OR REPLACE FUNCTION grant_xp(
                 -- Update Slack User experience
                 update slack_users set experience = experience + _experience where slack_id = _slack_id;
 
-                -- Get Slack Team
+                -- Get Slack Team ID
                 select slack_team_id into _slack_team_id from slack_users where slack_id = _slack_id;
                 if (_slack_team_id is null) then
                     select id into _slack_team_id from slack_teams where bot_user_id = _slack_id;
+                end if;
+                select experience into _slack_team_experience from slack_teams where slack_team_id = _slack_team_id;
+                select experience_required_to_next_level into _slack_team_experience_required_to_next_level from slack_teams where slack_team_id = _slack_team_id;
+                
+                -- Bump level if experience target is reached
+                if(_slack_team_experience + experience >= _slack_team_experience_required_to_next_level) then
+
+                    -- Compute experience reported to next level
+                    _experience = experience - _slack_team_experience_required_to_next_level + _slack_team_experience;
+
+                    -- Update Slack Team experience
+                    update slack_teams set experience = 0 where id = _slack_team_id;
+
+                    -- Upgrade level
+                    update slack_teams set level = level + 1 where id = _slack_team_id;
                 end if;
 
                 -- Update Slack Team experience
