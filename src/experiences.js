@@ -6,7 +6,7 @@ const slack = require("./slack.js");
 exports.list = function (id, callback_success, callback_error) {
     db.querySync('SELECT id, obtained_at, slack_id, reason, experience FROM experiences WHERE slack_team_id = $1', [id], (err, data) => {
         if (err) {
-            logger.error('Cannot get experiences ' + id + ': \n -> ' + err);
+            logger.error('Cannot get experiences for Slack Team ' + id + ': \n -> ' + err);
             if (callback_error !== undefined) {
                 callback_error();
             }
@@ -60,6 +60,44 @@ exports.getTotalForSlackUserId = function (id, callback_success, callback_error)
     });
 };
 
+exports.getLevelById = function (id, callback_success, callback_error) {
+    db.querySync('SELECT id, slack_team_id, level, experience, max_experience FROM levels WHERE id = $1', [id], (err, data) => {
+        if (err) {
+            logger.error('Cannot get level ' + id + ': \n -> ' + err);
+            if (callback_error !== undefined) {
+                callback_error();
+            }
+        } else if (data.rowCount > 1) {
+            logger.error('Cannot get level ' + id + ': multiple occurrences in DB');
+            if (callback_error !== undefined) {
+                callback_error();
+            }
+        } else {
+            callback_success(data.rows[0]);
+        }
+    });
+};
+
+exports.initSlackTeam = function (slackTeamId, callback_error) {
+    db.querySync("INSERT INTO levels(slack_team_id) VALUES($1) RETURNING id", [slackTeamId], (err, data) => {
+        if (err) {
+            logger.error(err);
+            if (callback_error) {
+                callback_error();
+            }
+        } else {
+            db.querySync("UPDATE slack_teams SET level_id = $1 WHERE id = $2", [data.rows[0].id, slackTeamId], (err) => {
+                if (err) {
+                    logger.error(err);
+                    if (callback_error) {
+                        callback_error();
+                    }
+                }
+            });
+        }
+    });
+}
+
 exports.create = function (experience, callback) {
     db.querySync('SELECT grant_xp($1, $2, $3)', [experience.slack_id, experience.reason, experience.experience], err => {
         if (err) {
@@ -85,139 +123,142 @@ exports.delete = function (id, callback) {
 };
 
 exports.updateView = function (slackTeam, viewId, userId) {
-    var levelPercent = Math.round(slackTeam.experience * 100 / slackTeam.experience_required_to_next_level);
-    var levelProgressBarDone = "█".repeat(levelPercent / 10);
-    var levelProgressBarRemaining = "▒".repeat((100 - levelPercent) / 10);
-    exports.listBySlackUserId(userId, userExperiences => {
-        exports.getTotalForSlackUserId(userId, totalUser => {
-            exports.listTopSlackUsersBySlackTeamId(slackTeam.id, topSlackUsers => {
+    exports.getLevelById(slackTeam.level_id, level => {
+        exports.listBySlackUserId(userId, userExperiences => {
+            exports.getTotalForSlackUserId(userId, totalUser => {
+                exports.listTopSlackUsersBySlackTeamId(slackTeam.id, topSlackUsers => {
 
-                var userExperiencesString = "*Mes 5 dernières contributions*\n\n";
-                userExperiences.forEach(userExperience => {
-                    userExperiencesString += new Date(userExperience.obtained_at).toLocaleString() + " : " + Reasons[userExperience.reason] + " : " + userExperience.experience + " XP\n";
-                });
-                userExperiencesString += "\n*Mon total depuis le début* : " + totalUser.total_experience + " XP";
+                    var levelPercent = Math.round(level.experience * 100 / level.max_experience);
+                    var levelProgressBarDone = "█".repeat(levelPercent / 10);
+                    var levelProgressBarRemaining = "▒".repeat((100 - levelPercent) / 10);
 
-                var topSlackUsersString = "*Top des contributeurs*\n\n"
-                if (topSlackUsers.length >= 1) {
-                    topSlackUsersString += ":first_place_medal: <@" + topSlackUsers[0].slack_id + "> : " + topSlackUsers[0].sum_experience + " XP\n"
-                }
-                if (topSlackUsers.length >= 2) {
-                    topSlackUsersString += ":second_place_medal: <@" + topSlackUsers[1].slack_id + "> : " + topSlackUsers[1].sum_experience + " XP\n"
-                }
-                if (topSlackUsers.length >= 3) {
-                    topSlackUsersString += ":third_place_medal: <@" + topSlackUsers[2].slack_id + "> : " + topSlackUsers[2].sum_experience + " XP\n"
-                }
-                for (var k = 3; k < topSlackUsers.length; k++) {
-                    topSlackUsersString += "<@" + topSlackUsers[k].slack_id + "> : " + topSlackUsers[k].sum_experience + " XP\n"
-                }
+                    var userExperiencesString = "*Mes 5 dernières contributions*\n\n";
+                    userExperiences.forEach(userExperience => {
+                        userExperiencesString += new Date(userExperience.obtained_at).toLocaleString() + " : " + Reasons[userExperience.reason] + " : " + userExperience.experience + " XP\n";
+                    });
+                    userExperiencesString += "\n*Mon total depuis le début* : " + totalUser.total_experience + " XP";
 
-                slack.updateView(slackTeam, viewId, {
-                    // Home tabs must be enabled in your app configuration page under "App Home"
-                    "type": "home",
-                    "blocks": [
-                        {
-                            "type": "header",
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Qui est Boothby ?",
-                                "emoji": true
-                            }
-                        },
-                        {
-                            "type": "section",
-                            "text": {
-                                "type": "mrkdwn",
-                                "text": "Il s'agit du seul coach virtuel qui va vous donner envie d'utiliser ou de développer vos applications de façon optimisée et responsable. Sacré pari n'est-ce pas ? C'est pour ça qu'il a besoin de vous pour grandir !"
-                            }
-                        },
-                        {
-                            "type": "actions",
-                            "elements": [
-                                {
-                                    "type": "button",
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "Son site web",
-                                        "emoji": true
-                                    },
-                                    "url": process.env.APP_URL
-                                },
-                                {
-                                    "type": "button",
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "Son CV",
-                                        "emoji": true
-                                    },
-                                    "url": process.env.APP_URL + '/public/cv.html'
+                    var topSlackUsersString = "*Top des contributeurs*\n\n"
+                    if (topSlackUsers.length >= 1) {
+                        topSlackUsersString += ":first_place_medal: <@" + topSlackUsers[0].slack_id + "> : " + topSlackUsers[0].sum_experience + " XP\n"
+                    }
+                    if (topSlackUsers.length >= 2) {
+                        topSlackUsersString += ":second_place_medal: <@" + topSlackUsers[1].slack_id + "> : " + topSlackUsers[1].sum_experience + " XP\n"
+                    }
+                    if (topSlackUsers.length >= 3) {
+                        topSlackUsersString += ":third_place_medal: <@" + topSlackUsers[2].slack_id + "> : " + topSlackUsers[2].sum_experience + " XP\n"
+                    }
+                    for (var k = 3; k < topSlackUsers.length; k++) {
+                        topSlackUsersString += "<@" + topSlackUsers[k].slack_id + "> : " + topSlackUsers[k].sum_experience + " XP\n"
+                    }
+
+                    slack.updateView(slackTeam, viewId, {
+                        // Home tabs must be enabled in your app configuration page under "App Home"
+                        "type": "home",
+                        "blocks": [
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Qui est Boothby ?",
+                                    "emoji": true
                                 }
-                            ]
-                        },
-                        {
-                            "type": "divider"
-                        },
-                        {
-                            "type": "header",
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Progression de Boothby",
-                                "emoji": true
-                            }
-                        },
-                        {
-                            "type": "section",
-                            "text": {
-                                "type": "mrkdwn",
-                                "text": "*Niveau* : " + slackTeam.level
-                            }
-                        },
-                        {
-                            "type": "section",
-                            "text": {
-                                "type": "mrkdwn",
-                                "text": "*Experience* : " + levelProgressBarDone + levelProgressBarRemaining + " " + levelPercent + "% (" + slackTeam.experience + " / " + slackTeam.experience_required_to_next_level + " XP)"
-                            }
-                        },
-                        {
-                            "type": "actions",
-                            "elements": [
-                                {
-                                    "type": "button",
-                                    "text": {
-                                        "type": "plain_text",
-                                        "text": "Comment gagner de l'XP ?",
-                                        "emoji": true
-                                    },
-                                    "url": process.env.APP_URL + '/public/game.html'
-                                }
-                            ]
-                        },
-                        {
-                            "type": "divider"
-                        },
-                        {
-                            "type": "header",
-                            "text": {
-                                "type": "plain_text",
-                                "text": "Contributions",
-                                "emoji": true
-                            }
-                        },
-                        {
-                            "type": "section",
-                            "fields": [
-                                {
+                            },
+                            {
+                                "type": "section",
+                                "text": {
                                     "type": "mrkdwn",
-                                    "text": userExperiencesString
-                                },
-                                {
-                                    "type": "mrkdwn",
-                                    "text": topSlackUsersString
+                                    "text": "Il s'agit du seul coach virtuel qui va vous donner envie d'utiliser ou de développer vos applications de façon optimisée et responsable. Sacré pari n'est-ce pas ? C'est pour ça qu'il a besoin de vous pour grandir !"
                                 }
-                            ]
-                        },
-                    ]
+                            },
+                            {
+                                "type": "actions",
+                                "elements": [
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "Son site web",
+                                            "emoji": true
+                                        },
+                                        "url": process.env.APP_URL
+                                    },
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "Son CV",
+                                            "emoji": true
+                                        },
+                                        "url": process.env.APP_URL + '/public/cv.html'
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Progression de Boothby",
+                                    "emoji": true
+                                }
+                            },
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": "*Niveau* : " + level.level
+                                }
+                            },
+                            {
+                                "type": "section",
+                                "text": {
+                                    "type": "mrkdwn",
+                                    "text": "*Experience* : " + levelProgressBarDone + levelProgressBarRemaining + " " + levelPercent + "% (" + level.experience + " / " + level.max_experience + " XP)"
+                                }
+                            },
+                            {
+                                "type": "actions",
+                                "elements": [
+                                    {
+                                        "type": "button",
+                                        "text": {
+                                            "type": "plain_text",
+                                            "text": "Comment gagner de l'XP ?",
+                                            "emoji": true
+                                        },
+                                        "url": process.env.APP_URL + '/public/game.html'
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "divider"
+                            },
+                            {
+                                "type": "header",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Contributions",
+                                    "emoji": true
+                                }
+                            },
+                            {
+                                "type": "section",
+                                "fields": [
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": userExperiencesString
+                                    },
+                                    {
+                                        "type": "mrkdwn",
+                                        "text": topSlackUsersString
+                                    }
+                                ]
+                            },
+                        ]
+                    });
                 });
             });
         });

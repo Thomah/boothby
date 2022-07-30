@@ -1,5 +1,6 @@
 const db = require('./db/index.js');
 const dialogs = require("./dialogs.js");
+const experiences = require("./experiences.js");
 const logger = require("./logger.js");
 const slack = require("./slack.js");
 
@@ -76,7 +77,7 @@ exports.getByTeamIdSync = async function (teamId) {
 };
 
 exports.getByTeamId = function (teamId, callback_success, callback_error) {
-    db.querySync('SELECT id, access_token, bot_user_id, team_id, team_name, incoming_webhook_channel, incoming_webhook_channel_id, progression, level, experience, experience_required_to_next_level FROM slack_teams WHERE team_id = $1', [teamId], (err, data) => {
+    db.querySync('SELECT id, access_token, bot_user_id, team_id, team_name, incoming_webhook_channel, incoming_webhook_channel_id, progression, level_id FROM slack_teams WHERE team_id = $1', [teamId], (err, data) => {
         if (err) {
             logger.error('Cannot get slack_team ' + teamId + ': \n -> ' + err);
             if (callback_error !== undefined) {
@@ -231,36 +232,42 @@ exports.router.create = function (req, res) {
         res.end();
     };
     if (req.query.code != undefined) {
-        slack.getAccessToken(req.query.code, function (workspace) {
-            if (!workspace.ok) {
-                response_400(workspace, res);
-            } else {
-                logger.log("Workspace : " + workspace);
-                workspace.team_id = workspace.team.id;
-                workspace.progression = 1;
-                (async () => {
-                    try {
-                        const result = await slack.authTest(workspace);
-                        workspace.bot_id = result.bot_id;
-                        db.querySync("INSERT INTO slack_teams(app_id, authed_user_id, \"scope\", token_type, access_token, bot_user_id, team_id, team_name, incoming_webhook_channel, incoming_webhook_channel_id, incoming_webhook_configuration_url, incoming_webhook_url, bot_id, progression) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 1) RETURNING id", [workspace.app_id, workspace.authed_user.id, workspace.scope, workspace.token_type, workspace.access_token, workspace.bot_user_id, workspace.team.id, workspace.team.name, workspace.incoming_webhook.channel, workspace.incoming_webhook.channel_id, workspace.incoming_webhook.configuration_url, workspace.incoming_webhook.url, result.bot_id], (err, data) => {
-                            if (err) {
-                                logger.error(err);
-                                res.status(500).end();
-                            } else {
-                                workspace.id = data.rows[0].id;
-                                dialogs.getByName("Welcome Message", dialog => {
-                                    dialogs.playInWorkspace(dialog, workspace);
-                                });
-                                exports.reload(workspace);
-                                res.redirect(302, '/?installed=1');
-                            }
-                        });
-                    } catch (error) {
-                        logger.error(error);
-                    }
-                })();
+        (async () => {
+            try {
+                var workspace = await slack.getAccessToken(req.query.code);
+                if (!workspace.ok) {
+                    response_400(workspace, res);
+                } else {
+                    logger.log("Workspace : " + workspace);
+                    workspace.team_id = workspace.team.id;
+                    workspace.progression = 1;
+                    (async () => {
+                        try {
+                            const result = await slack.authTest(workspace);
+                            workspace.bot_id = result.bot_id;
+                            db.querySync("INSERT INTO slack_teams(app_id, authed_user_id, \"scope\", token_type, access_token, bot_user_id, team_id, team_name, incoming_webhook_channel, incoming_webhook_channel_id, incoming_webhook_configuration_url, incoming_webhook_url, bot_id, progression) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 1) RETURNING id", [workspace.app_id, workspace.authed_user.id, workspace.scope, workspace.token_type, workspace.access_token, workspace.bot_user_id, workspace.team.id, workspace.team.name, workspace.incoming_webhook.channel, workspace.incoming_webhook.channel_id, workspace.incoming_webhook.configuration_url, workspace.incoming_webhook.url, result.bot_id], (err, data) => {
+                                if (err) {
+                                    logger.error(err);
+                                    res.status(500).end();
+                                } else {
+                                    workspace.id = data.rows[0].id;
+                                    experiences.initSlackTeam(workspace.id);
+                                    dialogs.getByName("Welcome Message", dialog => {
+                                        dialogs.playInWorkspace(dialog, workspace);
+                                    });
+                                    exports.reload(workspace);
+                                    res.redirect(302, '/?installed=1');
+                                }
+                            });
+                        } catch (error) {
+                            logger.error(error);
+                        }
+                    })();
+                }
+            } catch (error) {
+                logger.error(error);
             }
-        }, response_400);
+        })();
     } else {
         response_400("No code provided", res);
     }
