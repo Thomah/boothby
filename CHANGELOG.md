@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/thomah/boothby/compare/v2.1.0...v2.2.0) (2022-07-31)
+
+
+### Features
+
+* implement serious game ([261697e](https://github.com/thomah/boothby/commit/261697e3479a5876eb43c2acb00e8a5709b3b53d))
+
 # [2.1.0](https://github.com/thomah/boothby/compare/v2.0.3...v2.1.0) (2022-07-14)
 
 
