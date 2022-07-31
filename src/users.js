@@ -52,7 +52,7 @@ exports.router.login = function (req, res) {
         username: req.headers.user,
         password: req.headers.pwd
     };
-    
+
     db.querySync('SELECT username, password FROM users WHERE username = $1', [credentials['username']], (err, data) => {
         if (err) {
             logger.error('Cannot login user ' + credentials['username'] + ' : \n -> ' + err);
@@ -62,44 +62,36 @@ exports.router.login = function (req, res) {
             res.status(403).end();
         } else {
             bcrypt.compare(credentials['password'], data.rows[0]['password'], function (err, bcrypdata) {
-                if(err) {
+                if (err) {
                     logger.error('Cannot login user ' + credentials['username'] + ' : ' + err);
                     res.status(500).end();
-                } else if(!bcrypdata) {
+                } else if (!bcrypdata) {
                     logger.error('Cannot login user ' + credentials['username'] + ' : invalid credentials');
                     res.status(401).end();
                 } else {
                     var generated_token = generate_token();
                     //We get the array tokens in the server cache
                     myCache.get("tokens", function (err, value) {
-                        if (!err) {
-                            if (value == undefined) {
-                                //The array in the cache does not exist : Init of the array containing the tokens
-                                myCache.set("tokens", [generated_token], function (err) {
-                                    if (err) {
-                                        logger.error('Cannot login user ' + credentials['username'] + ' : cannot create token in cache');
-                                        res.status(500).end();
-                                    } else {
-                                        logger.log('1 token(s) in cache');
-                                    }
-                                });
+                        if(err) {
+                            logger.error('Cannot login user ' + credentials['username'] + ' : cannot get token in cache');
+                            res.status(500).end();
+                        } else {
+                            if(value == undefined) {
+                                value = [generated_token];
                             } else {
-                                //The array tokens already exists in the cache
-                                var tokens = value;
-                                tokens.push(generated_token);
-                                //Already a token in the server, we add the new generated token in the tokens cache array
-                                myCache.set("tokens", tokens, function (err) {
-                                    if (err) {
-                                        logger.error('Cannot login user ' + credentials['username'] + ' : cannot update token in cache');
-                                        res.status(500).end();
-                                    } else {
-                                        logger.log(tokens.length + ' token(s) in cache');
-                                    }
-                                });
+                                value.push(generated_token);
                             }
+                            myCache.set("tokens", value, function (err) {
+                                if (err) {
+                                    logger.error('Cannot login user ' + credentials['username'] + ' : cannot set token in cache');
+                                    res.status(500).end();
+                                } else {
+                                    logger.log(value.length + ' token(s) in cache');
+                                    res.send(generated_token);
+                                }
+                            });
                         }
                     });
-                    res.send({ token: generated_token });
                 }
             });
         }
@@ -112,7 +104,7 @@ exports.router.logout = function (req, res) {
             //We remove this specific token from the server cache
             var tokens = value;
             var index_token_to_remove = tokens.indexOf(req.headers.token);
-            if(index_token_to_remove >= 0) {
+            if (index_token_to_remove >= 0) {
                 tokens.splice(index_token_to_remove, 1);
                 myCache.set("tokens", tokens, function (err) {
                     if (err) {
