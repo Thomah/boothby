@@ -69,6 +69,29 @@ var serveFile = function (req, res) {
   });
 };
 
+var authenticate = function(req, res, next) {
+  if (req.headers.cookie && req.headers.cookie.indexOf('=') >= 0) {
+    var token = req.headers.cookie.split('=')[1];
+    users.getInCache("tokens", function (err, value) {
+      if (!err) {
+        if (value == undefined) {
+          res.redirect('/admin/auth.html');
+        } else {
+          if (value.includes(token)) {
+            next();
+          } else {
+            res.redirect('/admin/auth.html');
+          }
+        }
+      } else {
+        res.redirect('/admin/auth.html');
+      }
+    });
+  } else {
+    res.redirect('/admin/auth.html');
+  }
+};
+
 var unhandledRequestHandler = function() {
   logger.log('Acknowledging this incoming request because 2 seconds already passed...');
   return true;
@@ -84,18 +107,8 @@ var processEventErrorHandler = function({ error, logger, response }) {
 
 exports.initRoutes = function (receiver) {
 
-  // API
-  receiver.router.get('/api/configs', configs.router.list);
-  receiver.router.put('/api/configs', configs.router.update);
-  receiver.router.get('/api/dialogs', dialogs.router.list);
-  receiver.router.post('/api/dialogs', dialogs.router.create);
-  receiver.router.get('/api/dialogs/:id', dialogs.router.get);
-  receiver.router.put('/api/dialogs/:id', dialogs.router.update);
-  receiver.router.delete('/api/dialogs/:id', dialogs.router.delete);
-  receiver.router.get('/api/dialogs/:id/play', dialogs.router.play);
-  receiver.router.delete('/api/experiences/:id', experiences.router.delete);
-  receiver.router.get('/api/files/:id', files.router.get);
-  receiver.router.post('/api/files', files.router.create);
+
+  // Public API
   receiver.router.post('/api/interactive', interactive.router.interact);
   receiver.router.get('/api/links', (req, res) => {
     var slackLink = "https://slack.com/oauth/v2/authorize?client_id=" + process.env.SLACK_CLIENT_ID + "&scope=app_mentions:read,channels:join,channels:read,chat:write,files:write,im:write,incoming-webhook,users:read,links:read,channels:history,im:history&user_scope=&redirect_uri=" + process.env.APP_URL + "/api/oauth"
@@ -105,26 +118,39 @@ exports.initRoutes = function (receiver) {
     }));
     res.end();
   });
-  receiver.router.get('/api/messages', messages.router.list);
-  receiver.router.post('/api/messages', messages.router.send);
-  receiver.router.delete('/api/messages/:id', messages.router.delete);
-  receiver.router.get('/api/oauth', workspaces.router.create);
-  receiver.router.post('/api/surveys', surveys.router.create);
-  receiver.router.post('/api/surveys/:id/answers', surveys.router.createAnswer);
-  receiver.router.get('/api/users', users.router.list);
-  receiver.router.get('/api/users/login', users.router.login);
-  receiver.router.get('/api/users/logout', users.router.logout);
-  receiver.router.post('/api/users', users.router.create);
-  receiver.router.delete('/api/users/:id', users.router.delete);
-  receiver.router.get('/api/workspaces', workspaces.router.list);
-  receiver.router.get('/api/workspaces/:id', workspaces.router.get);
-  receiver.router.get('/api/workspaces/:id/users', workspaces.router.getSlackUsers);
-  receiver.router.post('/api/workspaces/:id/users', workspaces.router.reloadSlackUsers);
-  receiver.router.get('/api/workspaces/:id/experiences', experiences.router.list);
-  receiver.router.post('/api/workspaces/:id/experiences', experiences.router.create);
-  receiver.router.delete('/api/workspaces/:id', workspaces.router.delete);
+  receiver.router.post('/api/users/login', users.router.login);
 
-  // Static files
+  // Authenticated API
+  receiver.router.get('/api/configs', authenticate, configs.router.list);
+  receiver.router.put('/api/configs', authenticate, configs.router.update);
+  receiver.router.get('/api/dialogs', authenticate, dialogs.router.list);
+  receiver.router.post('/api/dialogs', authenticate, dialogs.router.create);
+  receiver.router.get('/api/dialogs/:id', authenticate, dialogs.router.get);
+  receiver.router.put('/api/dialogs/:id', authenticate, dialogs.router.update);
+  receiver.router.delete('/api/dialogs/:id', authenticate, dialogs.router.delete);
+  receiver.router.get('/api/dialogs/:id/play', authenticate, dialogs.router.play);
+  receiver.router.delete('/api/experiences/:id', authenticate, experiences.router.delete);
+  receiver.router.get('/api/files/:id', authenticate, files.router.get);
+  receiver.router.post('/api/files', authenticate, files.router.create);
+  receiver.router.get('/api/messages', authenticate, messages.router.list);
+  receiver.router.post('/api/messages', authenticate, messages.router.send);
+  receiver.router.delete('/api/messages/:id', authenticate, messages.router.delete);
+  receiver.router.get('/api/oauth', authenticate, workspaces.router.create);
+  receiver.router.post('/api/surveys', authenticate, surveys.router.create);
+  receiver.router.post('/api/surveys/:id/answers', authenticate, surveys.router.createAnswer);
+  receiver.router.get('/api/users', authenticate, users.router.list);
+  receiver.router.post('/api/users/logout', authenticate, users.router.logout);
+  receiver.router.post('/api/users', authenticate, users.router.create);
+  receiver.router.delete('/api/users/:id', authenticate, users.router.delete);
+  receiver.router.get('/api/workspaces', authenticate, workspaces.router.list);
+  receiver.router.get('/api/workspaces/:id', authenticate, workspaces.router.get);
+  receiver.router.get('/api/workspaces/:id/users', authenticate, workspaces.router.getSlackUsers);
+  receiver.router.post('/api/workspaces/:id/users', authenticate, workspaces.router.reloadSlackUsers);
+  receiver.router.get('/api/workspaces/:id/experiences', authenticate, experiences.router.list);
+  receiver.router.post('/api/workspaces/:id/experiences', authenticate, experiences.router.create);
+  receiver.router.delete('/api/workspaces/:id', authenticate, workspaces.router.delete);
+
+  // Public static files
   receiver.router.get('/favicon.ico', (req, res) => serveFile(req, res));
   receiver.router.get('/', (req, res) => {
     fs.readFile(resourceFolder[".html"] + "/index.html", function (error, content) {
@@ -132,10 +158,16 @@ exports.initRoutes = function (receiver) {
       res.end(content, "utf-8");
     });
   });
-  receiver.router.get('/admin/*', (req, res) => serveFile(req, res));
-  receiver.router.get('/public/*', (req, res) => serveFile(req, res));
+  receiver.router.get('/public/*', serveFile);
+  receiver.router.get('/admin/auth.html', serveFile);
+  receiver.router.get('/admin/auth.js', serveFile);
+  receiver.router.get('/admin/request.js', serveFile);
+  receiver.router.get('/admin/boothby.css', serveFile);
 
-  // Slack
+  // Private static files
+  receiver.router.get('/admin/*', authenticate, serveFile);
+
+  // Slack handlers
   receiver.unhandledRequestHandler = unhandledRequestHandler;
   receiver.processEventErrorHandler = processEventErrorHandler;
 };
