@@ -18,9 +18,9 @@ exports.router.create = function (req, res) {
         res.status(500).end();
       } else {
         fileInDb.id = data.rows[0].id;
-        fs.mkdir('files/uploads', { recursive: true }, (err) => {
+        fs.mkdir('files/data/uploads', { recursive: true }, (err) => {
           if (err && err.code !== 'EEXIST') throw err;
-          fs.copyFile(files.file.path, 'files/uploads/' + data.rows[0].id, function (err) {
+          fs.copyFile(files.file.path, 'files/data/uploads/' + data.rows[0].id, function (err) {
             if (err) throw err;
             res.write(JSON.stringify(fileInDb));
             res.end();
@@ -41,7 +41,7 @@ exports.router.get = function (req, res) {
       logger.error('Cannot get file ' + fileId + ': multiple occurrences in DB');
       res.status(500).end();
     } else {
-      fs.readFile("files/uploads/" + fileId, function (error, content) {
+      fs.readFile("files/data/uploads/" + fileId, function (error, content) {
         if (error) {
           if (error.code === "ENOENT") {
             res.writeHead(404);

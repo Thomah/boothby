@@ -17,7 +17,7 @@ exports.list = function (id, callback_success, callback_error) {
 };
 
 exports.listBySlackUserId = function (id, callback_success, callback_error) {
-    db.querySync('SELECT id, obtained_at, slack_id, reason, experience FROM experiences WHERE slack_id = $1 ORDER BY obtained_at DESC LIMIT 5', [id], (err, data) => {
+    db.querySync('SELECT id, obtained_at, slack_id, reason, experience FROM experiences WHERE slack_id = $1 ORDER BY obtained_at DESC LIMIT 15', [id], (err, data) => {
         if (err) {
             logger.error('Cannot get experiences ' + id + ': \n -> ' + err);
             if (callback_error !== undefined) {
@@ -30,7 +30,7 @@ exports.listBySlackUserId = function (id, callback_success, callback_error) {
 };
 
 exports.listTopSlackUsersBySlackTeamId = function (id, callback_success, callback_error) {
-    db.querySync('SELECT slack_id, sum(experience) AS sum_experience FROM experiences where slack_team_id = $1 group by slack_id ORDER BY sum_experience DESC LIMIT 5', [id], (err, data) => {
+    db.querySync('SELECT slack_id, sum(experience) AS sum_experience FROM experiences where slack_team_id = $1 group by slack_id ORDER BY sum_experience DESC LIMIT 15', [id], (err, data) => {
         if (err) {
             logger.error('Cannot get top Slack Users for Slack Team ' + id + ': \n -> ' + err);
             if (callback_error !== undefined) {
@@ -132,7 +132,7 @@ exports.updateView = function (slackTeam, viewId, userId) {
                     var levelProgressBarDone = "█".repeat(levelPercent / 10);
                     var levelProgressBarRemaining = "▒".repeat((100 - levelPercent) / 10);
 
-                    var userExperiencesString = "*Mes 5 dernières contributions*\n\n";
+                    var userExperiencesString = "*Mes dernières contributions*\n\n";
                     userExperiences.forEach(userExperience => {
                         userExperiencesString += new Date(userExperience.obtained_at).toLocaleString() + " : " + Reasons[userExperience.reason] + " : " + userExperience.experience + " XP\n";
                     });
@@ -152,10 +152,9 @@ exports.updateView = function (slackTeam, viewId, userId) {
                         topSlackUsersString += "<@" + topSlackUsers[k].slack_id + "> : " + topSlackUsers[k].sum_experience + " XP\n"
                     }
 
-                    slack.updateView(slackTeam, viewId, {
-                        // Home tabs must be enabled in your app configuration page under "App Home"
-                        "type": "home",
-                        "blocks": [
+                    var view = {
+                        type: "home",
+                        blocks: [
                             {
                                 "type": "header",
                                 "text": {
@@ -182,15 +181,6 @@ exports.updateView = function (slackTeam, viewId, userId) {
                                             "emoji": true
                                         },
                                         "url": process.env.APP_URL
-                                    },
-                                    {
-                                        "type": "button",
-                                        "text": {
-                                            "type": "plain_text",
-                                            "text": "Son CV",
-                                            "emoji": true
-                                        },
-                                        "url": process.env.APP_URL + '/public/cv.html'
                                     }
                                 ]
                             },
@@ -232,7 +222,25 @@ exports.updateView = function (slackTeam, viewId, userId) {
                                         "url": process.env.APP_URL + '/public/game.html'
                                     }
                                 ]
-                            },
+                            }
+                        ]
+                    }
+
+                    if (level.level >= 4) {
+                        view.blocks[2].elements.push(
+                            {
+                                "type": "button",
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Son CV",
+                                    "emoji": true
+                                },
+                                "url": process.env.APP_URL + '/public/cv.html'
+                            });
+                    }
+
+                    if (level.level >= 2) {
+                        view.blocks.push(
                             {
                                 "type": "divider"
                             },
@@ -250,15 +258,21 @@ exports.updateView = function (slackTeam, viewId, userId) {
                                     {
                                         "type": "mrkdwn",
                                         "text": userExperiencesString
-                                    },
-                                    {
-                                        "type": "mrkdwn",
-                                        "text": topSlackUsersString
                                     }
                                 ]
-                            },
-                        ]
-                    });
+                            }
+                        );
+                    }
+
+                    if (level.level >= 3) {
+                        view.blocks[10].fields.push(
+                            {
+                                "type": "mrkdwn",
+                                "text": topSlackUsersString
+                            });
+                    }
+
+                    slack.updateView(slackTeam, viewId, view);
                 });
             });
         });
