@@ -1,14 +1,19 @@
 display_information:
-  name: Boothby Beta
-  description: Bonjour humains ! Je vous donne des infos sur le Green IT. Et parfois, je dors.
+  name: Boothby
+  description: Bonjour humains ! Je suis là pour partager des astuces, quizz et réflexions autour du Green IT. A très vite ! 😉
   background_color: "#13a844"
+  long_description: "Et si vous vous mettiez au Green IT ?\r
+
+    \r
+
+    Boothby est le seul coach virtuel qui va vous donner envie d'utiliser ou de développer vos applications de façon optimisée et responsable. Disponible sur Slack gratuitement et sans limitation, essayez-le, adoptez-le et joignez-vous à son développement !"
 features:
   app_home:
     home_tab_enabled: true
     messages_tab_enabled: false
     messages_tab_read_only_enabled: false
   bot_user:
-    display_name: Boothby Beta
+    display_name: Boothby
     always_online: false
 oauth_config:
   redirect_urls:
