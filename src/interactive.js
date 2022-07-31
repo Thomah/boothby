@@ -2,6 +2,7 @@ const { parse } = require("querystring");
 
 const conversations = require("./conversations.js");
 const dialogs = require("./dialogs.js");
+const experiences = require("./experiences.js");
 const logger = require("./logger.js");
 const messages = require("./messages.js");
 const slack = require("./slack.js");
@@ -15,6 +16,11 @@ var answerSurvey = function (payload) {
     var userId = payload.user.id;
     surveys.get(surveyId, survey => {
         surveys.vote(survey.id, answerId, userId, data => {
+            experiences.create({
+                slack_id: userId,
+                reason: "ANSWER_SURVEY",
+                experience: 5
+            }, () => { });
             var blocks = payload.message.blocks;
             payload.message.blocks.forEach((block, index) => {
                 if(block.accessory !== undefined) {

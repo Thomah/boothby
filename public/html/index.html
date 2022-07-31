@@ -6,8 +6,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Boothby</title>
     <link rel="icon" href="/public/favicon.ico" type="image/x-icon" />
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="/public/boothby.css" />
 </head>
 
@@ -21,36 +21,32 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <a class="navbar-brand" href="/">
-                <img src="/public/Boothby-Icon.png" width="30" height="30" class="d-inline-block align-top" alt="Icone Boothby">
+                <img src="/public/Boothby-Icon.png" width="30" height="30" class="d-inline-block align-top"
+                    alt="Icone Boothby">
                 Boothby
             </a>
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                <ul class="navbar-nav">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item active">
-                        <a class="nav-link" href="/">Accueil <span class="sr-only">(page courante)</span></a>
+                        <a class="nav-link" href="/">Accueil</a>
                     </li>
-                    <!--li class="nav-item">
-                        <a class="nav-link" href="/cv.html">Mon CV</a>
-                    </li-->
                     <li class="nav-item">
                         <a class="nav-link" href="https://thomah.github.io/boothby">Documentation
                             technique</a>
                     </li>
-                </ul>
-                <ul class="navbar-nav ml-md-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="http://valeuriad.fr">Valeuriad ></a>
+                        <a class="nav-link" href="https://github.com/thomah/boothby">Code source</a>
                     </li>
                 </ul>
             </div>
         </nav>
         <div class="row">
-            <div class="col-md-9">
-                <div class="jumbotron">
-                    <h2>
+            <div class="col-md-9 p-5 bg-light rounded-3">
+                <div class="container-fluid">
+                    <h2 class="display-5">
                         Et si vous vous mettiez au Green IT ?
                     </h2>
-                    <p>
+                    <p class="fs-4">
                         Boothby est le seul coach virtuel qui va vous donner envie d'utiliser ou de développer
                         vos applications
                         de façon optimisée et responsable.
@@ -58,89 +54,90 @@
                         joignez-vous à son
                         développement !
                     </p>
-                    <p>
-                        <a class="btn btn-primary btn-large link-slack" href="#">Ajouter à Slack</a> <a
-                            class="btn btn-secondary btn-large" href="https://github.com/thomah/boothby">Voir
-                            le repo Git</a>
-                    </p>
+                    <a class="btn btn-primary btn-lg link-slack" href="#">Ajouter à Slack</a>
                 </div>
             </div>
             <div class="col-md-3" style="text-align: center">
                 <img alt="Boothby-Photo" src="/public/Boothby-Joyeux.png" width="80%" />
             </div>
         </div>
-        <div class="row demo">
+        <div class="row align-items-md-stretch demo">
             <div class="col-md-6">
-                <img alt="Boothby-Demo" src="/public/Boothby-Demo.png" width="100%" />
+                <div class="h-100 p-3 rounded-3">
+                    <img alt="Boothby-Demo" src="/public/Boothby-Demo.png" width="100%" />
+                </div>
             </div>
             <div class="col-md-6">
-                <div class="demo-side">
-                    <h2>Animer une communauté</h2>
-                    <p>
+                <div class="h-100 p-3 rounded-3">
+                    <h2 class="display-6">Animer une communauté</h2>
+                    <p class="fs-6">
                         Boothby est accessible à toutes les équipes, <b>qu'elles soient composées d'utilisateurs ou de
                             développeurs</b> (*) et interragit avec elle pour ouvrir et enrichir les discussions autour
                         de l'informatique durable.
                     </p>
-                    <p>
+                    <p class="fs-6">
                         (*) Des fonctionnalités de filtrage sont en cours d'élaboration pour s'adapter parfaitement à
                         vos activités.
                     </p>
                 </div>
             </div>
         </div>
-        <div class="row details">
+        <div class="row align-items-md-stretch details">
             <div class="col-md-4">
-                <h3>
-                    Un projet communautaire
-                </h3>
-                <p>
-                    Boothby ce n'est pas la nouvelle campagne marketing d'une entreprise qui veut surfer sur la vague du
-                    Green IT et s'offrir une image écolo.
-                </p>
-                <p>
-                    L'objectif est d'amener un maximum de professionnels à prendre conscience de leurs impacts dans leur
-                    utilisation et l'élaboration des services IT.
-                </p>
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>
+                        Un projet communautaire
+                    </h3>
+                    <p>
+                        Boothby ce n'est pas la nouvelle campagne marketing d'une entreprise qui veut surfer sur la
+                        vague du
+                        Green IT et s'offrir une image écolo.
+                    </p>
+                    <p>
+                        L'objectif est d'amener un maximum de professionnels à prendre conscience de leurs impacts dans
+                        leur
+                        utilisation et l'élaboration des services IT.
+                    </p>
+                </div>
             </div>
             <div class="col-md-4">
-                <h3>
-                    Le monde du logiciel va mal
-                </h3>
-                <p>
-                    Si en surface l'informatique n'a jamais été aussi performante, utile, sociale, high tech, en réalité
-                    il n'y a jamais eu autant de superflu, d'usage inutiles, d'obsolescence et de "gras" logiciel.
-                </p>
-                <p>
-                    Les récentes études le confirme, notamment le manifeste pour un développement durable d'Olivier
-                    Philippot. N'hésitez pas à le lire et à le partager autour de vous.
-                </p>
-                <p>
-                    <a class="btn"
-                        href="https://greenspector.com/fr/articles/2018-12-11-manifeste-developpement-plus-durable/">Lire
-                        le manifeste »</a>
-                </p>
+                <div class="h-100 p-5 text-bg-dark rounded-3">
+                    <h3>
+                        Le monde du logiciel va mal
+                    </h3>
+                    <p>
+                        Si en surface l'informatique n'a jamais été aussi performante, utile, sociale, high tech, en
+                        réalité
+                        il n'y a jamais eu autant de superflu, d'usage inutiles, d'obsolescence et de "gras" logiciel.
+                    </p>
+                    <p>
+                        Les récentes études le confirme, notamment le manifeste pour un développement durable d'Olivier
+                        Philippot. N'hésitez pas à le lire et à le partager autour de vous.
+                    </p>
+                    <p>
+                        <a class="btn btn-outline-light"
+                            href="https://greenspector.com/fr/articles/2018-12-11-manifeste-developpement-plus-durable/">Lire
+                            le manifeste »</a>
+                    </p>
+                </div>
             </div>
             <div class="col-md-4">
-                <h3>
-                    En cours de développement
-                </h3>
-                <p>
-                    De la veille technologique au développement de nouvelles fonctionnalités en passant par la rédaction
-                    de publications... il y a encore tant à faire ! Vous souhaitez participer ? Fantastique !
-                </p>
-                <p>
-                    Contactez-nous par mail en cliquant sur le bouton suivant.
-                </p>
-                <p>
-                    <a class="btn" href="mailto:boothby@valeuriad.fr">Nous contacter »</a>
-                </p>
-            </div>
-        </div>
-        <div class="row footer">
-            <div class="col-md-12">
-                <p>
-                    Fièrement soutenu par Valeuriad. Merci &#60;3
-                </p>
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>
+                        En cours de développement
+                    </h3>
+                    <p>
+                        De la veille technologique au développement de nouvelles fonctionnalités en passant par la
+                        rédaction
+                        de publications... il y a encore tant à faire ! Vous souhaitez participer ? Fantastique !
+                    </p>
+                    <p>
+                        Contactez-nous par mail en cliquant sur le bouton suivant.
+                    </p>
+                    <p>
+                        <a class="btn btn-outline-secondary" href="mailto:boothby@valeuriad.fr">Nous contacter »</a>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
@@ -148,12 +145,13 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
         crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
-        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.5/dist/umd/popper.min.js"
+        integrity="sha384-Xe+8cL9oJa6tN/veChSP7q+mnSPaj5Bcu9mPX5F5xIGE0DVittaqT5lorf0EI7Vk"
         crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
-        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.min.js"
+        integrity="sha384-ODmDIVzN+pFdexxHEHFBQH3/9/vQ9uori45z4JjnFsRydbmQbmL5t1tQ0culUzyK"
         crossorigin="anonymous"></script>
+
     <script src="/public/index.js" type="application/javascript"></script>
 
 </body>
