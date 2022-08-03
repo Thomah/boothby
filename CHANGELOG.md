@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/thomah/boothby/compare/v2.3.0...v2.3.1) (2022-08-03)
+
+
+### Bug Fixes
+
+* specify encoding in JAVA_OPTS ([9469e75](https://github.com/thomah/boothby/commit/9469e754e24bbd510d275e10e3bd1afb914f6d70))
+
 # [2.3.0](https://github.com/thomah/boothby/compare/v2.2.0...v2.3.0) (2022-08-03)
 
 
