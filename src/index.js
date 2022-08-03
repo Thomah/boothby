@@ -64,25 +64,25 @@ const app = new App({
 
 app.message(async ({ message }) => {
   if (message.subtype === undefined) {
-    if (message.text !== undefined) {
-      messages.create(message);
-    }
     workspaces.getByTeamId(message.team, slackTeam => {
-      if (message.channel === slackTeam.incoming_webhook_channel_id) {
-        experiences.create({
-          slack_id: message.user,
-          reason: 'PUBLIC_MESSAGE',
-          experience: 1
-        },
-          () => { });
-      }
-      if (message.text === ":house:") {
-        workspaces.getUsersByChannelId(message.channel, user => {
-          dialogs.getByName("Consent PM", dialog => {
-            dialog.channelId = user.im_id;
-            dialogs.speakRecurse(slackTeam, dialog, "0", () => { });
+      if (message.text !== undefined && message.user !== slackTeam.bot_user_id) {
+        messages.create(message);
+        if (message.channel === slackTeam.incoming_webhook_channel_id) {
+          experiences.create({
+            slack_id: message.user,
+            reason: 'PUBLIC_MESSAGE',
+            experience: 1
+          },
+            () => { });
+        }
+        if (message.text === ":house:") {
+          workspaces.getUsersByChannelId(message.channel, user => {
+            dialogs.getByName("Consent PM", dialog => {
+              dialog.channelId = user.im_id;
+              dialogs.speakRecurse(slackTeam, dialog, "0", () => { });
+            });
           });
-        });
+        }
       }
     });
   }

@@ -119,6 +119,7 @@ exports.initRoutes = function (receiver) {
     res.end();
   });
   receiver.router.post('/api/users/login', users.router.login);
+  receiver.router.get('/api/oauth', workspaces.router.create);
 
   // Authenticated API
   receiver.router.get('/api/configs', authenticate, configs.router.list);
@@ -135,7 +136,6 @@ exports.initRoutes = function (receiver) {
   receiver.router.get('/api/messages', authenticate, messages.router.list);
   receiver.router.post('/api/messages', authenticate, messages.router.send);
   receiver.router.delete('/api/messages/:id', authenticate, messages.router.delete);
-  receiver.router.get('/api/oauth', authenticate, workspaces.router.create);
   receiver.router.post('/api/surveys', authenticate, surveys.router.create);
   receiver.router.post('/api/surveys/:id/answers', authenticate, surveys.router.createAnswer);
   receiver.router.get('/api/users', authenticate, users.router.list);

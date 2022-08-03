@@ -1,5 +1,6 @@
 const schedule = require("node-schedule");
 const logger = require("./logger.js");
+const messages = require("./messages.js");
 
 require('dotenv').config();
 
@@ -44,11 +45,6 @@ exports.openIM = function (workspace, params) {
 
 exports.revokeToken = function (workspace) {
     return app.client.auth.revoke(workspace.access_token);
-};
-
-exports.sendSimpleMessage = function (workspace, channelId, message) {
-    var content = { text: message };
-    exports.postMessage(workspace, channelId, content);
 };
 
 exports.uploadFiles = function (workspace, files) {
@@ -96,14 +92,16 @@ exports.publishDefaultHome = function (workspace, userId) {
 
 var postQueue = [];
 exports.postMessage = function (workspace, channelId, message) {
-    logger.debug(JSON.stringify(message.blocks));
+    logger.debug(message.thread_ts);
     if (message.blocks !== undefined && message.blocks.length > 0) {
         postQueue.push({
             token: workspace.access_token,
             message: {
+                id: message.id,
                 channel: channelId,
                 type: "message",
                 text: "Impossible d'afficher ce contenu",
+                thread_ts: message.thread_ts,
                 blocks: JSON.stringify(message.blocks),
                 link_names: true
             }
@@ -112,8 +110,10 @@ exports.postMessage = function (workspace, channelId, message) {
         postQueue.push({
             token: workspace.access_token,
             message: {
+                id: message.id,
                 channel: channelId,
                 text: message.text,
+                thread_ts: message.thread_ts,
                 link_names: true,
                 attachments: message.attachments
             }
@@ -126,7 +126,11 @@ var postShift = function () {
         (async (app) => {
             try {
                 shift.message.token = shift.token;
-                await app.client.chat.postMessage(shift.message);
+                var response = await app.client.chat.postMessage(shift.message);
+                shift.message.ts = response.message.ts;
+                if(shift.message.id !== undefined) {
+                    messages.update(shift.message);
+                }
             } catch (error) {
                 logger.error(error);
             }
