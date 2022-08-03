@@ -21,8 +21,13 @@
   <button id="refresh" onclick="refresh()">Refresh</button>
   <hr />
   <div>
+    <label for="message-workspace">Team Slack ID</label>
     <input id="message-workspace" type="text" />
+    <label for="message-channel">Channel ID</label>
     <input id="message-channel" type="text" />
+    <label for="message-thread">Thread Ts</label>
+    <input id="message-thread" type="text" />
+    <label for="message-text">Message</label>
     <input id="message-text" type="text" />
     <input id="message-send" type="button" value="Send" onclick="sendMessage()" />
   </div>
@@ -33,6 +38,7 @@
         <th>Time</th>
         <th>Team</th>
         <th>Channel</th>
+        <th>Ts</th>
         <th>Sender</th>
         <th>Message</th>
         <th>Actions</th>

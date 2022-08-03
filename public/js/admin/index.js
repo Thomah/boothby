@@ -20,6 +20,7 @@ function refresh() {
 function sendMessage() {
   var workspace = document.getElementById("message-workspace").value;
   var channel = document.getElementById("message-channel").value;
+  var thread = document.getElementById("message-thread").value;
   var content = document.getElementById("message-text").value;
 
   overload_xhr(
@@ -33,7 +34,7 @@ function sendMessage() {
       xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     },
     function () { },
-    `workspace=${workspace}&channel=${channel}&message=${content}`
+    `workspace=${workspace}&channel=${channel}&thread=${thread}&message=${content}`
   );
 }
 
@@ -85,6 +86,11 @@ function doc_refreshMessages(messages) {
     // Channel
     cell = document.createElement("td");
     cell.textContent = message.channel;
+    row.appendChild(cell);
+
+    // Ts
+    cell = document.createElement("td");
+    cell.textContent = message.ts;
     row.appendChild(cell);
 
     // User
