@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/thomah/boothby/compare/v2.2.0...v2.3.0) (2022-08-03)
+
+
+### Features
+
+* manual message sending can be sent in a thread ([c97b5c3](https://github.com/thomah/boothby/commit/c97b5c374324457214a78586343bb36729df7ee4))
+
 # [2.2.0](https://github.com/thomah/boothby/compare/v2.1.0...v2.2.0) (2022-07-31)
 
 
