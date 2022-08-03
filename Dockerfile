@@ -24,6 +24,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | b
 ENV NVM_DIR ~/.nvm
 ENV NODE_PATH $NVM_DIR/v$NODE_VERSION/lib/node_modules
 ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
+ENV JAVA_OPTS "-Dfile.encoding=UTF-8"
 
 # # Bundle app source
 COPY --chown=boothby . .
