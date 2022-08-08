@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/thomah/boothby/compare/v2.3.1...v2.3.2) (2022-08-08)
+
+
+### Bug Fixes
+
+* grant xp on public message when there is no experience ([69f89d6](https://github.com/thomah/boothby/commit/69f89d62c1ab2b9bf221c69b2591101a71f4a47d))
+
 ## [2.3.1](https://github.com/thomah/boothby/compare/v2.3.0...v2.3.1) (2022-08-03)
 
 
