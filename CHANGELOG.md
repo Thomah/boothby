@@ -1,3 +1,10 @@
+## [2.3.3](https://github.com/thomah/boothby/compare/v2.3.2...v2.3.3) (2022-08-08)
+
+
+### Bug Fixes
+
+* bump number of liquibase changelogs ([64fa2e4](https://github.com/thomah/boothby/commit/64fa2e472c2754d713b7a7384cafe9b496536c84))
+
 ## [2.3.2](https://github.com/thomah/boothby/compare/v2.3.1...v2.3.2) (2022-08-08)
 
 
