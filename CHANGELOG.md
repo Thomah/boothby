@@ -1,3 +1,10 @@
+## [2.3.4](https://github.com/thomah/boothby/compare/v2.3.3...v2.3.4) (2023-01-19)
+
+
+### Bug Fixes
+
+* **deps:** bump @slack/bolt from 3.11.3 to 3.12.2 ([7527c3c](https://github.com/thomah/boothby/commit/7527c3cbba6ccdf1a17fc7f1328bab5807498cd5))
+
 ## [2.3.3](https://github.com/thomah/boothby/compare/v2.3.2...v2.3.3) (2022-08-08)
 
 
