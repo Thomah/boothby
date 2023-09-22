@@ -1,4 +1,4 @@
-const db = require('./db/index.js');
+const db = require('./db.js');
 const logger = require("./logger.js");
 const scheduler = require("./scheduler.js");
 

@@ -1,6 +1,6 @@
 const fs = require("fs");
 const formidable = require('formidable');
-const db = require('./db/index.js');
+const db = require('./db.js');
 const logger = require("./logger.js");
 
 exports.router = {};

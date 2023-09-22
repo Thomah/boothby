@@ -1,5 +1,5 @@
 const fs = require("fs");
-const db = require('./db/index.js');
+const db = require('./db.js');
 const conversations = require("./conversations.js");
 const experiences = require("./experiences.js");
 const logger = require("./logger.js");

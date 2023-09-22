@@ -7,7 +7,7 @@ function login() {
     "/api/users/login",
     function (xhr) {
       var token = xhr.response;
-      setCookie('token', token, 10);
+      setCookie('token', token + ";SameSite=Lax", 10);
       window.location = 'index.html';
     },
     function (xhr) {

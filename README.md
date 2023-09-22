@@ -2,8 +2,7 @@
 
 ## Prerequisites
 
-- NodeJS 16
-- Java 18 (for running liquibase)
+- NodeJS 18
 
 ## Configure the app
 
@@ -17,6 +16,7 @@ PGPORT = <Port of the PostgreSQL DB | Default : 5432>
 PGDATABASE = <Name of the PostgreSQL DB | Default : boothby>
 PGUSER = <User used to connect to the PostgreSQL DB | Default : boothby>
 PGPASSWORD = <Password used to connect to the PostgreSQL DB | Default : boothby>
+DATABASE_URL=postgres://<PGUSER>:<PGPASSWORD>@<PGHOST>:<PGPORT>/<PGDATABASE>
 
 SLACK_CLIENT_ID = <Slack App client ID>
 SLACK_CLIENT_SECRET = <Slack App client secret>
@@ -42,6 +42,7 @@ APP_URL = <Exposed URL of Boothby>
 Then, run the app in another terminal :
 
 ```cmd
+npm run migrate
 npm start
 ```
 
