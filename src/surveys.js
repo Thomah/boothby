@@ -1,4 +1,4 @@
-const db = require('./db/index.js');
+const db = require('./db.js');
 const logger = require('./logger.js');
 
 exports.get = function (id, callback_success, callback_error) {

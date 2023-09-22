@@ -1,4 +1,4 @@
-const db = require('./db/index.js');
+const db = require('./db.js');
 const dialogs = require("./dialogs.js");
 const experiences = require("./experiences.js");
 const logger = require("./logger.js");

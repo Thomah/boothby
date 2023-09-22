@@ -1,2 +1,5 @@
-theme: jekyll-theme-cayman
-show_downloads: "true"
+title: Boothby
+logo: /public/img/Photo-Boothby.png
+description: A Slack Bot to raise awareness on a topic
+show_downloads: true
+theme: jekyll-theme-minimal

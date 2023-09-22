@@ -1,6 +1,6 @@
 # Prerequisites
 
-- NodeJS 10.15+ with npm in PATH variable
+- NodeJS 18+ with npm in PATH variable
 - PostgreSQL Database
 - Slack Client
 - Be added to the Testing Boothby Slack workspace
@@ -20,6 +20,7 @@ PGPORT = <Port of the PostgreSQL DB | Default : 5432>
 PGDATABASE = <Name of the PostgreSQL DB | Default : boothby>
 PGUSER = <User used to connect to the PostgreSQL DB | Default : boothby>
 PGPASSWORD = <Password used to connect to the PostgreSQL DB | Default : boothby>
+DATABASE_URL=postgres://<PGUSER>:<PGPASSWORD>@<PGHOST>:<PGPORT>/<PGDATABASE>
 
 SLACK_CLIENT_ID=<Slack App client ID>
 SLACK_CLIENT_SECRET=<Slack App client secret>

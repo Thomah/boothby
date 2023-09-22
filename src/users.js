@@ -1,10 +1,10 @@
-const bcrypt = require('bcrypt-nodejs');
+const bcrypt = require('bcryptjs');
 const NodeCache = require("node-cache");
 
 const logger = require("./logger.js");
-const db = require('./db/index.js');
+const db = require('./db.js');
 
-var myCache;
+var appCache;
 var ttlCache = 36000;
 
 const ADMIN_USERNAME = 'admin';
@@ -19,15 +19,15 @@ var generate_token = function () {
 };
 
 exports.getInCache = function (key, callback) {
-    myCache.get(key, callback);
+    callback(null, appCache.get(key));
 };
 
 exports.initCache = function () {
-    myCache = new NodeCache({ stdTTL: ttlCache });
+    appCache = new NodeCache({ stdTTL: ttlCache });
 };
 
 exports.createDefaultUser = async function () {
-    bcrypt.hash(ADMIN_PASSWORD, null, null, function (err, hash) {
+    bcrypt.hash(ADMIN_PASSWORD, null, function (err, hash) {
         var credentials = {
             'username': ADMIN_USERNAME,
             'password': hash
@@ -70,28 +70,16 @@ exports.router.login = function (req, res) {
                     res.status(401).end();
                 } else {
                     var generated_token = generate_token();
-                    //We get the array tokens in the server cache
-                    myCache.get("tokens", function (err, value) {
-                        if(err) {
-                            logger.error('Cannot login user ' + credentials['username'] + ' : cannot get token in cache');
-                            res.status(500).end();
-                        } else {
-                            if(value == undefined) {
-                                value = [generated_token];
-                            } else {
-                                value.push(generated_token);
-                            }
-                            myCache.set("tokens", value, function (err) {
-                                if (err) {
-                                    logger.error('Cannot login user ' + credentials['username'] + ' : cannot set token in cache');
-                                    res.status(500).end();
-                                } else {
-                                    logger.log(value.length + ' token(s) in cache');
-                                    res.send(generated_token);
-                                }
-                            });
-                        }
-                    });
+                    var tokens = appCache.get("tokens");
+                    if (tokens == undefined) {
+                        logger.log('0 token(s) in cache');
+                        tokens = [generated_token];
+                    } else {
+                        logger.log(tokens.length + ' token(s) in cache');
+                        tokens.push(generated_token);
+                    }
+                    appCache.set("tokens", tokens);
+                    res.send(generated_token);
                 }
             });
         }
@@ -99,21 +87,15 @@ exports.router.login = function (req, res) {
 };
 
 exports.router.logout = function (req, res) {
-    myCache.get("tokens", function (err, value) {
+    appCache.get("tokens", function (err, value) {
         if (!err) {
             //We remove this specific token from the server cache
             var tokens = value;
             var index_token_to_remove = tokens.indexOf(req.headers.token);
             if (index_token_to_remove >= 0) {
                 tokens.splice(index_token_to_remove, 1);
-                myCache.set("tokens", tokens, function (err) {
-                    if (err) {
-                        logger.error('Cannot logout user : cannot update token in cache');
-                        res.status(500).end();
-                    } else {
-                        logger.log(tokens.length + ' tokens in cache');
-                    }
-                });
+                appCache.set("tokens", tokens);
+                logger.log(tokens.length + ' tokens in cache');
             }
         }
     });

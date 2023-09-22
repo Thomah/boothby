@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Boothby is a french bot available on Slack which publish tips and news about Green IT. Each publication is pre-written on a dedicated web interface and when the CRON is triggered, Boothby sends it on a Slack Workspace.
+Boothby is a bot available on Slack that can publish regular messages about a topic of your choice. Each publication is pre-written on a dedicated web interface and when the CRON is triggered, Boothby sends it on a Workspace.
 
 ## Table of Contents
 
