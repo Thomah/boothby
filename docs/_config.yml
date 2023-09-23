@@ -1,5 +1,5 @@
 title: Boothby
-logo: /public/img/Photo-Boothby.png
+logo: https://raw.githubusercontent.com/Thomah/boothby/master/public/img/Photo-Boothby.png
 description: A Slack Bot to raise awareness on a topic
 show_downloads: true
 theme: jekyll-theme-minimal
