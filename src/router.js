@@ -73,8 +73,6 @@ var authenticate = function(req, res, next) {
   if (req.headers.cookie && req.headers.cookie.indexOf('=') >= 0) {
     var token = req.headers.cookie.split('=')[1];
     users.getInCache("tokens", function (err, value) {
-      logger.info(value);
-      logger.info(token);
       if (!err) {
         if (value == undefined) {
           res.redirect('/admin/auth.html');

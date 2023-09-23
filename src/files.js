@@ -10,7 +10,7 @@ exports.router.create = function (req, res) {
   form.parse(req, function (err, fields, files) {
     var fileInDb = {
       name: req.headers.filename,
-      type: files.file.type
+      type: files.file[0].mimetype
     };
     db.querySync("INSERT INTO files(name, type) VALUES ($1, $2) RETURNING id", [fileInDb.name, fileInDb.type], (err, data) => {
       if (err) {
@@ -20,7 +20,7 @@ exports.router.create = function (req, res) {
         fileInDb.id = data.rows[0].id;
         fs.mkdir('files/data/uploads', { recursive: true }, (err) => {
           if (err && err.code !== 'EEXIST') throw err;
-          fs.copyFile(files.file.path, 'files/data/uploads/' + data.rows[0].id, function (err) {
+          fs.copyFile(files.file[0].filepath, 'files/data/uploads/' + data.rows[0].id, function (err) {
             if (err) throw err;
             res.write(JSON.stringify(fileInDb));
             res.end();
