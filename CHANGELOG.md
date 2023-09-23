@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/thomah/boothby/compare/v2.3.4...v2.4.0) (2023-09-23)
+
+
+### Features
+
+* :boom: remove liquibase and bump dependencies ([8fb2059](https://github.com/thomah/boothby/commit/8fb2059a53ebddf8c48f0a1c5e66facec2246d1c))
+
 ## [2.3.4](https://github.com/thomah/boothby/compare/v2.3.3...v2.3.4) (2023-01-19)
 
 
